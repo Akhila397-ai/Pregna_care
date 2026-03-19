@@ -1,71 +1,75 @@
-import { Request,Response } from "express";
-import { AuthService } from "../services/auth.service.js";
-
-
-const service = new AuthService();
-
-
+import { Request,Response,NextFunction } from "express";
+import { container } from "../container/index.js";
+import { HttpStatus } from "../constants/status.constant.js";
+import { HttpResponse } from "../constants/messages.constant.js";
 export class AuthController {
 
-    static async signup(req: Request, res: Response): Promise<void>{
+    static async signup(req: Request, res: Response, next: NextFunction) {
         try {
-            const {name, email, password} = req.body;
+            const {name, email,password} = req.body;
 
-            const otp = await service.signup(name,email,password);
+            const otp = await container.authService.signup(name,email,password);
 
-            res.json({message: "OTP sent" ,otp})
+            res.status(HttpStatus.OK).json({
+                success:true,
+                message:HttpResponse.OTP_SENT,
+                otp
+            });
         } catch (error) {
-            if(error instanceof Error){
-                res.status(400).json({error: error.message})
-            }
+            next(error)
             
         }
     }
-    static async verifyOtp(req: Request, res: Response):Promise<void>{
-        try {
-            const {email, otp} = req.body;
+    static async verifyOtp(req: Request, res: Response, next: NextFunction) {
+         try {
+            const {email,otp} = req.body;
 
-            await service.verifyOTP(email,otp);
-
-            res.json({message: 'Account verified'})
-        } catch (error) {
-            if(error instanceof Error){
-                res.status(400).json({error: error.message})
-            }
-            
-        }
+            await container.authService.verifyOTP(email,otp)
+            res.status(HttpStatus.OK).json({
+                success:true,
+                message:HttpResponse.CREATED
+            })
+         } catch (error) {
+            next(error)
+         }
     }
-    static async resendOtp(req:Request,res:Response):Promise<void> {
+
+    static async resentOtp(req: Request, res: Response, next: NextFunction) {
         try {
             const {email} = req.body;
 
-            const otp = await service.resendOtp(email);
-            res.json({message:'OTP resent successfully',otp});
+            const otp = await container.authService.resendOtp(email)
+
+            res.status(HttpStatus.OK).json({
+                success:true,
+                message:HttpResponse.OTP_RESENT,
+                otp
+            })
         } catch (error) {
-            if(error instanceof Error){
-                res.status(400).json({error: error.message})
-            }
+            next(error)
         }
     }
-    static async login(req: Request, res: Response):Promise<void> {
-        try {
-            const {email,password} = req.body;
-            const {user,token} = await service.login(email,password);
 
-            res.cookie("token",token, {
-                httpOnly:true,
-                sameSite:"strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000
+    static async login(req: Request, res: Response, next: NextFunction) {
+        try {
+            const {email, password} = req.body;
+
+            const {user,token} = await container.authService.login(email,password);
+
+            res.cookie('token',token, {
+                httpOnly: true,
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
             })
 
-            res.status(200).json({
+
+            res.status(HttpStatus.OK).json({
                 success:true,
-                user
+                user,
             })
         } catch (error) {
-              res.status(400).json({
-            message: (error as Error).message
-        });
+            next(error)
+            
         }
     }
 }

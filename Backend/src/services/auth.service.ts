@@ -1,121 +1,119 @@
 import bcrypt from 'bcrypt';
-import { UserRepository } from '../repositories/user.repository.js';
-import { OTPGenerator } from '../utils/otpGenarator.js';
+import { IUserRepository } from '../repositories/interfaces/user.repository.interface.js';
+import { HttpResponse } from '../constants/messages.constant.js';
+import { HttpStatus } from '../constants/status.constant.js';
 import { Logger } from '../utils/logger.js';
-import { GoogleAuth } from 'google-auth-library';
-import jwt from "jsonwebtoken";
-
+import { sendEmail } from '../utils/email.js';
 
 
 export class AuthService {
-    private repo = new UserRepository();
-
-    async signup(name: string, email: string, password: string, ): Promise<string>{
-
-        const existing = await this.repo.findByEmail(email)
-        if(existing)throw new Error('User already exists');
+    constructor(private userRepo: IUserRepository){}
 
 
-        const hashed = await bcrypt.hash(password,10);
-        const otp = OTPGenerator.generate();
+        private generateOtp(): string {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+        }
 
-        const data = {
+            async signup(name: string, email: string, password: string) {
+        const existing = await this.userRepo.findEmail(email);
+
+        if (existing && !existing.isVerified) {
+            const otp = this.generateOtp();
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            await this.userRepo.updateByEmail(email, {
+            name,
+            password: hashedPassword,
+            otp,
+            otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
+            });
+
+            await sendEmail(email, "Your OTP Code", `Your OTP is: ${otp}`);
+
+            return otp;
+        }
+
+        if (existing && existing.isVerified) {
+            throw new Error("Email already registered");
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const otp = this.generateOtp();
+
+        Logger.info(`Email:${email} Otp: ${otp}`);
+
+        await this.userRepo.create({
             name,
             email,
-            password:hashed,
+            password: hashedPassword,
             otp,
-            otpExpiry: OTPGenerator.expiry()
-        };
-        await this.repo.create(data)
-        Logger.info(`User verified: ${email} using OTP: ${otp}`);
-        return otp
-    }
-    async verifyOTP(email: string, otp: string): Promise<boolean> {
-        const user = await this.repo.findByEmail(email);
-        if(!user){
-            throw new Error('User not found...')
-        }
-        if(user.otpAttempts >= 5){
-            throw new Error('Too many attempts,Try again later')
+            otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
+            isVerified: false,
+        });
 
+        await sendEmail(email, "Your OTP Code", `Your OTP is: ${otp}`);
+
+        return otp;
         }
+
+    async verifyOTP(email: string, otp: string) {
+        const user = await this.userRepo.findEmail(email);
+
+        console.log("Entered OTP:", otp);
+        console.log("Stored OTP:", user?.otp);
+        if(!user){
+            throw new Error(HttpResponse.USER_NOT_FOUND);
+        }
+
         if(user.otp !== otp){
-            user.otpAttempts += 1
-            await user.save()
-            throw new Error('Invalid otp')
+            throw new Error(HttpResponse.OTP_INVALID)
         }
-        if(user.otpExpiry && user.otpExpiry < new Date()){
-            throw new Error("OTP expired")
+        
+        if(!user.otpExpiry || user.otpExpiry < new Date()){
+            throw new Error(HttpResponse.OTP_EXPIRED_OR_INVALID)
         }
-        Logger.info(`Otp: ${otp}`)
-        user.isVerified = true;
-        user.otp = null;
-        user.otpExpiry = null;
-        user.otpAttempts = 0;
 
-
-        await user.save();
-
-        Logger.info(`User verified: ${email}`);
-
-        return true
-
+        await this.userRepo.updateByEmail(email, {
+            isVerified: true,
+            otp: undefined,
+            otpExpiry: undefined
+        });
     }
 
-    async resendOtp(email:string): Promise<string>{
-        const user = await this.repo.findByEmail(email);
-        if(!user){
-            throw new Error('User mot found')
-        }
-        if(user.isVerified){
-            throw new Error('User already verified')
-        }
-
-        const cooldowntime = 60 * 1000;
-
-        if(user.otpRequestedAt && Date.now() - user.otpRequestedAt.getTime() < cooldowntime){
-            throw new Error('Please wait before requesting a new otp')
-        }
-        const newOtp = OTPGenerator.generate();
-        user.otp = newOtp;
-        user.otpExpiry = OTPGenerator.expiry();
-        user.otpRequestedAt = new Date();
-        user.otpAttempts = 0
-
-        await user.save()
-
-        Logger.info(`Resend otp for ${email}: ${newOtp}`)
-        return newOtp;
-
-    }
-
-    async login(email: string, password: string){
-
-        const user = await this.repo.findByEmail(email)
+    async resendOtp(email: string) {
+        const user = await this.userRepo.findEmail(email);
 
         if(!user){
-            throw new Error("User not found")
+            throw new Error(HttpResponse.USER_NOT_FOUND)
         }
 
-        if(!user.isVerified){
-            throw new Error('user is not verified')
-        }
+        const otp = this.generateOtp();
+        Logger.info(`Resent OTP for ${email}: ${otp}`);
 
-        const match = await bcrypt.compare(password,user.password);
-
-        if(!match){
-            throw new Error("invalid password")
-        }
-
-        const token = jwt.sign(
-        { id: user._id },
-        process.env.JWT_SECRET!,
-        { expiresIn: "7d" }
-    );
-        return {user,token}
+        await this.userRepo.updateByEmail(email,{
+            otp,
+            otpExpiry: new Date(Date.now() + 5 * 60 * 1000),
+        })
+        await sendEmail(email, "Your OTP Code",`Your OTP id: ${otp}`)
+        return otp;
     }
-   
-    
+
+    async login(email: string, password: string) {
+        const user = await this.userRepo.findEmail(email);
+
+        if(!user){
+            throw new Error(HttpResponse.USER_NOT_FOUND)
+        }
+
+        const isMatch = await bcrypt.compare(password,user.password)
+
+        if(!isMatch){
+            throw new Error(HttpResponse.INVALID_PASSWORD)
+        }
+        const token = "JWT_TOKEN";
+
+        return { user, token}
+    }
 
     
 }
