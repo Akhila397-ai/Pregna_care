@@ -1,35 +1,39 @@
-import mongoose, { Schema } from "mongoose";
-import { IUser } from "../interfaces/IUser.js";
-import { Role } from "../enums/role.enum.js";
-import { UserStatus } from "../enums/userStatus.enum.js";
+import mongoose, {Schema, Document} from "mongoose";
+import { userData } from "../types/user.js";
 
-const userSchema = new Schema<IUser>(
+
+export interface IUserDocument extends userData, Document {};
+
+const UserSchema = new Schema<IUserDocument>(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-
-    role: {
+    name: {
       type: String,
-      enum: Object.values(Role),
-      default: Role.PATIENT
+      required: true,
+      trim: true
     },
-
-    status: {
+    email: {
       type: String,
-      enum: Object.values(UserStatus),
-      default: UserStatus.ACTIVE
+      required: true,
+      trim: true
     },
+    phone:{
+      type: String
+    },
+    password: {
+      type: String,
+      required: true
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false
+    },
+    isVerified: {
+      type: Boolean,
+      default: false
+    }
 
-    isVerified: { type: Boolean, default: false },
-
-    otp: String,
-    otpExpiry: Date,
-    otpRequestedAt: { type: Date, default: null },   
-    otpAttempts: { type: Number, default: 0 }, 
-    lastLogin: Date
   },
-  { timestamps: true }
-);
+  { timestamps: true}
+)
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export default mongoose.model<IUserDocument>('User',UserSchema)

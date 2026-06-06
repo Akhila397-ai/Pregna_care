@@ -2,6 +2,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
+     "typeRoots": ["./node_modules/@types", "./src/types"],
+      "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
 
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

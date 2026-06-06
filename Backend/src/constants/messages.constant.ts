@@ -16,13 +16,15 @@ export const HttpResponse = {
   OTP_RESENT: "OTP resent successfully",
   OTP_NOT_FOUND: "No pending OTP found",
   OTP_EXPIRED_OR_INVALID: "OTP not verified or expired",
-
+  OTP_MAX_ATTEMPTS: "Maximum attempts!!",
   //user related
   FIELDS_REQUIRED: "All fields are required",
   INVALID_NAME: "Name must only contain at least 4 characters",
+  PASSWORD_RESET_SUCCESSFULL: "Password reset seccessfull",
   INVALID_EMAIL: "Invalid email format",
+  FORGOT_PASSWORD_SENT:'otp for forgott password has been sent',
   INVALID_PASSWORD:
-    "Password must be at least 8 characters long, contain at least 1 letter, 1 number, and 1 special character",
+    "=Invalid Password",
   EMAIL_ALREADY_EXISTS: "Email already registered",
   USER_NOT_FOUND: "User not found",
   REGISTER_SUCCESS: "Registered successfully",
@@ -31,4 +33,10 @@ export const HttpResponse = {
   REFRESH_TOKEN_MISSING: "No refresh token provided",
   REFRESH_TOKEN_INVALID: "Invalid refresh token",
   REFRESH_TOKEN_FAILED: "Token verification failed",
+  VERIFY_YOUR_ACCOUNT: "Please verify your account first",
+  TOKEN_EXPIRED: "Role based auth",
+  USER_BLOCKED: "User has been blocked by the admin",
+
+  //doctor related
+  ALREADY_APPLIED: "Already applied"
 }

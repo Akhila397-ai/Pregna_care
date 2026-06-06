@@ -1,29 +1,44 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { redirect, useNavigate } from "react-router-dom";
+import { loginUser } from "../api/auth.api";
+import { validateSignin } from "../utils/validation";
+import { handleGoogleLogin } from "../api/auth.api";
+import { GoogleLogin } from "@react-oauth/google";
+import { AxiosError } from "axios";
 
 export default function Login() {
-  const [fields, setFields] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [focused, setFocused] = useState(null);
+  const [focused, setFocused] = useState<string | null>(null);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
 
-  const handle = (key) => (e) =>
-    setFields((f) => ({ ...f, [key]: e.target.value }));
 
-  const handleLogin = async () => {
-    if (!fields.email || !fields.password) {
-      setError("Please fill in all fields.");
-      return;
+  
+
+const handleLogin = async () => {
+  const validationError = validateSignin({ email, password });
+
+  if (validationError) {
+    setError(validationError);
+    return;
+  }
+
+  try {
+    const res = await loginUser({ email, password });
+
+
+
+    navigate("/dashboard"); // ✅ important
+  } catch (err: unknown) {
+    if (err instanceof AxiosError) {
+      setError(err.response?.data?.message || "Login failed");
+    } else {
+      setError("Something went wrong");
     }
-    try {
-      // await loginUser(fields);
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err?.response?.data?.error || "Login failed");
-    }
-  };
-
+  }
+};
   return (
     <div className="h-screen overflow-hidden flex flex-col lg:flex-row font-sans bg-[#f5f7f0]">
 
@@ -65,8 +80,8 @@ export default function Login() {
               <input
                 type="email"
                 placeholder="jane@example.com"
-                value={fields.email}
-                onChange={handle("email")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 onFocus={() => setFocused("email")}
                 onBlur={() => setFocused(null)}
                 className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white text-[#1a2e1a] placeholder-[#b0c8b0] outline-none transition-all duration-200 text-sm ${
@@ -88,8 +103,8 @@ export default function Login() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                value={fields.password}
-                onChange={handle("password")}
+                value={password}
+                onChange={(e)=>setPassword(e.target.value)}
                 onFocus={() => setFocused("password")}
                 onBlur={() => setFocused(null)}
                 className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white text-[#1a2e1a] placeholder-[#b0c8b0] outline-none transition-all duration-200 text-sm ${
@@ -123,13 +138,28 @@ export default function Login() {
               <input type="checkbox" className="w-3.5 h-3.5 accent-[#2ecc71] cursor-pointer" />
               <span className="text-xs text-[#5a7a5a]">Remember me</span>
             </label>
-            <a href="#" className="text-xs text-[#2ecc71] font-semibold hover:underline">
+            <a href="/forgot-password" className="text-xs text-[#2ecc71] font-semibold hover:underline">
               Forgot Password?
             </a>
           </div>
 
           {/* Google Login */}
           {/* <GoogleLogin onSuccess={...} onError={...} /> */}
+          <GoogleLogin
+onSuccess={ async (credentialResponse) => {
+    if (!credentialResponse.credential) return;
+
+  const res = await handleGoogleLogin(credentialResponse.credential);
+  if(res.success){
+    navigate('/dashboard');
+  }else
+    navigate("/login")
+    
+  }}
+  onError={() => {
+    setError("Google login failed");
+  }}
+/>
 
           {/* Divider */}
           <div className="flex items-center gap-3">

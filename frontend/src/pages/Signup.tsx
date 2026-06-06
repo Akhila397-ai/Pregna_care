@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { signupUser } from "../api/auth.api";
 import { validateSignup } from "../utils/validation";
 import { GoogleLogin } from "@react-oauth/google";
-import { googleSignup } from "../api/auth.api";
+
 type FieldState = {
   name: string;
   email: string;
@@ -150,31 +150,6 @@ const navigate = useNavigate();
             </div>
             <p className="text-xs text-[#8fba8f] mt-1.5">Must be at least 8 characters</p>
           </div>
-          {/* Google Signup */}
-<GoogleLogin
-  onSuccess={async (credentialResponse) => {
-
-    const token = credentialResponse.credential;
-
-    if (!token) return;
-
-    try {
-
-      await googleSignup(token);
-
-      navigate("/dashboard");
-
-    } catch (error) {
-
-      console.log("Google signup failed");
-
-    }
-
-  }}
-  onError={() => {
-    console.log("Google login failed");
-  }}
-/>
 
 {/* Divider */}
 <div className="flex items-center gap-3 mb-3">
@@ -202,7 +177,7 @@ const navigate = useNavigate();
 
           <p className="text-center text-sm text-[#5a7a5a]">
             Already have an account?{" "}
-            <a href="#" className="text-[#2ecc71] font-semibold hover:underline">Log in</a>
+            <a href="/login" className="text-[#2ecc71] font-semibold hover:underline">Log in</a>
           </p>
         </div>
 
