@@ -78,7 +78,7 @@ export class AuthService implements IAUthService {
         if(user.isBlocked){
             throw new Error(HttpResponse.USER_BLOCKED)
         }
-        if(user.isVerified){
+        if(!user.isVerified){
             throw new Error(HttpResponse.UNAUTHORIZED)
         }
 

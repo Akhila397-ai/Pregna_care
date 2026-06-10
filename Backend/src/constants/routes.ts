@@ -1,7 +1,7 @@
 export const ROUTES = {
     AUTH: {
         BASE: "/api/auth",
-        SIGNUP: "/signup",
+        SIGNUP: "/register",
         LOGIN: "/login",
         VERIFY_OTP: "/verify-otp",
         RESEND_OTP: "/resend-otp",

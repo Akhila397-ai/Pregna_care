@@ -14,7 +14,6 @@ app.use(
     credentials: true,
   })
 );
-// app.use("/api/admin",adminRoutes)
 app.use(express.json())
 app.use(cookieParser());
 app.use(ROUTES.AUTH.BASE,authRoutes);

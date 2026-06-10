@@ -13,8 +13,9 @@ export class AuthController implements IAuthController {
         @inject(Types.AuthService) private authService: IAUthService,
     ) {}
 
-    async regiter(req: Request, res: Response): Promise<void> {
+     register = async (req: Request, res: Response): Promise<void> => {
        try {
+        console.log("Body:",req.body);
          const {name, email, password} = req.body;
          const result = await this.authService.register(name,email,password);
          res.status(HttpStatus.CREATED).json(result);
@@ -28,7 +29,7 @@ export class AuthController implements IAuthController {
     }
    }
 
-   async verifyOtp(req: Request, res: Response): Promise<void> {
+ verifyOtp = async(req: Request, res: Response): Promise<void> => {
        try {
            const {email, otp, purpose} = req.body;
            const result = await this.authService.verifyOtp(email, otp, purpose)
@@ -42,7 +43,7 @@ export class AuthController implements IAuthController {
        }
    }
 
-   async login(req: Request, res: Response): Promise<void> {
+    login = async (req: Request, res: Response): Promise<void> => {
        try {
           const { email, password} = req.body;
           const result = await this.authService.login(email,password)
@@ -55,7 +56,7 @@ export class AuthController implements IAuthController {
         }
    }
 
-   async forgotPassword(req: Request, res: Response): Promise<void> {
+    forgotPassword = async (req: Request, res: Response): Promise<void> =>  {
        try {
         const {email} =req.body;
         const result = this.authService.forgotPassword(email)
@@ -70,8 +71,9 @@ export class AuthController implements IAuthController {
         
        }
    }
-   async resetPassword(req: Request, res: Response): Promise<void> {
+    resetPassword =  async(req: Request, res: Response): Promise<void> => {
        try {
+          console.log("Reset body:", req.body);
           const { email, otp, newPassword} = req.body;
           const result = this.authService.resetPassword(email,otp,newPassword)
           res.status(HttpStatus.OK).json(result)
@@ -83,7 +85,7 @@ export class AuthController implements IAuthController {
         
        }
    }
-   async resendOtp(req: Request, res: Response): Promise<void> {
+    resendOtp = async (req: Request, res: Response): Promise<void> => {
        try {
           const { email, purpose} =  req.body;
           const result = this.authService.resendOtp(email,purpose)
@@ -97,7 +99,7 @@ export class AuthController implements IAuthController {
        }
    }
 
-   
+
 
 
    
