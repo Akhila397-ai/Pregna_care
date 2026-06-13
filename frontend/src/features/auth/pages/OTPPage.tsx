@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate }                  from 'react-router-dom';
 import { useAuth }                      from '../hooks/useAuth';
-import { validateOTP } from '../utils/validation';
+import { validateOTP,OTPErrors,hasErrors } from '../utils/validation';
 
 const OTPPage = () => {
   const { verifyOTP, resendOTP, loading, error, pendingEmail } = useAuth();
 
   const [digits,      setDigits]      = useState<string[]>(['', '', '', '', '', '']);
   const [resendTimer, setResendTimer] = useState(30);
-  const [localError,  setLocalError]  = useState('');
+  const [localError,  setLocalError]  = useState<OTPErrors>({});
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const navigate  = useNavigate();
 
@@ -28,7 +28,7 @@ const OTPPage = () => {
     const next    = [...digits];
     next[index]   = cleaned;
     setDigits(next);
-    setLocalError('');
+    setLocalError({})
     if (cleaned && index < 5) inputRefs.current[index + 1]?.focus();
   };
 
@@ -56,9 +56,9 @@ const OTPPage = () => {
   // ── Verify ────────────────────────────────────
   const handleVerify = async () => {
     const validationError = validateOTP(otp);
-    if(validationError){
+    if(hasErrors(validationError)){
         setLocalError(validationError)
-        return;
+        return
     }
     await verifyOTP(otp);
 
@@ -78,7 +78,7 @@ const OTPPage = () => {
     inputRefs.current[0]?.focus();
   };
 
-  const displayError = localError || error;
+  const displayError = localError.otp || error;
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-[#f5f7f0]">
@@ -163,7 +163,9 @@ const OTPPage = () => {
                 d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
               />
             </svg>
-            {displayError}
+            <span>
+                {displayError}
+            </span>
           </div>
         )}
 

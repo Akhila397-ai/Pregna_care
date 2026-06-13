@@ -1,7 +1,7 @@
 import { useState }    from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth }     from '../hooks/useAuth';
-import { validateResetPassword } from '../utils/validation';
+import { hasErrors, ResetPasswordErrors, validateResetPassword } from '../utils/validation';
 
 // ── Sub Components ────────────────────────────
 function EyeIcon({ open }: { open: boolean }) {
@@ -65,17 +65,17 @@ const ResetPasswordPage = () => {
   const [showPassword,    setShowPassword]    = useState(false);
   const [showConfirm,     setShowConfirm]     = useState(false);
   const [focused,         setFocused]         = useState<string | null>(null);
-  const [localError,      setLocalError]      = useState('');
+  const [errors,          setErrors]          = useState<ResetPasswordErrors>({});
   const [success,         setSuccess]         = useState(false);
 
-  const displayError = localError || error;
+
 
   const handleReset = async () => {
     const validationError = validateResetPassword(otp,password,confirmPassword);
-    if(validationError){
-        setLocalError(validationError)
-        return
-    }
+    if(hasErrors(validationError)){
+      setErrors(validationError)
+      return
+     }
     await resetPassword(otp, password);
     setSuccess(true);
   };
@@ -168,16 +168,14 @@ const ResetPasswordPage = () => {
 
             {/* Form */}
             <div className="space-y-5 flex-1">
-
-              {displayError && (
-                <p className="text-red-500 text-sm">{displayError}</p>
-              )}
-
               {/* OTP */}
               <div>
                 <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
                   OTP Code
                 </label>
+                {errors.otp && (
+                    <p className='text-red-500 text-xs mb-1'>{errors.otp}</p>
+                )}
                 <input
                   type="text"
                   inputMode="numeric"
@@ -201,6 +199,9 @@ const ResetPasswordPage = () => {
                 <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
                   New Password
                 </label>
+                {errors.password && (
+                    <p className='text-red-500 text-xs mb-1'>{errors.password}</p>
+                )}
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -233,6 +234,9 @@ const ResetPasswordPage = () => {
                 <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
                   Confirm Password
                 </label>
+                {errors.confirmPassword && (
+                    <p className='text-red-500 text-xs mb-1'>{errors.confirmPassword}</p>
+                )}
                 <div className="relative">
                   <input
                     type={showConfirm ? 'text' : 'password'}

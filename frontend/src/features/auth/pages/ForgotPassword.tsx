@@ -1,7 +1,15 @@
 import { useState }  from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth }   from '../hooks/useAuth';
-import { validateForgotPassword } from '../utils/validation';
+import {
+  validateForgotPassword,
+  validateOTP,
+  validateResetPassword,
+  hasErrors,
+  ForgotPasswordErrors,
+  OTPErrors,
+  ResetPasswordErrors,
+} from '../utils/validation';
 
 type Step = 'email' | 'otp' | 'reset' | 'success';
 
@@ -64,7 +72,6 @@ const ForgotPasswordPage = () => {
     resetPassword,
     loading,
     error,
-    pendingEmail,
   } = useAuth();
 
   const navigate = useNavigate();
@@ -77,17 +84,20 @@ const ForgotPasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword,    setShowPassword]    = useState(false);
   const [showConfirm,     setShowConfirm]     = useState(false);
-  const [localError,      setLocalError]      = useState('');
 
-  const steps: Step[]  = ['email', 'otp', 'reset', 'success'];
-  const currentIdx     = steps.indexOf(step);
-  const displayError   = localError || error;
+  // ── Per field errors ──────────────────────────
+  const [emailErrors,    setEmailErrors]    = useState<ForgotPasswordErrors>({});
+  const [otpErrors,      setOtpErrors]      = useState<OTPErrors>({});
+  const [resetErrors,    setResetErrors]    = useState<ResetPasswordErrors>({});
+
+  const steps: Step[] = ['email', 'otp', 'reset', 'success'];
+  const currentIdx    = steps.indexOf(step);
 
   // ── Step Meta ─────────────────────────────────
   const stepMeta = {
     email: {
       heading: 'Forgot\nPassword?',
-      sub:     'No worries! Enter your email and we\'ll send you a 6-digit verification code.',
+      sub:     "No worries! Enter your email and we'll send you a 6-digit verification code.",
     },
     otp: {
       heading: 'Check Your\nEmail',
@@ -95,7 +105,7 @@ const ForgotPasswordPage = () => {
     },
     reset: {
       heading: 'New\nPassword',
-      sub:     'Create a strong password that you haven\'t used before.',
+      sub:     "Create a strong password that you haven't used before.",
     },
     success: {
       heading: 'All\nDone!',
@@ -108,39 +118,25 @@ const ForgotPasswordPage = () => {
   // ── Handlers ──────────────────────────────────
 
   const handleSendOtp = async () => {
-   const validationError = validateForgotPassword(email);
-   if(validationError){
-    setLocalError(validationError)
-    return
-   }
+    const errs = validateForgotPassword(email);
+    if (hasErrors(errs)) { setEmailErrors(errs); return; }
+    setEmailErrors({});
     await forgotPassword(email);
     setStep('otp');
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.some((d) => d === '')) {
-      setLocalError('Please enter all 6 digits.');
-      return;
-    }
-    setLocalError('');
+    const errs = validateOTP(otp.join(''));
+    if (hasErrors(errs)) { setOtpErrors(errs); return; }
+    setOtpErrors({});
     await verifyOTP(otp.join(''));
     setStep('reset');
   };
 
   const handleResetPassword = async () => {
-    if (!password || !confirmPassword) {
-      setLocalError('Please fill in all fields.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setLocalError('Passwords do not match.');
-      return;
-    }
-    if (password.length < 8) {
-      setLocalError('Password must be at least 8 characters.');
-      return;
-    }
-    setLocalError('');
+    const errs = validateResetPassword(otp.join(''), password, confirmPassword);
+    if (hasErrors(errs)) { setResetErrors(errs); return; }
+    setResetErrors({});
     await resetPassword(otp.join(''), password);
     setStep('success');
   };
@@ -149,9 +145,10 @@ const ForgotPasswordPage = () => {
 
   const handleOtpChange = (val: string, idx: number) => {
     if (!/^\d?$/.test(val)) return;
-    const next  = [...otp];
-    next[idx]   = val;
+    const next = [...otp];
+    next[idx]  = val;
     setOtp(next);
+    setOtpErrors({});    // ← clear error when typing
     if (val && idx < 5) {
       (document.getElementById(`otp-${idx + 1}`) as HTMLInputElement)?.focus();
     }
@@ -204,9 +201,7 @@ const ForgotPasswordPage = () => {
             <div
               key={s}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i <= currentIdx
-                  ? 'bg-[#2ecc71] w-8'
-                  : 'bg-[#dde8dd] w-4'
+                i <= currentIdx ? 'bg-[#2ecc71] w-8' : 'bg-[#dde8dd] w-4'
               }`}
             />
           ))}
@@ -217,34 +212,44 @@ const ForgotPasswordPage = () => {
           <h1 className="text-4xl lg:text-5xl font-extrabold text-[#1a2e1a] leading-tight mb-3 whitespace-pre-line">
             {heading}
           </h1>
-          <p className="text-[#5a7a5a] text-base leading-relaxed max-w-xs">
-            {sub}
-          </p>
+          <p className="text-[#5a7a5a] text-base leading-relaxed max-w-xs">{sub}</p>
         </div>
 
         {/* ── STEP: EMAIL ──────────────────────────── */}
         {step === 'email' && (
           <div className="space-y-5 flex-1">
-            {displayError && (
-              <p className="text-red-500 text-sm">{displayError}</p>
-            )}
+
+            {/* API error */}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
             <div>
               <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
                 Email Address
               </label>
+
+              {/* ← per field error above input */}
+              {emailErrors.email && (
+                <p className="text-red-500 text-xs mb-1">{emailErrors.email}</p>
+              )}
+
               <div className="relative">
                 <input
                   type="email"
                   placeholder="jane@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailErrors({});   // ← clear on type
+                  }}
                   onFocus={() => setFocused('email')}
                   onBlur={() => setFocused(null)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
                   className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white
                     text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
                     transition-all duration-200 text-sm ${
-                    focused === 'email'
+                    emailErrors.email
+                      ? 'border-red-400'
+                      : focused === 'email'
                       ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
                       : 'border-[#dde8dd]'
                   }`}
@@ -284,13 +289,20 @@ const ForgotPasswordPage = () => {
         {/* ── STEP: OTP ────────────────────────────── */}
         {step === 'otp' && (
           <div className="space-y-6 flex-1">
-            {displayError && (
-              <p className="text-red-500 text-sm">{displayError}</p>
-            )}
+
+            {/* API error */}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
             <div>
-              <label className="block text-sm font-semibold text-[#2d4a2d] mb-4">
+              <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
                 Enter 6-digit code
               </label>
+
+              {/* ← per field error above OTP inputs */}
+              {otpErrors.otp && (
+                <p className="text-red-500 text-xs mb-3">{otpErrors.otp}</p>
+              )}
+
               <div className="flex gap-2 sm:gap-3">
                 {otp.map((digit, idx) => (
                   <input
@@ -307,7 +319,9 @@ const ForgotPasswordPage = () => {
                     style={{ width: '2.75rem', height: '3.25rem' }}
                     className={`text-center text-lg font-bold rounded-xl border-2
                       bg-white text-[#1a2e1a] outline-none transition-all duration-200 ${
-                      focused === `otp-${idx}`
+                      otpErrors.otp
+                        ? 'border-red-400 bg-red-50'
+                        : focused === `otp-${idx}`
                         ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
                         : digit
                         ? 'border-[#2ecc71] bg-[#f0fdf4]'
@@ -346,27 +360,38 @@ const ForgotPasswordPage = () => {
         {/* ── STEP: RESET PASSWORD ─────────────────── */}
         {step === 'reset' && (
           <div className="space-y-5 flex-1">
-            {displayError && (
-              <p className="text-red-500 text-sm">{displayError}</p>
-            )}
+
+            {/* API error */}
+            {error && <p className="text-red-500 text-sm">{error}</p>}
 
             {/* New Password */}
             <div>
               <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
                 New Password
               </label>
+
+              {/* ← per field error above input */}
+              {resetErrors.password && (
+                <p className="text-red-500 text-xs mb-1">{resetErrors.password}</p>
+              )}
+
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setResetErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
                   onFocus={() => setFocused('password')}
                   onBlur={() => setFocused(null)}
                   className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white
                     text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
                     transition-all duration-200 text-sm ${
-                    focused === 'password'
+                    resetErrors.password
+                      ? 'border-red-400'
+                      : focused === 'password'
                       ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
                       : 'border-[#dde8dd]'
                   }`}
@@ -387,21 +412,30 @@ const ForgotPasswordPage = () => {
               <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
                 Confirm Password
               </label>
+
+              {/* ← per field error above input */}
+              {resetErrors.confirmPassword && (
+                <p className="text-red-500 text-xs mb-1">{resetErrors.confirmPassword}</p>
+              )}
+
               <div className="relative">
                 <input
                   type={showConfirm ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setResetErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                  }}
                   onFocus={() => setFocused('confirm')}
                   onBlur={() => setFocused(null)}
                   className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white
                     text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
                     transition-all duration-200 text-sm ${
-                    focused === 'confirm'
-                      ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                      : confirmPassword && confirmPassword !== password
+                    resetErrors.confirmPassword
                       ? 'border-red-400'
+                      : focused === 'confirm'
+                      ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
                       : 'border-[#dde8dd]'
                   }`}
                 />
@@ -413,9 +447,6 @@ const ForgotPasswordPage = () => {
                   <EyeIcon open={showConfirm} />
                 </button>
               </div>
-              {confirmPassword && confirmPassword !== password && (
-                <p className="text-red-400 text-xs mt-1">Passwords do not match</p>
-              )}
             </div>
 
             <button
@@ -441,9 +472,7 @@ const ForgotPasswordPage = () => {
               </svg>
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-[#2d4a2d]">
-                Password updated for
-              </p>
+              <p className="text-sm font-semibold text-[#2d4a2d]">Password updated for</p>
               <p className="text-base font-bold text-[#1a2e1a]">{email}</p>
             </div>
             <button
@@ -458,18 +487,14 @@ const ForgotPasswordPage = () => {
           </div>
         )}
 
-        <p className="text-xs text-[#a0b8a0] mt-10">
-          © 2024 PregnaCare. All rights reserved.
-        </p>
+        <p className="text-xs text-[#a0b8a0] mt-10">© 2024 PregnaCare. All rights reserved.</p>
       </div>
 
       {/* ── Right Panel ────────────────────────────── */}
       <div className="relative hidden lg:flex h-full w-full lg:w-1/2 xl:w-7/12 overflow-hidden rounded-tl-3xl rounded-bl-3xl">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=1200&q=80')`,
-          }}
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=1200&q=80')` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         <div className="absolute bottom-12 left-10 right-10 text-white">
@@ -485,9 +510,7 @@ const ForgotPasswordPage = () => {
             It feels like having a caring friend by your side."
           </blockquote>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#2ecc71]/40 border-2 border-[#2ecc71] flex items-center justify-center text-white font-bold text-sm">
-              SJ
-            </div>
+            <div className="w-10 h-10 rounded-full bg-[#2ecc71]/40 border-2 border-[#2ecc71] flex items-center justify-center text-white font-bold text-sm">SJ</div>
             <div>
               <p className="font-semibold text-white text-sm">Sarah Jenkins</p>
               <p className="text-white/60 text-xs">New Mother</p>
@@ -500,9 +523,7 @@ const ForgotPasswordPage = () => {
       <div className="lg:hidden relative h-56 w-full overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=800&q=80')`,
-          }}
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=800&q=80')` }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-4 left-5 right-5 text-white">

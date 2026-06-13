@@ -1,7 +1,7 @@
 import { useState }    from 'react';
 import { useAuth }     from '../hooks/useAuth';
 import { Link }        from 'react-router-dom';
-import { validateRegister } from '../utils/validation';
+import { validateRegister, RegisterErrors,hasErrors } from '../utils/validation';
 
 type FieldState = {
   name:     string;
@@ -15,18 +15,20 @@ const RegisterPage = () => {
   const [fields,       setFields]       = useState<FieldState>({ name: '', email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [focused,      setFocused]      = useState<string | null>(null);
-  const [localError,setLocalError] = useState<string | null>(null);
-
+  const [errors,       setErrors]       = useState<RegisterErrors>({});
   const handle = (key: keyof FieldState) =>
-    (e: React.ChangeEvent<HTMLInputElement>) =>
-      setFields((f) => ({ ...f, [key]: e.target.value }));
+  (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setFields((f) => ({ ...f, [key]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
 
   const handleSubmit = async () => {
-    const validationError = validateRegister(fields.name,fields.email,fields.password);
-    if(validationError){
-        setLocalError(validationError)
+    const validateError = validateRegister(fields.name,fields.email,fields.password);
+     if(hasErrors(validateError)){
+        setErrors(validateError)
         return
-    }
+     }
+
     await register(fields.name, fields.email, fields.password);
   };
 
@@ -64,12 +66,6 @@ const RegisterPage = () => {
         <div className="space-y-5 flex-1">
 
           {/* Error */}
-          {localError && (
-            <p className='"text-red-500 text-sm"'>{localError}</p>
-
-          )}
-
-          
           {error && (
             <p className="text-red-500 text-sm">{error}</p>
           )}
@@ -79,6 +75,9 @@ const RegisterPage = () => {
             <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
               Full Name
             </label>
+            {errors.name && (
+                <p className='text-red-500 text-xs mb-1'>{errors.name}</p>
+            )}
             <input
               type="text"
               placeholder="Jane"
@@ -100,6 +99,9 @@ const RegisterPage = () => {
             <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
               Email Address
             </label>
+            {errors.email && (
+                <p className='text-red-500 text-xs mb-1'>{errors.email}</p>
+            )}
             <div className="relative">
               <input
                 type="email"
@@ -131,6 +133,11 @@ const RegisterPage = () => {
             <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
               Password
             </label>
+            {errors.password && (
+                <p className='text-red-500 text-xs mb-1'>{errors.password
+                
+                }</p>
+            )}
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}

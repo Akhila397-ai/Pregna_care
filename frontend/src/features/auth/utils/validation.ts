@@ -1,68 +1,99 @@
+export interface RegisterErrors {
+    name?: string;
+    email?: string;
+    password?: string;
+}
+
+export interface LoginErrors {
+    email?: string;
+    password?: string
+}
+
+export interface OTPErrors {
+    otp?: string;
+}
+
+export interface ForgotPasswordErrors {
+    email?: string;
+}
+
+export interface ResetPasswordErrors {
+    otp?: string;
+    password?: string;
+    confirmPassword?: string;
+}
+
+
+
 export const validateRegister = (
     name: string,
     email: string,
     password: string
-): string | null => {
+): RegisterErrors => {
+    const errors: RegisterErrors = {}
     if(!name.trim()){
-        return "Full name is required"
+      errors.name =  "Full name is required"
     }
 
     if(!email.trim()){
-        return "Email required"
+        errors.email =  "Email required";
     }
 
-    if(!/^[^\s@]+@[^\s@]+$]/.test(email)){
-        return "Please enter a valid email address"
-    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errors.email = "Please enter a valid email address";
+}
 
     if(!password){
-        return "Password is required"
+        errors.password = "Password is required"
     }
 
     if(password.length < 8){
-        return "Password must be at least 8 characters"
+        errors.password = "Password must be at least 8 characters"
     }
-    return null
+    return errors;
 }
 export const validateLogin = (
     email: string,
     password: string
-): string | null => {
+): LoginErrors => {
+    const errors: LoginErrors = {};
     if(!email.trim()){
-        return "Email required"
+        errors.email = "Email required"
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-        return "Please enter valid email address"
+        errors.password =  "Please enter valid email address"
     }
 
     if(!password){
-        return "Password is required"
+        errors.password = "Password is required"
     }
-    return null
+    return errors;
 
 }
 
 export const validateOTP = (
     otp: string,
-): string | null => {
+): OTPErrors => {
+    const errors: OTPErrors = {}
     if(!otp){
-        return "Please enter the otp"
+        errors.otp =  "Please enter the otp"
     }
     if(otp.length < 6){
-        return "Please enter the complete 6-digit otp"
+        errors.otp =  "Please enter the complete 6-digit otp"
     }
-    return null
+    return errors;
 }
 export const validateForgotPassword = (
     email: string,
-): string | null => {
+): ForgotPasswordErrors => {
+    const errors: ForgotPasswordErrors = {}
     if(!email.trim()){
-        return "Email address required"
+        errors.email =  "Email address required"
     }
      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
-        return "Please enter valid email address"
+        errors.email = "Please enter valid email address"
      }
-     return null
+     return errors;
 
 }
 
@@ -70,19 +101,28 @@ export const validateResetPassword = (
     otp: string,
     password: string,
     confirmPassword: string
-): string | null => {
+): ResetPasswordErrors => {
+    const errors: ResetPasswordErrors = {}
     if(!otp || otp.length < 6){
-        return "Please enter complete 6-digit OTP"
+       errors.otp =   "Please enter complete 6-digit OTP"
     }
 
     if(!password){
-        return "Password required"
+        errors.password =  "Password required"
     }
     if(password.length < 8){
-        return "Password must be atleast 8 characters"
+        errors.password = "Password must be atleast 8 characters"
+    }
+
+    if(!password || !confirmPassword){
+        errors.password = "Please fill all the fields"
     }
     if(password !== confirmPassword){
-        return "Password do not match"
+        errors.confirmPassword =  "Password do not match"
     }
-    return null
+    return errors;
+}
+
+export const hasErrors = (errors: object): boolean => {
+    return Object.keys(errors).length> 0
 }

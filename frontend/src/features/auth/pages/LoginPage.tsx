@@ -1,7 +1,8 @@
 import { useState }  from 'react';
 import { Link }      from 'react-router-dom';
 import { useAuth }   from '../hooks/useAuth';
-import { validateLogin } from '../utils/validation';
+import { validateLogin,hasErrors,LoginErrors } from '../utils/validation';
+
 
 
 const LoginPage = () => {
@@ -11,15 +12,15 @@ const LoginPage = () => {
   const [password,     setPassword]     = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [focused,      setFocused]      = useState<string | null>(null);
-  const [localError,setLocalError] = useState<string | null>(null);
+  const [errors,       setErrors]       = useState<LoginErrors>({});
+
 
   const handleLogin = async () => {
-
     const validationError = validateLogin(email,password);
-    if(validationError){
-        setLocalError(validationError)
-        return
-    }
+   if(hasErrors(validationError)){
+    setErrors(validationError)
+    return
+   }
     await login(email, password);
   };
 
@@ -66,6 +67,9 @@ const LoginPage = () => {
             <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
               Email or Phone
             </label>
+            {errors.email && (
+                <p className='text-red-500 text-xs mb-1'>{errors.email}</p>
+            )}
             <div className="relative">
               <input
                 type="email"
@@ -98,6 +102,9 @@ const LoginPage = () => {
             <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
               Password
             </label>
+            {errors.password && (
+                <p className='text-red-500 text-xs mb-1'>{errors.password}</p>
+            )}
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}

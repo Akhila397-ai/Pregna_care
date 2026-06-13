@@ -9,6 +9,7 @@ import {
   ResendOTPRequest,
   UserAuthResponse,
 } from '../../features/auth/types/auth.types';
+import { AxiosError } from 'axios';
 
 
 interface AuthState {
@@ -39,9 +40,10 @@ export const registerThunk = createAsyncThunk(
     try {
       const res = await authApi.register(data);
       return { ...res, email: data.email };
-    } catch (err: any) {
+    } catch (error: unknown) {
+        const err = error as AxiosError<string>;
       return rejectWithValue(
-        err.response?.data?.error || 'Registration failed.'
+        err.response?.data || "Registration failed"
       );
     }
   }
