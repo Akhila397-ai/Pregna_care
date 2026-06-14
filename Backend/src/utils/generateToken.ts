@@ -1,8 +1,11 @@
 import jwt from 'jsonwebtoken'
+import { JWTPayload } from '../types/roles.js';
+import { UserRole } from '../types/roles.js';
+
 
 export const generateAccessToken = (
     userId: string,
-    role: string
+    role: UserRole
 ): string => {
     return jwt.sign(
         {userId, role},
@@ -14,8 +17,25 @@ export const generateAccessToken = (
 export const generateRefreshToken = (userId: string): string => {
     return  jwt.sign(
         {userId},
-        process.env.JWT_SECRET!,
+        process.env.JWT_REFRESH_SECRET!,
         { expiresIn: '7d'}
     )
 };
+
+export const verifyAccessToken = (token: string): JWTPayload => {
+    return jwt.verify(
+        token,
+        process.env.JWT_SECRET!
+    ) as JWTPayload
+}
+
+export const verifyRefreshToken = (
+    token: string
+): {userId: string} => {
+    return jwt.verify(
+        token,
+        process.env.JWT_REFRESH_SECRET!
+
+    )as { userId: string}
+}
 

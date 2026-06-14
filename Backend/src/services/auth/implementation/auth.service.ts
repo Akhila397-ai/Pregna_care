@@ -14,6 +14,7 @@ import type { IEmailService } from '../../email/interface/IEmail.service.js';
 import  { AuthResponseDTO, MessageResponseDTO, OTPResponseDTO } from '../../../dtos/auth.dto.js';
 import { error } from 'node:console';
 import { access } from 'node:fs';
+import { UserRole } from '../../../types/roles.js';
 
 @injectable()
 export class AuthService implements IAUthService {
@@ -87,7 +88,7 @@ export class AuthService implements IAUthService {
             throw new Error(HttpResponse.INVALID_PASSWORD)
         }
 
-        const accessToken = generateAccessToken(user._id.toString(),'user');
+        const accessToken = generateAccessToken(user._id.toString(),user.role);
         const refreshToken = generateRefreshToken(user._id.toString())
 
         return {

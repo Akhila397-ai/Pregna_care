@@ -2,7 +2,7 @@ import { injectable }          from 'inversify';
 import { IUserRepository } from '../interface/IUser.repository.js';
 import { userData } from '../../../types/user.js';
 import { otpData,OTPPurpose } from '../../../types/otp.js';
-import userModel from '../../../models/user.model.js';
+import userModel from '../../../models/User.model.js';
 import otpModel from '../../../models/otp.model.js';
 import { Types } from 'mongoose';
 

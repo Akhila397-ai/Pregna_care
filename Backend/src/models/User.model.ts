@@ -2,6 +2,7 @@ import mongoose, {Schema, Document} from "mongoose";
 import { userData } from "../types/user.js";
 
 
+
 export interface IUserDocument extends userData, Document {};
 
 const UserSchema = new Schema<IUserDocument>(
@@ -23,6 +24,11 @@ const UserSchema = new Schema<IUserDocument>(
       type: String,
       required: true
     },
+     role:       {
+      type:    String,
+      enum:    ['user', 'admin', 'doctor'],
+      default: 'user',
+    },
     isBlocked: {
       type: Boolean,
       default: false
@@ -30,7 +36,15 @@ const UserSchema = new Schema<IUserDocument>(
     isVerified: {
       type: Boolean,
       default: false
+    },
+    isDeleted: {
+      type: Boolean,
+      defualt: false
+    },
+    imageUrl: {
+      type: String
     }
+    
 
   },
   { timestamps: true}
