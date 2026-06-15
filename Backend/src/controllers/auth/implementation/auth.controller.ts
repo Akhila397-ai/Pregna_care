@@ -74,7 +74,7 @@ export class AuthController implements IAuthController {
    }
     resetPassword =  async(req: Request, res: Response): Promise<void> => {
        try {
-          console.log("Reset body:", req.body);
+
           const { newPassword} = req.body;
           
           const userId = req.user?.userId;

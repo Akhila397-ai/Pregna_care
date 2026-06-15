@@ -18,11 +18,6 @@ export const verifyResetJWT = (
   try {
     const authHeader = req.headers.authorization;
 
-    console.log("AUTH HEADER:", authHeader);
-    console.log(
-  "RESET SECRET LENGTH:",
-  process.env.JWT_RESET_SECRET?.length
-);
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       res.status(HttpStatus.UNAUTHORIZED).json({
@@ -32,23 +27,14 @@ export const verifyResetJWT = (
     }
 
     const token = authHeader.split(" ")[1];
-
-    console.log("TOKEN RECEIVED:", token);
-    console.log(
-      "VERIFY SECRET:",
-      process.env.JWT_RESET_SECRET
-    );
-
-    // Decode without verifying (debug only)
     const decodedRaw = jwt.decode(token);
-    console.log("DECODED RAW:", decodedRaw);
+   
 
     const decoded = jwt.verify(
       token,
       process.env.JWT_RESET_SECRET as string
     ) as ResetPayload;
 
-    console.log("VERIFIED PAYLOAD:", decoded);
 
     if (decoded.purpose !== "password-reset") {
       res.status(HttpStatus.UNAUTHORIZED).json({
@@ -61,7 +47,6 @@ export const verifyResetJWT = (
 
     next();
   } catch (error) {
-    console.error("RESET JWT ERROR:", error);
 
     if (error instanceof jwt.TokenExpiredError) {
       res.status(HttpStatus.UNAUTHORIZED).json({
