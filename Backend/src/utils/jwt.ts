@@ -22,3 +22,32 @@ export const generateRefreshToken = (userId: string) => {
   return jwt.sign({ userId }, secret, { expiresIn: "7d" });
 };
 
+export const generateResetToken = (
+  userId: string
+): string => {
+  console.log(
+    "SIGN SECRET:",
+    process.env.JWT_RESET_SECRET
+  );
+  console.log(
+  "RESET SECRET LENGTH:",
+  process.env.JWT_RESET_SECRET?.length
+);
+
+  const token = jwt.sign(
+    {
+      userId,
+      purpose: "password-reset",
+    },
+    process.env.JWT_RESET_SECRET as string,
+    {
+      expiresIn: "10m",
+    }
+  );
+
+  console.log("RESET TOKEN:", token);
+
+  return token;
+};
+
+

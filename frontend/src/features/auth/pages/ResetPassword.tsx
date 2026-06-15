@@ -9,7 +9,7 @@ function EyeIcon({ open }: { open: boolean }) {
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round"
         d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-      />
+      />        
     </svg>
   ) : (
     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -59,7 +59,6 @@ const ResetPasswordPage = () => {
   const { resetPassword, loading, error, pendingEmail } = useAuth();
   const navigate = useNavigate();
 
-  const [otp,             setOtp]             = useState('');
   const [password,        setPassword]        = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword,    setShowPassword]    = useState(false);
@@ -71,12 +70,16 @@ const ResetPasswordPage = () => {
 
 
   const handleReset = async () => {
-    const validationError = validateResetPassword(otp,password,confirmPassword);
+    const validationError =
+  validateResetPassword(
+    password,
+    confirmPassword
+  );
     if(hasErrors(validationError)){
       setErrors(validationError)
       return
      }
-    await resetPassword(otp, password);
+    await resetPassword(password);
     setSuccess(true);
   };
 
@@ -169,30 +172,6 @@ const ResetPasswordPage = () => {
             {/* Form */}
             <div className="space-y-5 flex-1">
               {/* OTP */}
-              <div>
-                <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
-                  OTP Code
-                </label>
-                {errors.otp && (
-                    <p className='text-red-500 text-xs mb-1'>{errors.otp}</p>
-                )}
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Enter OTP from email"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  onFocus={() => setFocused('otp')}
-                  onBlur={() => setFocused(null)}
-                  className={`w-full px-4 py-3 rounded-xl border-2 bg-white
-                    text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
-                    transition-all duration-200 text-sm tracking-widest ${
-                    focused === 'otp'
-                      ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                      : 'border-[#dde8dd]'
-                  }`}
-                />
-              </div>
 
               {/* New Password */}
               <div>

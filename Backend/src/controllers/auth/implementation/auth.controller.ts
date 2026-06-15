@@ -5,6 +5,7 @@ import { Types } from '../../../container/types.js'
 import type { IAUthService } from '../../../services/auth/interface/IAuth.service.js'
 import { IAuthController } from '../interface/IAuth.controller.js'
 import { HttpStatus } from '../../../constants/status.constant.js'
+import { HttpResponse } from '../../../constants/messages.constant.js'
 
 
 @injectable()
@@ -74,8 +75,21 @@ export class AuthController implements IAuthController {
     resetPassword =  async(req: Request, res: Response): Promise<void> => {
        try {
           console.log("Reset body:", req.body);
-          const { email, otp, newPassword} = req.body;
-          const result = this.authService.resetPassword(email,otp,newPassword)
+          const { newPassword} = req.body;
+          
+          const userId = req.user?.userId;
+          if(!userId){
+            res.status(HttpStatus.NOT_FOUND).json({
+                message: HttpResponse.FORBIDDEN
+            });
+            return
+          }
+
+          const result = 
+          await this.authService.resetPassword(
+            userId,
+            newPassword
+          )
           res.status(HttpStatus.OK).json(result)
        } catch (error: unknown) {
         if(error instanceof Error){

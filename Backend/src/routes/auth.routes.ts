@@ -3,6 +3,8 @@ import { container } from "../container/index.js";
 import { Types } from "../container/types.js";
 import { IAuthController } from "../controllers/auth/interface/IAuth.controller.js";
 import { ROUTES } from "../constants/routes.js";
+import { auth } from "google-auth-library";
+import { verifyResetJWT } from "../middleware/verifyResetJWT.middleware.js";
 
 const router = Router();
 
@@ -10,12 +12,13 @@ const authController = container.get<IAuthController>(Types.AuthController);
 router.get("/test", (req, res) => {
   res.json({ message: "Auth route working" });
 });
-router.post(ROUTES.AUTH.SIGNUP,authController.register);
-router.post(ROUTES.AUTH.VERIFY_OTP, authController.verifyOtp)
-router.post(ROUTES.AUTH.LOGIN, authController.login)
-router.post(ROUTES.AUTH.FORGOT_PASSWORD,authController.forgotPassword)
-router.post(ROUTES.AUTH.RESET_PASSWORD,authController.resetPassword)
-router.post(ROUTES.AUTH.RESEND_OTP,authController.resendOtp)
+
+router.route(ROUTES.AUTH.SIGNUP).post(authController.register)
+router.route(ROUTES.AUTH.VERIFY_OTP).post(authController.verifyOtp)
+router.route(ROUTES.AUTH.LOGIN).post(authController.login)
+router.route(ROUTES.AUTH.FORGOT_PASSWORD).post(authController.forgotPassword);
+router.route(ROUTES.AUTH.RESET_PASSWORD).post(verifyResetJWT,authController.resetPassword)
+router.route(ROUTES.AUTH.RESEND_OTP).post(authController.resendOtp)
 
 
 export default router;

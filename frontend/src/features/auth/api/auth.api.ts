@@ -34,9 +34,18 @@ export const authApi = {
         const res = await axiosInstance.post('/auth/forgot-password',data)
         return res.data
     },
+    
 
-    resetPassword: async (data: ResetPasswordREquest): Promise<MessageResponse> => {
-        const res = await axiosInstance.post('/auth/reset-password',data)
+    resetPassword: async (newPassword: string, resetToken: string): Promise<MessageResponse> => {
+        console.log("TOKEN SENT:", resetToken);
+        const res = await axiosInstance.post('/auth/reset-password',{
+            newPassword
+        },
+    {
+        headers: {
+            Authorization: `Bearer ${resetToken}`
+        }
+    })
         return res.data
     },
 

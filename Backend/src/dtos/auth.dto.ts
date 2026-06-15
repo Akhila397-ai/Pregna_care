@@ -26,3 +26,11 @@ export interface OTPResponseDTO {
 export interface MessageResponseDTO {
     message: string;
 }
+
+export interface ResetTokenDTO {
+    token: string
+}
+
+export type VerifyOtpResponseDTO =
+  | AuthResponseDTO
+  | ResetTokenDTO;

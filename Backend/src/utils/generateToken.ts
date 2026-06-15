@@ -15,6 +15,7 @@ export const generateAccessToken = (
 }
 
 export const generateRefreshToken = (userId: string): string => {
+    console.log("SIGN SECRET:", process.env.JWT_RESET_SECRET);
     return  jwt.sign(
         {userId},
         process.env.JWT_REFRESH_SECRET!,

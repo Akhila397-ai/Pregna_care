@@ -48,10 +48,19 @@ export const authorizeRoles = (...roles: UserRole[]) => {
             return
         }
 
-        if(!roles.includes(req.user.role)){
-            res.status(HttpStatus.FORBIDDEN).json({error: HttpResponse.FORBIDDEN})
-            return
-        }
+       if (!req.user?.role) {
+  res.status(HttpStatus.UNAUTHORIZED).json({
+    error: HttpResponse.UNAUTHORIZED,
+  });
+  return;
+}
+
+if (!roles.includes(req.user.role)) {
+  res.status(HttpStatus.FORBIDDEN).json({
+    error: HttpResponse.FORBIDDEN,
+  });
+  return;
+}
         next()
     }
 }

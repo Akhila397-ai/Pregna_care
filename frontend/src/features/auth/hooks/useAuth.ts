@@ -24,6 +24,7 @@ export const useAuth = () => {
     pendingEmail,
     otpPurpose,
     otpSent,
+    resetToken
   } = useAppSelector((state) => state.auth);
 
   // ── Register ──────────────────────────────────
@@ -75,24 +76,23 @@ export const useAuth = () => {
   };
 
   // ── Reset Password ────────────────────────────
-  const resetPassword = async (otp: string, newPassword: string) => {
-    console.log({
-  pendingEmail,
-  otp,
-  newPassword,
-});
-console.log("pendingEmail:", pendingEmail);
-    const result = await dispatch(
-      resetPasswordThunk({
-        email:       pendingEmail || '',
-        otp,
-        newPassword,
-      })
-    );
-    if (resetPasswordThunk.fulfilled.match(result)) {
-      navigate('/login');
-    }
-  };
+const resetPassword = async (
+  newPassword: string
+) => {
+
+  console.log("RESET TOKEN IN STORE:", resetToken);
+
+  const result = await dispatch(
+    resetPasswordThunk({
+      newPassword,
+      resetToken: resetToken || '',
+    })
+  );
+
+  if (resetPasswordThunk.fulfilled.match(result)) {
+    navigate('/login');
+  }
+};
 
   // ── Resend OTP ────────────────────────────────
   const resendOTP = async () => {

@@ -20,12 +20,14 @@ interface AuthState {
   otpSent:      boolean;
   pendingEmail: string | null;
   otpPurpose:   string | null;
+  resetToken: string | null;
 }
 
 const initialState: AuthState = {
   user:         null,
   token:        localStorage.getItem('accessToken'),
   loading:      false,
+   resetToken: null,
   error:        null,
   otpSent:      false,
   pendingEmail: null,
@@ -91,12 +93,22 @@ export const forgotPasswordThunk = createAsyncThunk(
 
 export const resetPasswordThunk = createAsyncThunk(
   'auth/resetPassword',
-  async (data: ResetPasswordREquest, { rejectWithValue }) => {
+  async (
+    data: {
+      newPassword: string;
+      resetToken: string;
+    },
+    { rejectWithValue }
+  ) => {
     try {
-      return await authApi.resetPassword(data);
+      return await authApi.resetPassword(
+        data.newPassword,
+        data.resetToken
+      );
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.error || 'Password reset failed.'
+        err.response?.data?.error ||
+        'Password reset failed.'
       );
     }
   }
@@ -157,16 +169,23 @@ const authSlice = createSlice({
         state.error   = null;
       })
       .addCase(verifyOTPThunk.fulfilled, (state, action) => {
-  state.loading = false;
-  state.otpSent = false;
+        state.loading = false;
+        state.otpSent = false;
+        console.log("VERIFY OTP RESPONSE:", action.payload);
 
-  if (state.otpPurpose === 'signup') {
-    state.user = action.payload.user;
-    state.token = action.payload.token;
-    state.pendingEmail = null;
-    state.otpPurpose = null;
-  }
-})
+        if (state.otpPurpose === 'signup') {
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+
+          state.pendingEmail = null;
+          state.otpPurpose = null;
+        }
+
+        if (state.otpPurpose === 'forgot_password') {
+          console.log("OTP RESPONSE:", action.payload);
+          state.resetToken = action.payload.token;
+        }
+      })
       .addCase(verifyOTPThunk.rejected, (state, action) => {
         state.loading = false;
         state.error   = action.payload as string;
@@ -220,7 +239,9 @@ const authSlice = createSlice({
       .addCase(resetPasswordThunk.rejected, (state, action) => {
         state.loading = false;
         state.error   = action.payload as string;
+        
       });
+
 
     // ── Resend OTP ────────────────────────────
     builder

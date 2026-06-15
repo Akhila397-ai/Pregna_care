@@ -6,12 +6,12 @@ import { IAUthService } from '../interface/IAuth.service.js';
 import { toUserAuthDTO } from '../../../mapper/user.mapper.js';
 import { hashPassword, comparePassword } from '../../../utils/hashPassword.js';
 import { generateOTP } from '../../../utils/generateOtp.js';
-import { generateAccessToken,generateRefreshToken } from '../../../utils/jwt.js';
+import { generateAccessToken,generateRefreshToken, generateResetToken } from '../../../utils/jwt.js';
 import { HttpResponse } from '../../../constants/messages.constant.js';
 import { OTPPurpose } from '../../../types/otp.js';
 import { EmailService } from '../../email/implementation/email.service.js';
 import type { IEmailService } from '../../email/interface/IEmail.service.js';
-import  { AuthResponseDTO, MessageResponseDTO, OTPResponseDTO } from '../../../dtos/auth.dto.js';
+import  { AuthResponseDTO, MessageResponseDTO, OTPResponseDTO, VerifyOtpResponseDTO } from '../../../dtos/auth.dto.js';
 import { error } from 'node:console';
 import { access } from 'node:fs';
 import { UserRole } from '../../../types/roles.js';
@@ -42,13 +42,13 @@ export class AuthService implements IAUthService {
         return {message: HttpResponse.REGISTER_SUCCESS, expiresIn: 300}
         
     }
-    async verifyOtp(email: string, otp: string, purpose: string): Promise<AuthResponseDTO> {
+    async verifyOtp(email: string, otp: string, purpose: string): Promise<VerifyOtpResponseDTO> {
 
         const user = await this.userRepository.findByEmail(email);
         if(!user){
             throw new Error(HttpResponse.USER_NOT_FOUND)
         }
-
+             
         await this._verifyOtp(
             user._id.toString(),
             purpose as OTPPurpose,
@@ -57,19 +57,29 @@ export class AuthService implements IAUthService {
 
         if(purpose === 'signup'){
             await this.userRepository.markVerified(user._id.toString())
+
+            const accessToken = generateAccessToken(
+                user._id.toString(),
+                user.role
+            )
+            return {
+                user: toUserAuthDTO(user),
+                token: accessToken,
+           };
         }
 
-        const accessToken = generateAccessToken(user._id.toString(),'user');
-        const refreshToken = generateRefreshToken(user._id.toString());
-
-        return {
-            user: toUserAuthDTO(user),
-            token:  accessToken
+        if(purpose === 'forgot_password'){
+            const resetToken = generateResetToken(
+                user._id.toString()
+            );
+            console.log("RESET TOKEN:", resetToken);
+            return {
+                token: resetToken,
+            }
         }
-        
+        throw new Error("Invalid OTP purpose");
 
-        
-    }
+}
 
     async login(email: string, password: string): Promise<AuthResponseDTO> {
         const user = await this.userRepository.findByEmail(email);
@@ -112,16 +122,12 @@ export class AuthService implements IAUthService {
         }
     }
 
-    async resetPassword(email: string, submittedOtp: string, newPassword: string): Promise<MessageResponseDTO> {
-        const user = await  this.userRepository.findByEmail(email);
-        if(!user){
-            throw new Error(HttpResponse.USER_NOT_FOUND)
-        }
+    async resetPassword(userId: string,newPassword: string): Promise<MessageResponseDTO> {
+
         
-        await this._verifyOtp(user._id.toString(),'forgot_password',submittedOtp);
 
         const hash = await hashPassword(newPassword);
-        await this.userRepository.updatePassword(user._id.toString(),hash);
+        await this.userRepository.updatePassword(userId,hash);
 
         return{
             message: HttpResponse.PASSWORD_RESET_SUCCESSFULL

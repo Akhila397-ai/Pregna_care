@@ -98,14 +98,10 @@ export const validateForgotPassword = (
 }
 
 export const validateResetPassword = (
-    otp: string,
     password: string,
     confirmPassword: string
 ): ResetPasswordErrors => {
     const errors: ResetPasswordErrors = {}
-    if(!otp || otp.length < 6){
-       errors.otp =   "Please enter complete 6-digit OTP"
-    }
 
     if(!password){
         errors.password =  "Password required"

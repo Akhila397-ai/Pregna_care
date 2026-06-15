@@ -17,7 +17,7 @@ export const HttpResponse = {
   OTP_NOT_FOUND: "No pending OTP found",
   OTP_EXPIRED_OR_INVALID: "OTP not verified or expired",
   OTP_MAX_ATTEMPTS: "Maximum attempts!!",
-  //user related
+  //User Management
   FIELDS_REQUIRED: "All fields are required",
   INVALID_NAME: "Name must only contain at least 4 characters",
   PASSWORD_RESET_SUCCESSFULL: "Password reset seccessfull",
@@ -36,7 +36,26 @@ export const HttpResponse = {
   VERIFY_YOUR_ACCOUNT: "Please verify your account first",
   TOKEN_EXPIRED: "Role based auth",
   USER_BLOCKED: "User has been blocked by the admin",
+  RESET_TOKEN_MISSING: "Reset token not found",
+  INVALID_RESET_TOKEN:"Invalid reset token",
+  RESET_EXPIRED:"Reset token expired",
+  //Admin Management
 
-  //doctor related
-  ALREADY_APPLIED: "Already applied"
+  ADMIN_NOT_FOUND:        'Admin account not found.',
+  ADMIN_INACTIVE:         'Admin account is inactive.',
+
+  //User Management
+  USER_BLOCK_SUCCESS:     'User has been blocked successfully.',
+  USER_UNBLOCK_SUCCESS:   'User has been unblocked successfully.',
+  USER_DELETE_SUCCESS:    'User has been deleted successfully.',
+
+
+  //Doctor Management 
+  DOCTOR_NOT_FOUND:       'Doctor not found.',
+  DOCTOR_APPROVED:        'Doctor has been approved successfully.',
+  DOCTOR_REJECTED:        'Doctor has been rejected successfully.',
+  DOCTOR_BLOCK_SUCCESS:   'Doctor has been blocked successfully.',
+  DOCTOR_UNBLOCK_SUCCESS: 'Doctor has been unblocked successfully.',
+  DOCTOR_DELETE_SUCCESS:  'Doctor has been deleted successfully.',
+
 }

@@ -1,12 +1,10 @@
 import { UserRole } from "./roles.ts";
+import { JWTPayload } from "./roles.ts";
 
 declare global {
     namespace Express {
         interface Request {
-            user?: {
-                userId: string;
-                role: UserRole
-            }
+            user?: JWTPayload
         }
     }
 }
