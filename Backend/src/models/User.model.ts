@@ -39,7 +39,7 @@ const UserSchema = new Schema<IUserDocument>(
     },
     isDeleted: {
       type: Boolean,
-      defualt: false
+      default: false
     },
     imageUrl: {
       type: String

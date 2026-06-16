@@ -5,6 +5,14 @@ import OTPPage            from '../features/auth/pages/OTPPage';
 import ForgotPasswordPage from '../features/auth/pages/ForgotPassword';
 import ResetPasswordPage from '../features/auth/pages/ResetPassword';
 
+
+//Admin
+import AdminLoginPage from '../features/admin/pages/AdminLogin';
+import AdminDashboardPage from '../features/admin/pages/AdminDashboardPage';
+import UserManagementPage from '../features/admin/pages/UserManagementPage';
+
+
+
 const AppRoutes = () => (
   <Routes>
     <Route path="/"                element={<Navigate to="/login" />} />
@@ -13,6 +21,12 @@ const AppRoutes = () => (
     <Route path="/verify-otp"      element={<OTPPage />} />
     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
     <Route path="/reset-password"  element={<ResetPasswordPage />} />
+
+    {/* Admin*/}
+    <Route path='/admin/login'  element={<AdminLoginPage/>} />
+    <Route path='/admin/dashboard'  element={<AdminDashboardPage/>}/>
+    <Route path='/admin/users' element={<UserManagementPage/>}/>
+
   </Routes>
 );
 

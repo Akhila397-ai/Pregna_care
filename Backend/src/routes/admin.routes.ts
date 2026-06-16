@@ -9,7 +9,9 @@ const router = Router();
 
 const adminController = container.get<IAdminController>(Types.AdminController);
 
-router.route(ROUTES.ADMIN.USERS).get(...isAdmin,adminController.getAllDoctors);
+
+
+router.route(ROUTES.ADMIN.USERS).get(...isAdmin,adminController.getAllUsers);
 router.route(ROUTES.ADMIN.BLOCK_USER).patch(...isAdmin,adminController.blockUser);
 router.route(ROUTES.ADMIN.UNBLOCK_USER).patch(...isAdmin,adminController.unblockUser);
 router.route(ROUTES.ADMIN.UNBLOCK_USER).patch(...isAdmin,adminController.unblockUser);
