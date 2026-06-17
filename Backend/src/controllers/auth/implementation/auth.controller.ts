@@ -51,7 +51,7 @@ export class AuthController implements IAuthController {
           res.status(HttpStatus.OK).json(result)
        } catch (error: unknown) {
         if(error instanceof  Error){
-            res.status(HttpStatus.BAD_REQUEST).json(error.message)
+            res.status(HttpStatus.BAD_REQUEST).json({message: error.message})
         }else
             res.status(HttpStatus.BAD_REQUEST).json({message: 'Internal error happened'})
         }
@@ -65,7 +65,7 @@ export class AuthController implements IAuthController {
 
        } catch (error: unknown) {
         if(error instanceof Error){
-            res.status(HttpStatus.BAD_REQUEST).json(error.message)
+            res.status(HttpStatus.BAD_REQUEST).json({message:error.message})
         }else
             res.status(HttpStatus.BAD_REQUEST).json({message:'Internal error occured'})
 
@@ -93,7 +93,7 @@ export class AuthController implements IAuthController {
           res.status(HttpStatus.OK).json(result)
        } catch (error: unknown) {
         if(error instanceof Error){
-            res.status(HttpStatus.BAD_REQUEST).json(error.message)
+            res.status(HttpStatus.BAD_REQUEST).json({message:error.message})
         }else
             res.status(HttpStatus.BAD_REQUEST).json({message:'invalid'})
         
@@ -106,7 +106,7 @@ export class AuthController implements IAuthController {
           res.status(HttpStatus.OK).json(result)
        } catch (error: unknown) {
         if(error instanceof Error){
-            res.status(HttpStatus.BAD_REQUEST).json(error.message)
+            res.status(HttpStatus.BAD_REQUEST).json({message:error.message})
         }else
             res.status(HttpStatus.BAD_REQUEST).json({message: 'Invalid'})
         

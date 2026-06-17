@@ -7,6 +7,7 @@ import { validateLogin,hasErrors,LoginErrors } from '../utils/validation';
 
 const LoginPage = () => {
   const { login, loading, error } = useAuth();
+  console.log('error:', error);
 
   const [email,        setEmail]        = useState('');
   const [password,     setPassword]     = useState('');

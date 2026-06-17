@@ -32,7 +32,7 @@ export class AdminController implements IAdminController {
          }
      }
 
-     async blockUser(req: Request, res: Response): Promise<void> {
+      blockUser = async(req: Request, res: Response): Promise<void> => {
          try {
             const { userId} = req.params;
             const result = await this.adminService.blockUser(userId as string)
@@ -47,7 +47,7 @@ export class AdminController implements IAdminController {
          }
      }
 
-     async unblockUser(req: Request, res: Response): Promise<void> {
+     unblockUser =async(req: Request, res: Response): Promise<void>=> {
          try {
             const { userId} = req.params;
             const result = await this.adminService.unblockUser(userId as string)

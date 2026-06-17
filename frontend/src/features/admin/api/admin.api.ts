@@ -18,7 +18,7 @@ export const adminApi = {
         return res.data
     },
     blockUser: async(userId: string): Promise<{ message: String}> =>  {
-        const res = await axiosInstance.patch(`/admin/users/${userId}/unblock`)
+        const res = await axiosInstance.patch(`/admin/users/${userId}/block`)
         return res.data
     },
 
