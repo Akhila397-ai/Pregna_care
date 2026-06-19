@@ -51,11 +51,14 @@ export const HttpResponse = {
 
 
   //Doctor Management 
-  DOCTOR_NOT_FOUND:       'Doctor not found.',
-  DOCTOR_APPROVED:        'Doctor has been approved successfully.',
-  DOCTOR_REJECTED:        'Doctor has been rejected successfully.',
-  DOCTOR_BLOCK_SUCCESS:   'Doctor has been blocked successfully.',
-  DOCTOR_UNBLOCK_SUCCESS: 'Doctor has been unblocked successfully.',
-  DOCTOR_DELETE_SUCCESS:  'Doctor has been deleted successfully.',
+  DDOCTOR_ALREADY_APPLIED:   'You have already submitted a doctor application.',
+  DOCTOR_APPLICATION_SENT:  'Application submitted. Pending admin review.',
+  DOCTOR_NOT_FOUND:         'Doctor not found.',
+  DOCTOR_APPROVED:          'Doctor application approved successfully.',
+  DOCTOR_REJECTED:          'Doctor application rejected.',
+  DOCTOR_BLOCK_SUCCESS:     'Doctor has been blocked successfully.',
+  DOCTOR_UNBLOCK_SUCCESS:   'Doctor has been unblocked successfully.',
+  DOCTOR_DELETE_SUCCESS:    'Doctor has been deleted successfully.',
+  DOCTOR_PROFILE_NOT_FOUND: 'Doctor profile not found.',
 
 }

@@ -33,6 +33,8 @@ export const ROUTES = {
   DOCTOR: {
     BASE:               '/api/doctor',
     APPLY:              '/apply',
+    MY_APPLICATION:  '/my-application',  // GET  — check application status
+    MY_PROFILE:      '/my-profile', 
   },
 
 } as const;

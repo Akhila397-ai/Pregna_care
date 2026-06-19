@@ -70,10 +70,6 @@ export const loginThunk = createAsyncThunk(
     try {
       return await authApi.login(data);
     } catch (err: any) {
-      // console.log('FULL ERROR:', err);
-      // console.log('err.response:', err.response);
-      // console.log('err.response.data:', err.response?.data);
-      // console.log('err.response.status:', err.response?.status);
       return rejectWithValue(
         err.response?.data?.message ||
         err.response?.data ||
