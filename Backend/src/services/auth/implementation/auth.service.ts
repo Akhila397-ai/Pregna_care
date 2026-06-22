@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { injectable,inject } from 'inversify';
-import { Types } from '../../../container/types.js';
+import { TYPES } from '../../../container/types.js';
 import type { IUserRepository } from '../../../repositories/auth/interface/IUser.repository.js';
 import { IAUthService } from '../interface/IAuth.service.js';
 import { toUserAuthDTO } from '../../../mapper/user.mapper.js';
@@ -19,8 +19,8 @@ import { UserRole } from '../../../types/roles.js';
 @injectable()
 export class AuthService implements IAUthService {
     constructor(
-        @inject(Types.UserRepository) private userRepository: IUserRepository,
-        @inject(Types.EmailService) private emailService: IEmailService
+        @inject(TYPES.UserRepository) private userRepository: IUserRepository,
+        @inject(TYPES.EmailService) private emailService: IEmailService
     ) {}
 
     async register(name: string, email: string, password: string): Promise<OTPResponseDTO> {

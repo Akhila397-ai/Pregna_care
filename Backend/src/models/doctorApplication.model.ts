@@ -60,7 +60,7 @@ const DoctorApplicationSchema = new Schema<IDoctorApplicationDocument>(
             required: true
         },
         profileImage: {
-            type: [String],
+            type: String,
             required: true
         },
         documents: {

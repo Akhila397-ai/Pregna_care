@@ -3,9 +3,9 @@ import { Types } from "mongoose";
 export type DoctorStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Availability {
-    days:  string[];
-    startTime: string[];
-    endTime: string;
+     days: string[];
+  startTime: string;
+  endTime: string;
 }
 
 
@@ -21,17 +21,23 @@ export interface doctorApplicationData {
     consultationFee:  number;
     clinicName:  string;
     clinicAddress: string;
-    profileImage: string[];
+    profileImage: string;
     availability: Availability;
     status:       DoctorStatus;
     rejectionReason?: string;
     approvedBy?:   Types.ObjectId;
     approvedAt?: Date;
     createdAt?: Date;
-    upddatedAt: Date;
+    updatedAt?: Date;
     documents: string[];
 
 }
+export type ApplicationStatusUpdate = {
+  status: "approved" | "rejected";
+  approvedBy?: Types.ObjectId;
+  approvedAt?: Date;
+  rejectionReason?: string;
+};
 
 //Doctor profile(created after admin approvrd the request)
 

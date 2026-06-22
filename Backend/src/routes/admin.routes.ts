@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { container } from "../container/index.js";
-import { Types } from "../container/types.js";
+import { TYPES } from "../container/types.js";
 import { IAdminController } from "../controllers/admin/interface/IAdmin.controller.js";
 import { isAdmin } from "../middleware/auth.middleware.js";
 import { ROUTES } from "../constants/routes.js";
 
 const router = Router();
 
-const adminController = container.get<IAdminController>(Types.AdminController);
+const adminController = container.get<IAdminController>(TYPES.AdminController);
 
 
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { injectable, inject } from 'inversify'
 import e, { Request, Response } from 'express'
-import { Types } from '../../../container/types.js'
+import { TYPES } from '../../../container/types.js'
 import type { IAUthService } from '../../../services/auth/interface/IAuth.service.js'
 import { IAuthController } from '../interface/IAuth.controller.js'
 import { HttpStatus } from '../../../constants/status.constant.js'
@@ -11,7 +11,7 @@ import { HttpResponse } from '../../../constants/messages.constant.js'
 @injectable()
 export class AuthController implements IAuthController {
     constructor(
-        @inject(Types.AuthService) private authService: IAUthService,
+        @inject(TYPES.AuthService) private authService: IAUthService,
     ) {}
 
      register = async (req: Request, res: Response): Promise<void> => {

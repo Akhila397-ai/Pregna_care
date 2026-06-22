@@ -22,7 +22,7 @@ const AvailabilitySchema = new Schema (
     {_id: false}
 );
 
-const DcotorProfileSchema = new Schema<IDoctorApplicationDocument>(
+const DoctorProfileSchema = new Schema<IDoctorApplicationDocument>(
     {
         userId: {
             type: Schema.Types.ObjectId,
@@ -99,5 +99,5 @@ const DcotorProfileSchema = new Schema<IDoctorApplicationDocument>(
 
 export default  mongoose.model<IDoctorApplicationDocument>(
     'DoctorProfile',
-    DcotorProfileSchema
+    DoctorProfileSchema
 )

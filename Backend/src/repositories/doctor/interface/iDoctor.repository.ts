@@ -3,19 +3,15 @@ import { doctorApplicationData, doctorProfileData } from "../../../types/doctor.
 
 
 export interface IDoctorRepository {
-    createApplication(
-        data: doctorProfileData
-    ): Promise<doctorApplicationData & {_id: Types.ObjectId}>;
-
 
     //Application
     createApplication(
-        data: doctorProfileData
+        data: doctorApplicationData
     ): Promise<doctorApplicationData & { _id: Types.ObjectId}>
 
     findApplicationByUserId(
         userId: string
-    ): Promise<(doctorApplicationData & { _id: Types.ObjectId})>
+    ): Promise<(doctorApplicationData & { _id: Types.ObjectId}) | null>
 
     findApplicationById(
         id: string
@@ -30,11 +26,11 @@ export interface IDoctorRepository {
 
     createProfile(
         data: doctorProfileData
-    ): Promise<doctorApplicationData & {_id: Types.ObjectId}>
+    ): Promise<doctorProfileData & {_id: Types.ObjectId}  >
 
     findProfileByUserId(
         userId: string
-    ): Promise<(doctorApplicationData & {_id: Types.ObjectId}) | null>
+    ): Promise<(doctorProfileData & {_id: Types.ObjectId}) | null>
 
     findProfileById(
         id: string

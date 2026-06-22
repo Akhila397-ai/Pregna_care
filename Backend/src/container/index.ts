@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { Container } from 'inversify'
-import { Types } from './types.js'
+import { TYPES } from './types.js'
 
 import { IUserRepository } from '../repositories/auth/interface/IUser.repository.js'
 import { UserRepository } from '../repositories/auth/imlementation/user.repository.js'
@@ -22,16 +22,30 @@ import { AdminService } from '../services/admin/implementation/admin.service.js'
 import { IAdminController } from '../controllers/admin/interface/IAdmin.controller.js'
 import { AdminController } from '../controllers/admin/implementation/admin.controller.js'
 
+//Doctor
+import { IDoctorRepository } from '../repositories/doctor/interface/iDoctor.repository.js'
+import { DoctorRepository } from '../repositories/doctor/implementation/doctor.repository.js'
+import { IDoctorService } from '../services/doctor/interface/IDoctor.service.js'
+import { DoctorService } from '../services/doctor/implementation/doctor.service.js'
+import { IDoctorController } from '../controllers/doctor/interface/IDoctor.controller.js'
+import { DoctorController } from '../controllers/doctor/implemetation/doctor.controller.js'
+
+
 const container = new Container();
 
-container.bind<IUserRepository>(Types.UserRepository).to(UserRepository);
-container.bind<IEmailService>(Types.EmailService).to(EmailService);
-container.bind<IAUthService>(Types.AuthService).to(AuthService);
-container.bind<IAuthController>(Types.AuthController).to(AuthController)
+container.bind<IUserRepository>(TYPES.UserRepository).to(UserRepository);
+container.bind<IEmailService>(TYPES.EmailService).to(EmailService);
+container.bind<IAUthService>(TYPES.AuthService).to(AuthService);
+container.bind<IAuthController>(TYPES.AuthController).to(AuthController)
 
 //Admin
-container.bind<IAdminRepository>(Types.AdminRepository).to(AdminRepository);
-container.bind<IAdminService>(Types.AdminService).to(AdminService);
-container.bind<IAdminController>(Types.AdminController).to(AdminController);
+container.bind<IAdminRepository>(TYPES.AdminRepository).to(AdminRepository);
+container.bind<IAdminService>(TYPES.AdminService).to(AdminService);
+container.bind<IAdminController>(TYPES.AdminController).to(AdminController);
+
+//doctor
+container.bind<IDoctorRepository>(TYPES.DoctorRepository).to(DoctorRepository);
+container.bind<IDoctorService>(TYPES.DoctorService).to(DoctorService);
+container.bind<IDoctorController>(TYPES.DoctorController).to(DoctorController);
 
 export { container }

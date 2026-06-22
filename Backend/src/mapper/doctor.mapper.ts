@@ -4,7 +4,7 @@ import { DoctorApplicationDTO,DoctorProfileDTO } from "../dtos/doctor.dto.js";
 
 
 export const toDoctorApplicationDTO = (
-    app: DoctorApplicationDTO & { _id: Types.ObjectId}
+    app: doctorApplicationData & { _id: Types.ObjectId}
 ): DoctorApplicationDTO => ({
     id: app._id.toString(),
     userId: app.userId.toString(),
@@ -23,7 +23,7 @@ export const toDoctorApplicationDTO = (
     availability: app.availability,
     status: app.status,
     rejectionReason: app.rejectionReason,
-    approvedBy: app.approvedBy,
+    approvedBy: app.approvedBy?.toString(),
     approvedAt: app.approvedAt,
     createdAt: app.createdAt,
 })

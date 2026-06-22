@@ -10,6 +10,11 @@ import ResetPasswordPage from '../features/auth/pages/ResetPassword';
 import AdminLoginPage from '../features/admin/pages/AdminLogin';
 import AdminDashboardPage from '../features/admin/pages/AdminDashboardPage';
 import UserManagementPage from '../features/admin/pages/UserManagementPage';
+import ApplyAsDoctorPage from '../features/doctor/pages/ApplyAsDoctorPage';
+import DoctorPendingPage from '../features/doctor/pages/DoctorPendingPage';
+import DoctorRejectedPage from '../features/doctor/pages/DoctorRejectedPage';
+import DoctorDashboardPage from '../features/doctor/pages/DoctorDashboard';
+import DoctorManagementPage from '../features/admin/pages/DoctorManagementPage';
 
 
 
@@ -26,7 +31,15 @@ const AppRoutes = () => (
     <Route path='/admin/login'  element={<AdminLoginPage/>} />
     <Route path='/admin/dashboard'  element={<AdminDashboardPage/>}/>
     <Route path='/admin/users' element={<UserManagementPage/>}/>
-  
+    <Route path='/admin/doctors'element={<DoctorManagementPage/>}/>
+    
+
+    {/* Doctor*/}
+
+    <Route path='/doctor/apply' element={<ApplyAsDoctorPage/>}/>
+    <Route path='/doctor/pending' element={<DoctorPendingPage/>}/>
+    <Route path='/doctor/rejected' element={<DoctorRejectedPage/>}/>
+    <Route path='/doctor/dashboard' element= {<DoctorDashboardPage/>}/>
 
   </Routes>
 );

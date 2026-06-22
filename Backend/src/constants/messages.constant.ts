@@ -39,6 +39,7 @@ export const HttpResponse = {
   RESET_TOKEN_MISSING: "Reset token not found",
   INVALID_RESET_TOKEN:"Invalid reset token",
   RESET_EXPIRED:"Reset token expired",
+  USER_ALREADYEXIST:"user already exists",
   //Admin Management
 
   ADMIN_NOT_FOUND:        'Admin account not found.',

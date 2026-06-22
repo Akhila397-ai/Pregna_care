@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import { injectable,inject } from 'inversify'
 import { Request, Response } from 'express'
-import { Types } from '../../../container/types.js'
+import { TYPES } from '../../../container/types.js'
 import type { IAdminService } from '../../../services/admin/interface/IAdmin.service.js'
 import { IAdminController } from '../interface/IAdmin.controller.js'
 import { HttpResponse } from '../../../constants/messages.constant.js'
@@ -12,7 +12,7 @@ import { HttpStatus } from '../../../constants/status.constant.js'
 @injectable()
 export class AdminController implements IAdminController {
     constructor(
-        @inject(Types.AdminService) private adminService: IAdminService,
+        @inject(TYPES.AdminService) private adminService: IAdminService,
     ){}
 
       getAllUsers = async(req: Request, res: Response): Promise<void> => {
@@ -82,7 +82,7 @@ export class AdminController implements IAdminController {
 
     //doctor management
 
-    async getAllDoctors(req: Request, res: Response): Promise<void> {
+     getAllDoctors = async(req: Request, res: Response): Promise<void> =>{
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
@@ -99,7 +99,7 @@ export class AdminController implements IAdminController {
     }
   }
 
-  async approveDoctor(req: Request, res: Response): Promise<void> {
+   approveDoctor = async(req: Request, res: Response): Promise<void>=> {
       try {
 
         const { doctorId} = req.params;
@@ -116,7 +116,7 @@ export class AdminController implements IAdminController {
         }
   }
 
-  async rejectDoctor(req: Request, res: Response): Promise<void> {
+   rejectDoctor = async(req: Request, res: Response): Promise<void>=> {
       try {
         const {doctorId} = req.params;
         const result = await this.adminService.rejectDoctor(doctorId as string)
@@ -131,7 +131,7 @@ export class AdminController implements IAdminController {
       }
   }
 
-  async blockDoctor(req: Request, res: Response): Promise<void> {
+   blockDoctor = async(req: Request, res: Response): Promise<void>=> {
       try {
         const {doctorId} = req.params;
         const result = await this.adminService.blockDoctor(doctorId as string)
@@ -146,7 +146,7 @@ export class AdminController implements IAdminController {
         }
   }
 
-  async unblockDoctor(req: Request, res: Response): Promise<void> {
+   unblockDoctor = async(req: Request, res: Response): Promise<void> => {
       try {
 
         const { doctorId} = req.params;
@@ -163,7 +163,7 @@ export class AdminController implements IAdminController {
       }
   }
 
-   async deleteDoctor(req: Request, res: Response): Promise<void> {
+    deleteDoctor = async(req: Request, res: Response): Promise<void> => {
       try {
         const {doctorId} = req.params;
         const result = await this.adminService.deleteDoctor(doctorId as string)

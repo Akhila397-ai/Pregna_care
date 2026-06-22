@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import { injectable, inject } from 'inversify'
-import { Types } from '../../../container/types.js'
+import { TYPES } from '../../../container/types.js'
 import type { IAdminService } from '../interface/IAdmin.service.js'
 import type { IAdminRepository } from '../../../repositories/admin/interface/IAdmin.repository.js'
 import { toAdminAuthDTO,toUserMappedData,toDoctorMappedData } from '../../../mapper/admin.mapper.js'
@@ -14,7 +14,7 @@ import { GetMappedDoctorsResponse, GetMappedUsersResponse } from '../../../dtos/
 injectable()
 export class AdminService implements IAdminService {
     constructor(
-        @inject(Types.AdminRepository) private adminRepository: IAdminRepository,
+        @inject(TYPES.AdminRepository) private adminRepository: IAdminRepository,
     ){}
 
     async getAllUsers(page: number, limit: number): Promise<GetMappedUsersResponse> {

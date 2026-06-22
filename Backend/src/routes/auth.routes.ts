@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { container } from "../container/index.js";
-import { Types } from "../container/types.js";
+import { TYPES } from "../container/types.js";
 import { IAuthController } from "../controllers/auth/interface/IAuth.controller.js";
 import { ROUTES } from "../constants/routes.js";
 import { auth } from "google-auth-library";
@@ -8,7 +8,7 @@ import { verifyResetJWT } from "../middleware/verifyResetJWT.middleware.js";
 
 const router = Router();
 
-const authController = container.get<IAuthController>(Types.AuthController);
+const authController = container.get<IAuthController>(TYPES.AuthController);
 router.get("/test", (req, res) => {
   res.json({ message: "Auth route working" });
 });
