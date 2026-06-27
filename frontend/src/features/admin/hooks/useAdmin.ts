@@ -66,8 +66,8 @@ export const useAdmin = () => {
     dispatch(approveDoctorThunk(doctorId));
   };
 
-  const rejectDoctor = (doctorId: string) => {
-    dispatch(rejectDoctorThunk(doctorId));
+  const rejectDoctor = (doctorId: string, rejectionReason: string) => {
+    dispatch(rejectDoctorThunk({doctorId,rejectionReason}));
   };
 
   const blockDoctor = (doctorId: string) => {

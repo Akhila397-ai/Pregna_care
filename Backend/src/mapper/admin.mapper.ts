@@ -1,7 +1,18 @@
 import { Types } from "mongoose";
 import { userData } from "../types/user.js";
 import { IUserMappedData,IDoctorsMappedData,AdminAuthDTO} from "../dtos/admin.dto.js";
+import { doctorApplicationData, DoctorApplicationDocument } from "../types/doctor.js";
 
+
+
+type PopulatedDoctorApplication = doctorApplicationData & {
+    _id: Types.ObjectId;
+    createdAt?: Date,
+    userId: userData & {
+        _id: Types.ObjectId;
+    },
+    specialization?: string;
+}
 export const toAdminAuthDTO = (
     user: userData & {_id: Types.ObjectId}
 ): AdminAuthDTO => ({
@@ -30,24 +41,29 @@ export const toUserMappedData = (
 })
 
 export const toDoctorMappedData = (
-    user: userData & {
-        _id: Types.ObjectId;
-        isApproved?: boolean;
-        specialization?: string;
-        createdAt?: Date
-    }
+    app:  DoctorApplicationDocument
 ): IDoctorsMappedData => ({
-    _id: user._id.toString(),
-    userId: user._id.toString(),
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    isBlocked: user.isBlocked,
-    isVerified: user.isVerified,
-    isDeleted: user.isDeleted,
-    isApproved: user.isApproved ?? false,
-    imageUrl: user.imageUrl,
-    mobileNumber: user.phone,
-    specialization: user.specialization,
-    createdAt: user.createdAt,
+    _id:  app._id.toString(),
+    userId: app.userId.toString(),
+    fullName: app.fullName,
+    email: app.email,
+    phone: app.phone,
+    specialization: app.specialization,
+    qualification: app.qualification,
+    experience: app.experience,
+    registrationNumber: app.registrationNumber,
+    consultationFee: app.consultationFee,
+    clinicName: app.clinicName,
+    clinicAddress: app.clinicAddress,
+    imageUrl: app.profileImage,
+    documents: app.documents,
+    availability: app.availability,
+    status: app.status,
+    rejectionReason: app.rejectionReason,
+    approvedBy: app.approvedBy?.toString(),
+    approvedAt: app.approvedAt,
+    createdAt:app.createdAt,
+    isBlocked: app.isBlocked,
+    isDeleted: app.isDeleted,
+    isVerified: app.isVerified,
 })

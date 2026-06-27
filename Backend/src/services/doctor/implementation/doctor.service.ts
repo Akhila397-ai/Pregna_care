@@ -10,7 +10,7 @@ import { hashPassword } from '../../../utils/hashPassword.js'
 import { generateAccessToken,generateRefreshToken } from '../../../utils/jwt.js'
 import { generateOTP } from '../../../utils/generateOtp.js'
 import { HttpResponse } from '../../../constants/messages.constant.js'
-import { DoctorApplicationDTO, DoctorApplyDTO, DoctorApplyResponseDTO, DoctorProfileDTO } from '../../../dtos/doctor.dto.js'
+import { DoctorApplicationDTO, DoctorApplyDTO, DoctorApplyResponseDTO, DoctorProfileDTO, DoctorStatusResponseDTO } from '../../../dtos/doctor.dto.js'
 import { inject, injectable } from 'inversify'
 import { raw } from 'express'
 import app from '../../../app.js'
@@ -46,20 +46,23 @@ export class DoctorService implements IDoctorService{
 
         const  application = await this.doctorRepository.createApplication({
             userId:             new Types.ObjectId(newUser._id.toString()),
-      fullName:           data.fullName,
-      email:              data.email,
-      phone:              data.phone,
-      specialization:     data.specialization,
-      qualification:      data.qualification,
-      experience:         data.experience,
-      registrationNumber: data.registrationNumber,
-      consultationFee:    data.consultationFee,
-      clinicName:         data.clinicName,
-      clinicAddress:      data.clinicAddress,
-      profileImage:       data.profileImage,
-      documents:          data.documents,
-      availability:       data.availability,
-      status:             'pending',
+            fullName:           data.fullName,
+            email:              data.email,
+            phone:              data.phone,
+            specialization:     data.specialization,
+            qualification:      data.qualification,
+            experience:         Number(data.experience),
+            registrationNumber: data.registrationNumber,
+            consultationFee:    data.consultationFee,
+            clinicName:         data.clinicName,
+            clinicAddress:      data.clinicAddress,
+            profileImage:       data.profileImage,
+            documents:          data.documents,
+            availability:       data.availability,
+            status:             'pending',
+            isBlocked:          false,
+            isVerified:         false,
+            isDeleted:          false,
         });
 
 
@@ -93,6 +96,21 @@ export class DoctorService implements IDoctorService{
         .findProfileByUserId(userId)
         if(!profile)return null;
         return toDoctorProfileDTO(profile)
+    }
+
+    async getMyStatus(userId: string): Promise<DoctorStatusResponseDTO> {
+        const application = await this.doctorRepository
+        .findApplicationByUserId(userId)
+
+        if(!application){
+            throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
+        }
+
+        return {
+            status:  application.status,
+            application:   toDoctorApplicationDTO(application),
+            rejectionReason: application.rejectionReason,
+        }
     }
 
 

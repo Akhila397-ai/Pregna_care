@@ -47,10 +47,14 @@ export const adminApi = {
     return res.data;
   },
 
-  rejectDoctor: async (doctorId: string): Promise<{ message: string }> => {
-    const res = await axiosInstance.patch(`/admin/doctors/${doctorId}/reject`);
-    return res.data;
-  },
+rejectDoctor: async (doctorId: string,rejectionReason: string): Promise<{ message: string }> => {
+  const res = await axiosInstance.patch(
+    `/admin/doctors/${doctorId}/reject`,
+    { rejectionReason }
+  );
+
+  return res.data;
+},
 
    blockDoctor: async (doctorId: string): Promise<{ message: string }> => {
     const res = await axiosInstance.patch(`/admin/doctors/${doctorId}/block`);

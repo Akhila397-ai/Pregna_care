@@ -28,6 +28,7 @@ export const ROUTES = {
     BLOCK_DOCTOR:       '/doctors/:doctorId/block',
     UNBLOCK_DOCTOR:     '/doctors/:doctorId/unblock',
     DELETE_DOCTOR:      '/doctors/:doctorId',
+    
   },
 
   DOCTOR: {
@@ -35,6 +36,7 @@ export const ROUTES = {
     APPLY:              '/apply',
     MY_APPLICATION:  '/my-application',  // GET  — check application status
     MY_PROFILE:      '/my-profile', 
+    MY_STATUS: '/my-status'
   },
 
 } as const;

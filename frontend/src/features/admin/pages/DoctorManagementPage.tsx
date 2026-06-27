@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAdmin }            from '../hooks/useAdmin';
-
+import { IDoctorMappedData } from '../types/admin.types';
 const DoctorManagementPage = () => {
   const {
     doctors, totalDoctors, doctorPages,
@@ -10,18 +10,44 @@ const DoctorManagementPage = () => {
     blockDoctor, unblockDoctor, deleteDoctor,
   } = useAdmin();
 
-  const [page,   setPage]   = useState(1);
-  const [search, setSearch] = useState('');
+  const [page,             setPage]             = useState(1);
+  const [search,           setSearch]           = useState('');
+  const [rejectModalOpen,  setRejectModalOpen]  = useState(false);
+  const [selectedDoctor,   setSelectedDoctor]   = useState<IDoctorMappedData | null>(null);
+  const [rejectionReason,  setRejectionReason]  = useState('');
   const limit = 10;
 
   useEffect(() => {
     getDoctors(page, limit);
   }, [page]);
 
+  // ← use fullName not name
   const filtered = doctors.filter((d) =>
-    d.name.toLowerCase().includes(search.toLowerCase()) ||
+    d.fullName.toLowerCase().includes(search.toLowerCase()) ||
     d.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleReject = (doctor: IDoctorMappedData) => {
+    setSelectedDoctor(doctor);
+    setRejectModalOpen(true);
+  };
+
+  const confirmReject = async () => {
+    if (!selectedDoctor || !rejectionReason.trim()) return;
+    await rejectDoctor(selectedDoctor._id, rejectionReason);
+    setRejectModalOpen(false);
+    setRejectionReason('');
+    setSelectedDoctor(null);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const map = {
+      pending:  'bg-yellow-100 text-yellow-700',
+      approved: 'bg-green-100  text-green-700',
+      rejected: 'bg-red-100    text-red-700',
+    };
+    return map[status as keyof typeof map] ?? 'bg-gray-100 text-gray-700';
+  };
 
   return (
     <div className="p-6">
@@ -29,9 +55,11 @@ const DoctorManagementPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#1a2e1a]">Doctor Management</h1>
+          <h1 className="text-2xl font-bold text-[#1a2e1a]">
+            Doctor Management
+          </h1>
           <p className="text-sm text-[#5a7a5a] mt-0.5">
-            Total {totalDoctors} doctors
+            Total {totalDoctors} applications
           </p>
         </div>
         <input
@@ -39,9 +67,8 @@ const DoctorManagementPage = () => {
           placeholder="Search by name or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 rounded-xl border-2 border-[#dde8dd] bg-white
-            text-sm outline-none focus:border-[#2ecc71] w-64
-            transition-all duration-200"
+          className="px-4 py-2 rounded-xl border-2 border-[#dde8dd]
+            bg-white text-sm outline-none focus:border-[#2ecc71] w-64"
         />
       </div>
 
@@ -52,10 +79,19 @@ const DoctorManagementPage = () => {
         <table className="w-full">
           <thead className="bg-[#f5f7f0]">
             <tr>
-              {['Name', 'Email', 'Specialization', 'Approval', 'Status', 'Actions'].map((h) => (
+              {[
+                'Doctor',
+                'Specialization',
+                'Experience',
+                'Fee',
+                'Status',
+                'Blocked',
+                'Actions',
+              ].map((h) => (
                 <th
                   key={h}
-                  className="px-6 py-3 text-left text-xs font-semibold text-[#5a7a5a] uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-semibold
+                    text-[#5a7a5a] uppercase tracking-wider"
                 >
                   {h}
                 </th>
@@ -65,46 +101,74 @@ const DoctorManagementPage = () => {
           <tbody className="divide-y divide-[#f0f4f0]">
             {loading ? (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-[#8fba8f]">
+                <td colSpan={7} className="px-6 py-10 text-center text-[#8fba8f]">
                   Loading...
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-[#8fba8f]">
+                <td colSpan={7} className="px-6 py-10 text-center text-[#8fba8f]">
                   No doctors found.
                 </td>
               </tr>
             ) : (
               filtered.map((doctor) => (
-                <tr key={doctor._id} className="hover:bg-[#f9fbf9] transition">
-                  <td className="px-6 py-4">
+                <tr
+                  key={doctor._id}
+                  className="hover:bg-[#f9fbf9] transition"
+                >
+                  {/* Doctor Info */}
+                  <td className="px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#d4f5e2] flex items-center justify-center text-[#2ecc71] font-bold text-sm">
-                        {doctor.name.charAt(0).toUpperCase()}
+                      <img
+                        src={doctor.profileImage}
+                        alt={doctor.fullName}           // ← fullName ✅
+                        className="w-9 h-9 rounded-full object-cover border border-[#dde8dd]"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            `https://ui-avatars.com/api/?name=${doctor.fullName}&background=d4f5e2&color=2ecc71`;
+                        }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-[#1a2e1a]">
+                          {doctor.fullName}             {/* ← fullName ✅ */}
+                        </p>
+                        <p className="text-xs text-[#8fba8f]">
+                          {doctor.email}
+                        </p>
                       </div>
-                      <span className="text-sm font-medium text-[#1a2e1a]">
-                        {doctor.name}
-                      </span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#5a7a5a]">
-                    {doctor.email}
+
+                  {/* Specialization */}
+                  <td className="px-4 py-4 text-sm text-[#5a7a5a]">
+                    {doctor.specialization}
                   </td>
-                  <td className="px-6 py-4 text-sm text-[#5a7a5a]">
-                    {doctor.specialization || '—'}
+
+                  {/* Experience */}
+                  <td className="px-4 py-4 text-sm text-[#5a7a5a]">
+                    {doctor.experience} yrs
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      doctor.isApproved
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {doctor.isApproved ? 'Approved' : 'Pending'}
+
+                  {/* Fee */}
+                  <td className="px-4 py-4 text-sm text-[#5a7a5a]">
+                    ${doctor.consultationFee}
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-4 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5
+                      rounded-full text-xs font-medium
+                      ${getStatusBadge(doctor.status)}`}
+                    >
+                      {doctor.status.charAt(0).toUpperCase() + doctor.status.slice(1)}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+
+                  {/* Blocked */}
+                  <td className="px-4 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5
+                      rounded-full text-xs font-medium ${
                       doctor.isBlocked
                         ? 'bg-red-100 text-red-700'
                         : 'bg-green-100 text-green-700'
@@ -112,47 +176,62 @@ const DoctorManagementPage = () => {
                       {doctor.isBlocked ? 'Blocked' : 'Active'}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {!doctor.isApproved && (
+
+                  {/* Actions */}
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+
+                      {/* Approve */}
+                      {doctor.status === 'pending' && (
                         <button
                           onClick={() => approveDoctor(doctor._id)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-green-50
-                            text-green-700 hover:bg-green-100 font-medium transition"
+                          className="text-xs px-2.5 py-1.5 rounded-lg
+                            bg-green-50 text-green-700 hover:bg-green-100
+                            font-medium transition"
                         >
                           Approve
                         </button>
                       )}
-                      {doctor.isApproved && (
+
+                      {/* Reject */}
+                      {doctor.status !== 'rejected' && (
                         <button
-                          onClick={() => rejectDoctor(doctor._id)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-orange-50
-                            text-orange-700 hover:bg-orange-100 font-medium transition"
+                          onClick={() => handleReject(doctor)}
+                          className="text-xs px-2.5 py-1.5 rounded-lg
+                            bg-orange-50 text-orange-700 hover:bg-orange-100
+                            font-medium transition"
                         >
                           Reject
                         </button>
                       )}
+
+                      {/* Block / Unblock */}
                       {doctor.isBlocked ? (
                         <button
                           onClick={() => unblockDoctor(doctor._id)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-blue-50
-                            text-blue-700 hover:bg-blue-100 font-medium transition"
+                          className="text-xs px-2.5 py-1.5 rounded-lg
+                            bg-blue-50 text-blue-700 hover:bg-blue-100
+                            font-medium transition"
                         >
                           Unblock
                         </button>
                       ) : (
                         <button
                           onClick={() => blockDoctor(doctor._id)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-red-50
-                            text-red-700 hover:bg-red-100 font-medium transition"
+                          className="text-xs px-2.5 py-1.5 rounded-lg
+                            bg-red-50 text-red-700 hover:bg-red-100
+                            font-medium transition"
                         >
                           Block
                         </button>
                       )}
+
+                      {/* Delete */}
                       <button
                         onClick={() => deleteDoctor(doctor._id)}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-gray-50
-                          text-gray-700 hover:bg-gray-100 font-medium transition"
+                        className="text-xs px-2.5 py-1.5 rounded-lg
+                          bg-gray-50 text-gray-700 hover:bg-gray-100
+                          font-medium transition"
                       >
                         Delete
                       </button>
@@ -175,8 +254,8 @@ const DoctorManagementPage = () => {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-4 py-2 rounded-xl border-2 border-[#dde8dd] text-sm
-                font-medium text-[#5a7a5a] disabled:opacity-50
+              className="px-4 py-2 rounded-xl border-2 border-[#dde8dd]
+                text-sm font-medium text-[#5a7a5a] disabled:opacity-50
                 hover:border-[#2ecc71] hover:text-[#2ecc71] transition"
             >
               Previous
@@ -184,12 +263,62 @@ const DoctorManagementPage = () => {
             <button
               onClick={() => setPage((p) => Math.min(doctorPages, p + 1))}
               disabled={page === doctorPages}
-              className="px-4 py-2 rounded-xl border-2 border-[#dde8dd] text-sm
-                font-medium text-[#5a7a5a] disabled:opacity-50
+              className="px-4 py-2 rounded-xl border-2 border-[#dde8dd]
+                text-sm font-medium text-[#5a7a5a] disabled:opacity-50
                 hover:border-[#2ecc71] hover:text-[#2ecc71] transition"
             >
               Next
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {rejectModalOpen && selectedDoctor && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-bold text-[#1a2e1a] mb-2">
+              Reject Application
+            </h3>
+            <p className="text-sm text-[#5a7a5a] mb-4">
+              Rejecting{' '}
+              <span className="font-semibold text-[#1a2e1a]">
+                {selectedDoctor.fullName}    {/* ← fullName ✅ */}
+              </span>
+              . Please provide a reason.
+            </p>
+            <textarea
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Enter rejection reason..."
+              rows={4}
+              className="w-full px-4 py-3 rounded-xl border-2 border-[#dde8dd]
+                bg-white text-sm outline-none focus:border-[#2ecc71]
+                resize-none mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setRejectModalOpen(false);
+                  setRejectionReason('');
+                  setSelectedDoctor(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl border-2 border-[#dde8dd]
+                  text-[#5a7a5a] font-semibold text-sm hover:border-red-300
+                  hover:text-red-500 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmReject}
+                disabled={!rejectionReason.trim()}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600
+                  text-white font-bold text-sm transition
+                  disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Confirm Reject
+              </button>
+            </div>
           </div>
         </div>
       )}

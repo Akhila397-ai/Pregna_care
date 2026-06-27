@@ -63,17 +63,23 @@ export class AdminService implements IAdminService {
         }
     }
 
-    async approveDoctor(doctorId: string): Promise<MessageResponseDTO> {
-        const doctor = await this.adminRepository.findDoctorById(doctorId);
-        if(!doctor) throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
-        await this.adminRepository.approveDoctor(doctorId);
-        return {message: HttpResponse.DOCTOR_APPROVED}
-    }
+    async approveDoctor(
+    doctorId: string,
+    adminId: string
+): Promise<MessageResponseDTO> {
 
-    async rejectDoctor(doctorId: string): Promise<MessageResponseDTO> {
+    const doctor = await this.adminRepository.findDoctorById(doctorId);
+    if (!doctor) throw new Error(HttpResponse.DOCTOR_NOT_FOUND);
+
+    await this.adminRepository.approveDoctor(doctorId, adminId);
+
+    return { message: HttpResponse.DOCTOR_APPROVED };
+}
+
+    async rejectDoctor(doctorId: string,adminId: string): Promise<MessageResponseDTO> {
         const doctor = await this.adminRepository.findDoctorById(doctorId)
         if(!doctor) throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
-        await this.adminRepository.rejectDoctor(doctorId)
+        await this.adminRepository.rejectDoctor(doctorId,adminId)
         return {message: HttpResponse.DOCTOR_REJECTED}
     }
 

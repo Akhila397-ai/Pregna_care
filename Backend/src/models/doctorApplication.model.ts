@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, mongo} from "mongoose";
+import mongoose, { Schema, Document} from "mongoose";
 import { doctorApplicationData } from "../types/doctor.js";
 
 
@@ -59,6 +59,11 @@ const DoctorApplicationSchema = new Schema<IDoctorApplicationDocument>(
             type: String,
             required: true
         },
+        experience: {
+            type: Number,
+            required: true,
+            min: 0
+        },
         profileImage: {
             type: String,
             required: true
@@ -78,6 +83,18 @@ const DoctorApplicationSchema = new Schema<IDoctorApplicationDocument>(
         },
         rejectionReason: {
             type: String,
+        },
+        isBlocked: {
+            type: Boolean,
+            default: false
+        },
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
+        isDeleted: {
+            type: Boolean,
+            default: false,
         },
         approvedBy: {
             type: Schema.Types.ObjectId,

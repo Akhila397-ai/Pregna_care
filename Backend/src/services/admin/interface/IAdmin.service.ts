@@ -13,8 +13,8 @@ export interface IAdminService {
 
     //doctorManagement
     getAllDoctors(page: number, limit: number): Promise<GetMappedDoctorsResponse>;
-    approveDoctor(doctorId: string): Promise<MessageResponseDTO>;
-    rejectDoctor(doctorId: string): Promise<MessageResponseDTO>
+    approveDoctor(doctorId: string,adminId: string): Promise<MessageResponseDTO> 
+    rejectDoctor(doctorId: string,adminId: string): Promise<MessageResponseDTO>
     blockDoctor(doctorId: string): Promise<MessageResponseDTO>;
     unblockDoctor(doctorId: string): Promise<MessageResponseDTO>
     deleteDoctor(doctorId: string): Promise<MessageResponseDTO>;

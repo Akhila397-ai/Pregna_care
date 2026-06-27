@@ -3,6 +3,9 @@ import { Types } from "mongoose";
 import { IAdminRepository } from "../interface/IAdmin.repository.js";
 import UserModel from "../../../models/User.model.js";
 import { userData } from "../../../types/user.js";
+import doctorApplicationModel from "../../../models/doctorApplication.model.js";
+import { doctorApplicationData, DoctorApplicationDocument } from "../../../types/doctor.js";
+
 
 
 @injectable()
@@ -86,55 +89,106 @@ export class AdminRepository implements IAdminRepository {
 
     //doctor managmnt
 
-    async findAllDoctors(page: number, limit: number): Promise<{ doctors: (userData & { _id: Types.ObjectId; isApproved?: boolean; specialization?: string; createdAt?: Date; })[]; total: number; }> {
-        const skip = (page-1) * limit;
-        const query = {role: 'doctor', isDeleted: false};
-        const total = await UserModel.countDocuments(query);
-        const doctors = await UserModel
-        .find(query)
+    async findAllDoctors(page: number, limit: number): Promise<{ doctors: DoctorApplicationDocument[]; total: number; }> {
+        const skip = (page -1) * limit;
+        const total = await doctorApplicationModel
+        .countDocuments({ isDeleted: false})
+        const doctors = await doctorApplicationModel
+        .find({ isDeleted: false})
         .skip(skip)
         .limit(limit)
-        .sort({createdAt: -1})
-        .lean();
+        .sort({ createdAt: -1})
+        .lean() as DoctorApplicationDocument[];
 
         return { doctors, total}
     }
-
-    async findDoctorById(id: string): Promise<(userData & { _id: Types.ObjectId; }) | null> {
-        return await UserModel.findOne({
-            _id: id,
-            role: 'doctor',
-            isDeleted: false,
-        }).lean()
+    async findDoctorById(id: string): Promise<DoctorApplicationDocument | null> {
+        return await doctorApplicationModel
+        .findOne({ _id: id, isDeleted: false})
+        .lean()  as DoctorApplicationDocument | null;
     }
-
-    async approveDoctor(id: string): Promise<void> {
-        await UserModel.findByIdAndUpdate(
-            {_id: id},
-            {$set: {isApproved: true}}
+    async approveDoctor(id: string, adminId: string): Promise<void> {
+        await doctorApplicationModel.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    status:  'approved',
+                    isVerified: true,
+                    approvedBy: new Types.ObjectId(adminId),
+                    approvedAt: new Date()
+                },
+            }
         );
     }
 
-    async rejectDoctor(id: string): Promise<void> {
-        await UserModel.findByIdAndUpdate(
-            {_id: id},
-            {$set: {isApproved: false}}
-        );
+    async rejectDoctor(id: string, rejectionReason: string): Promise<void> {
+        await doctorApplicationModel.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    status:   'rejected',
+                    rejectionReason: rejectionReason
+                }
+            }
+        )
     }
 
     async blockDoctor(id: string): Promise<void> {
-        await UserModel.findByIdAndUpdate(
-            {_id: id},
-            {$set: {isBlocked: false}}
+        await doctorApplicationModel.findByIdAndUpdate(
+            id,
+            {$set: {isBlocked: true}}
         );
+        const app = await doctorApplicationModel
+        .findById(id)
+        .select('userId')
+        .lean()
+
+        if(app) {
+            await UserModel.findByIdAndUpdate(
+                app.userId,
+                {$set: { isBlocked: true}}
+            )
+        }
     }
 
     async unblockDoctor(id: string): Promise<void> {
-        await UserModel.findByIdAndUpdate(
-            {_id: id},
-            {$set: {isBlocked: false}}
+        await doctorApplicationModel.findByIdAndUpdate(
+           id,
+           { $set: { isBlocked: false}}
         )
+
+        const app = await doctorApplicationModel
+        .findById(id)
+        .select('userId')
+        .lean()
+
+        if(app) {
+            await UserModel.findByIdAndUpdate(
+                app.userId,
+                { $set: {isBlocked: false}}
+            )
+        }
     }
+
+    async softDeleteDoctor(id: string): Promise<void> {
+        await doctorApplicationModel.findByIdAndUpdate(
+            id,
+            { $set: { isDeleted: true}}
+        );
+
+         const app = await doctorApplicationModel
+      .findById(id)
+      .select('userId')
+      .lean();
+
+    if (app) {
+      await UserModel.findByIdAndUpdate(
+        app.userId,
+        { $set: { isDeleted: true } }
+      );
+    }
+    }
+
 
    
 }

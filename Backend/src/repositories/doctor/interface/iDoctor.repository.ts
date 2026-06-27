@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { doctorApplicationData, doctorProfileData } from "../../../types/doctor.js";
+import { doctorApplicationData, doctorProfileData,DoctorApplicationDocument } from "../../../types/doctor.js";
 
 
 export interface IDoctorRepository {
@@ -7,15 +7,15 @@ export interface IDoctorRepository {
     //Application
     createApplication(
         data: doctorApplicationData
-    ): Promise<doctorApplicationData & { _id: Types.ObjectId}>
+    ): Promise<DoctorApplicationDocument>
 
     findApplicationByUserId(
         userId: string
-    ): Promise<(doctorApplicationData & { _id: Types.ObjectId}) | null>
+    ): Promise<DoctorApplicationDocument | null>
 
     findApplicationById(
         id: string
-    ): Promise<(doctorApplicationData & { _id: Types.ObjectId}) | null>
+    ): Promise<DoctorApplicationDocument | null>
 
     updateApplicationStatus(
         id: string,

@@ -121,15 +121,20 @@ export const approveDoctorThunk = createAsyncThunk(
 
 export const rejectDoctorThunk = createAsyncThunk(
   'admin/rejectDoctor',
-  async (doctorId: string, { rejectWithValue }) => {
+  async(
+    {doctorId, rejectionReason}: { doctorId: string, rejectionReason: string},
+    {rejectWithValue}
+  ) => {
     try {
-      await adminApi.rejectDoctor(doctorId);
+      await adminApi.rejectDoctor(doctorId, rejectionReason);
       return doctorId;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.error || 'Failed to reject doctor.');
+      return rejectWithValue(
+        err.response?.data?.error || 'Failed to reject doctor.'
+      );
     }
   }
-);
+)
 
 export const blockDoctorThunk = createAsyncThunk(
   'admin/blockDoctor',
@@ -258,14 +263,14 @@ const adminSlice = createSlice({
     builder
       .addCase(approveDoctorThunk.fulfilled, (state, action) => {
         const doc = state.doctors.find((d) => d._id === action.payload);
-        if (doc) doc.isApproved = true;
+        if (doc) doc.status === 'approved';
       });
 
     // ── Reject Doctor ──────────────────────────
     builder
       .addCase(rejectDoctorThunk.fulfilled, (state, action) => {
         const doc = state.doctors.find((d) => d._id === action.payload);
-        if (doc) doc.isApproved = false;
+        if (doc) doc.status === 'rejected';
       });
 
     // ── Block Doctor ───────────────────────────

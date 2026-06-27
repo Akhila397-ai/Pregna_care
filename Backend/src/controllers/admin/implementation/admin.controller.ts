@@ -102,8 +102,8 @@ export class AdminController implements IAdminController {
    approveDoctor = async(req: Request, res: Response): Promise<void>=> {
       try {
 
-        const { doctorId} = req.params;
-        const result = await this.adminService.approveDoctor(doctorId as string)
+        const { doctorId,adminId} = req.params;
+        const result = await this.adminService.approveDoctor(doctorId as string,adminId as string)
         res.status(HttpStatus.OK).json(result)
 
         
@@ -118,8 +118,8 @@ export class AdminController implements IAdminController {
 
    rejectDoctor = async(req: Request, res: Response): Promise<void>=> {
       try {
-        const {doctorId} = req.params;
-        const result = await this.adminService.rejectDoctor(doctorId as string)
+        const {doctorId,adminId} = req.params;
+        const result = await this.adminService.rejectDoctor(doctorId as string, adminId as string)
         res.status(HttpStatus.OK).json(result)
         
       } catch (error: unknown) {

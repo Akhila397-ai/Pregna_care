@@ -50,6 +50,21 @@ export class DoctorController implements IDoctorController {
         }
     }
 
+    getMyStatus = async (req: Request, res: Response):  Promise<void> => {
+        try {
+            const userId = req.user!.userId;
+            const result = await this.doctorService.getMyStatus(userId);
+            res.status(HttpStatus.OK).json(result)
+        } catch (error : unknown) {
+            if(error instanceof Error){
+                res.status(HttpStatus.BAD_REQUEST).json(error.message)
+            }else{
+                res.status(HttpStatus.BAD_REQUEST).json({message:"intrenal error occured"})
+            }
+            
+        }
+    }
+
      getMyProfile = async(req: Request, res: Response): Promise<void> => {
         try {
             const userId = req.user!.userId;

@@ -1,4 +1,5 @@
-
+import { NumericLiteral } from "typescript";
+import { DoctorStatus } from "../../doctor/types/doctor.types";
 
 export interface AdminLoginRequest {
     email: string;
@@ -30,21 +31,31 @@ export interface getMappedUsersResponse {
 export interface IDoctorMappedData {
         _id:             string;
         userId:          string;
-        name:            string;
+        fullName:            string;
         email:           string;
-        role:            string;
-        isBlocked:       boolean;
-        isDeleted:       boolean;
-        isVerified:      boolean;
-        isApproved:      boolean;
-        imageUrl?:       string;
-        mobileNumber?:   string;
-        specialization?: string;
-        createdAt?:      string;
+        phone: string;
+        specialization:  string;
         qualification: string;
         experience: number;
-        licenseCertificate: string;
-        status: "pending" | "approved" | "rejected";
+        registrationNumber: string;
+        consultationFee: number;
+        clinicName: string;
+        clinicAddress: string;
+        profileImage:  string;
+        documents:  string[];
+        availabilty: {
+          days:  string[];
+          startTime: string;
+          endTime: string;
+        }
+        status: DoctorStatus;
+        rejectionReason?: string;
+        isBlocked: boolean;
+        isVerified: boolean;
+        isDeleted: boolean;
+        approvedBy?: string;
+        approvedAt?: string;
+        createdAt?: string;
 }
 export interface GetMappedDoctorsResponse {
   doctors:      IDoctorMappedData[];

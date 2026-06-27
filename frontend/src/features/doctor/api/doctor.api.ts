@@ -1,5 +1,5 @@
 import axiosInstance  from '../../../api/axiosInstance'
-import { DoctorApplyRequest,DoctorApplyResponse,DoctorApplicationResponse,DoctorProfileResponse } from '../types/doctor.types'
+import { DoctorApplyRequest,DoctorApplyResponse,DoctorApplicationResponse,DoctorProfileResponse,DoctorStatusResponse  } from '../types/doctor.types'
 
 export const doctorApi = {
 
@@ -8,6 +8,11 @@ export const doctorApi = {
         data: DoctorApplyRequest
     ): Promise<DoctorApplyResponse> => {
         const res = await axiosInstance.post('/doctor/apply',data);
+        return res.data;
+    },
+
+    getMyStatus: async (): Promise<DoctorStatusResponse> => {
+        const res = await axiosInstance.get('/doctor/my-status')
         return res.data;
     },
 

@@ -14,6 +14,8 @@ const doctorController = container.get<IDoctorController>(
 );
 
 router.post(ROUTES.DOCTOR.APPLY,doctorController.apply)
+router.get(ROUTES.DOCTOR.MY_STATUS,authenticate,doctorController.getMyStatus)
+
 router.get(ROUTES.DOCTOR.MY_APPLICATION,authenticate,doctorController.getMyApplication)
 router.get(ROUTES.DOCTOR.MY_PROFILE,doctorController.getMyProfile)
 

@@ -16,7 +16,7 @@ export interface doctorApplicationData {
     phone:     string;
     specialization:  string;
     qualification:   string;
-    experience:      string;
+    experience:      number;
     registrationNumber: string;
     consultationFee:  number;
     clinicName:  string;
@@ -30,6 +30,9 @@ export interface doctorApplicationData {
     createdAt?: Date;
     updatedAt?: Date;
     documents: string[];
+    isBlocked: boolean;
+    isVerified: boolean;
+    isDeleted: boolean
 
 }
 export type ApplicationStatusUpdate = {
@@ -61,3 +64,6 @@ export interface doctorProfileData {
     createdAt: Date;
     updatedAt?:  Date;
 }
+
+export type DoctorApplicationDocument = 
+doctorApplicationData & { _id: Types.ObjectId};

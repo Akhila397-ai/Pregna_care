@@ -1,3 +1,5 @@
+import { DoctorStatus } from "../types/doctor.js";
+
 export interface IUserMappedData {
     _id:  string;
     userId: string;
@@ -39,17 +41,31 @@ export interface AdminAuthResponseDTO {
 export interface IDoctorsMappedData {
     _id: string;
     userId: string;
-    name: string;
+    fullName: string;
     email: string;
-    role: string;
+    phone: string;
+    qualification: string;
+    experience: number;
+    registrationNumber: string;
+    consultationFee: number;
+    clinicName: string;
+    clinicAddress: string;
+    availability: {
+        days: string[];
+        startTime: string;
+        endTime: string;
+    }
+    documents: string[];
+    status: DoctorStatus;
+    rejectionReason?: string;
     isBlocked: boolean;
     isDeleted: boolean;
     isVerified: boolean;
-    isApproved: boolean;
+    approvedBy?:  string;
+    approvedAt?: Date;
     imageUrl?: string;
-    mobileNumber?: string;
     specialization?: string;
-    createdAt: Date;
+    createdAt?: Date ;
 }
 
 export interface GetMappedDoctorsResponse {

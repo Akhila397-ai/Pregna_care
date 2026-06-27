@@ -71,3 +71,9 @@ export interface DoctorApplyResponseDTO {
     token: string;
     application: DoctorApplicationDTO
 }
+
+export interface DoctorStatusResponseDTO {
+    status:   DoctorStatus;
+    application: DoctorApplicationDTO;
+    rejectionReason?: string;
+}

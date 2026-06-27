@@ -78,3 +78,9 @@ export interface DoctorApplyResponse  {
     token:  string;
     application: DoctorApplicationResponse;
 }
+
+export interface DoctorStatusResponse {
+    status:   DoctorStatus;
+    application: DoctorApplicationResponse;
+    rejectionReason?: string;
+}
