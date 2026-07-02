@@ -114,6 +114,39 @@ export class AuthController implements IAuthController {
    }
 
 
+   refreshToken = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const result = await this.authService.refreshToken(userId);
+      res.status(HttpStatus.OK).json(result);
+    } catch (error: unknown) {
+        if(error instanceof Error){
+            res.status(HttpStatus.BAD_REQUEST).json({message:error.message})
+        }else
+            res.status(HttpStatus.BAD_REQUEST).json({message: 'Invalid'})
+        
+       }
+  };
+
+ setOnboarding = async(req: Request, res: Response): Promise<void> => {
+      try {
+        const userId = req.user!.userId;
+        const {onboardingType} = req.body;
+        const result = await this.authService.setOnboarding(
+            userId,onboardingType
+        )
+        res.status(HttpStatus.OK).json(result);
+      } catch (error: unknown) {
+        if(error instanceof Error){
+            res.status(HttpStatus.BAD_REQUEST).json({message:error.message})
+        }else
+            res.status(HttpStatus.BAD_REQUEST).json({message: 'Invalid'})
+        
+       }
+  }
+
+
+
 
 
    

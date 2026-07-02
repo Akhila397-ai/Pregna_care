@@ -41,31 +41,34 @@ export interface AdminAuthResponseDTO {
 export interface IDoctorsMappedData {
     _id: string;
     userId: string;
-    fullName: string;
-    email: string;
-    phone: string;
-    qualification: string;
-    experience: number;
+    name:             string;
+    email:            string;
+    phone?:           string;
+    imageUrl?:        string;
+    isBlocked:        boolean;
+    isDeleted:        boolean;
+    isVerified:       boolean;
+    specialization:   string;
+    qualification:    string;
+    experience:       number;
     registrationNumber: string;
-    consultationFee: number;
-    clinicName: string;
-    clinicAddress: string;
+    consultationFee:  number;
+    clinicName:       string;
+    clinicAddress:    string;
+    profileImage:     string;
+    documents:        string[];
     availability: {
-        days: string[];
+        days:      string[];
         startTime: string;
-        endTime: string;
-    }
-    documents: string[];
-    status: DoctorStatus;
+        endTime:   string;
+    };
+    status:           DoctorStatus;
     rejectionReason?: string;
-    isBlocked: boolean;
-    isDeleted: boolean;
-    isVerified: boolean;
-    approvedBy?:  string;
-    approvedAt?: Date;
-    imageUrl?: string;
-    specialization?: string;
-    createdAt?: Date ;
+    approvedBy?:      string;
+    approvedAt?:      Date;
+    createdAt?:       Date;
+
+
 }
 
 export interface GetMappedDoctorsResponse {

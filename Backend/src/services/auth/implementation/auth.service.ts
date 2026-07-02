@@ -15,6 +15,7 @@ import  { AuthResponseDTO, MessageResponseDTO, OTPResponseDTO, VerifyOtpResponse
 import { error } from 'node:console';
 import { access } from 'node:fs';
 import { UserRole } from '../../../types/roles.js';
+import { onboardingType } from '../../../types/user.js';
 
 @injectable()
 export class AuthService implements IAUthService {
@@ -150,6 +151,23 @@ export class AuthService implements IAUthService {
             expiresIn: 300
         }
     }
+
+    async refreshToken(userId: string) {
+    const user = await this.userRepository.findById(userId);
+    if (!user)           throw new Error(HttpResponse.USER_NOT_FOUND);
+    if (user.isBlocked)  throw new Error(HttpResponse.USER_BLOCKED);
+    if (user.isDeleted)  throw new Error(HttpResponse.USER_NOT_FOUND);
+
+    const accessToken = generateAccessToken(user._id.toString(), user.role);
+    return { user: toUserAuthDTO(user), token: accessToken };
+  }
+
+  async setOnboarding(userId: string, onboardingType: onboardingType): Promise<MessageResponseDTO> {
+      const user = await this.userRepository.findById(userId);
+      if(!user) throw new Error(HttpResponse.USER_NOT_FOUND)
+        await this.userRepository.setOnboarding(userId, onboardingType);
+    return { message: 'onboarding updated successfully'}
+  }
 
 
 

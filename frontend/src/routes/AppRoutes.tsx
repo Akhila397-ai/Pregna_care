@@ -4,7 +4,7 @@ import LoginPage          from '../features/auth/pages/LoginPage';
 import OTPPage            from '../features/auth/pages/OTPPage';
 import ForgotPasswordPage from '../features/auth/pages/ForgotPassword';
 import ResetPasswordPage from '../features/auth/pages/ResetPassword';
-
+import OnboardingSelectionPage from '../features/onboarding/pages/OnboardingSelectionPage';
 
 //Admin
 import AdminLoginPage from '../features/admin/pages/AdminLogin';
@@ -32,7 +32,7 @@ const AppRoutes = () => (
     <Route path='/admin/dashboard'  element={<AdminDashboardPage/>}/>
     <Route path='/admin/users' element={<UserManagementPage/>}/>
     <Route path='/admin/doctors'element={<DoctorManagementPage/>}/>
-    
+    <Route path='/onboarding' element={<OnboardingSelectionPage/>}/>
 
     {/* Doctor*/}
 

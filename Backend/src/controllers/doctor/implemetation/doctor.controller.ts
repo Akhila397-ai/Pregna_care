@@ -18,7 +18,8 @@ export class DoctorController implements IDoctorController {
 
      apply = async(req: Request, res: Response): Promise<void> => {
         try {
-            const result = await this.doctorService.apply(req.body)
+            const userId = req.user!.userId;
+            const result = await this.doctorService.apply(userId,req.body)
             res.status(HttpStatus.CREATED).json(result)
         } catch (error: unknown) {
             if(error instanceof Error){
@@ -30,60 +31,41 @@ export class DoctorController implements IDoctorController {
         }
     }
 
- getMyApplication = async(req: Request, res: Response): Promise<void> => {
-        try {
-           const userId = req.user !.userId;
-           const result = await this.doctorService.getMyApplication(userId)
-           if(!result){
-            res.status(HttpStatus.NOT_FOUND).json({
-                error: HttpResponse.DOCTOR_NOT_FOUND
-            });
-            return;
-           }
-        } catch (error : unknown) {
-            if(error instanceof Error){
-                res.status(HttpStatus.BAD_REQUEST).json(error.message)
-            }else{
-                res.status(HttpStatus.BAD_REQUEST).json({message:"intrenal error occured"})
-            }
-            
-        }
-    }
 
-    getMyStatus = async (req: Request, res: Response):  Promise<void> => {
-        try {
-            const userId = req.user!.userId;
-            const result = await this.doctorService.getMyStatus(userId);
-            res.status(HttpStatus.OK).json(result)
-        } catch (error : unknown) {
-            if(error instanceof Error){
-                res.status(HttpStatus.BAD_REQUEST).json(error.message)
-            }else{
-                res.status(HttpStatus.BAD_REQUEST).json({message:"intrenal error occured"})
-            }
-            
-        }
-    }
 
-     getMyProfile = async(req: Request, res: Response): Promise<void> => {
-        try {
-            const userId = req.user!.userId;
-            const result = await this.doctorService.getMyProfile(userId);
-            if(!result){
-                res.status(HttpStatus.NOT_FOUND).json({
-                    error: HttpResponse.DOCTOR_PROFILE_NOT_FOUND
-                });
-                return;
-            }
-            res.status(HttpStatus.OK).json(result)
-        } catch (error: unknown) {
+   getMyStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+
+    // ← add this log
+    console.log('userId from JWT:', userId);
+    console.log('typeof userId:', typeof userId);
+
+    const result = await this.doctorService.getMyStatus(userId);
+    res.status(HttpStatus.OK).json(result);
+  } catch (error: unknown) {
             if(error instanceof Error){
                 res.status(HttpStatus.BAD_REQUEST).json(error.message)
             }else{
-                res.status(HttpStatus.BAD_REQUEST).json({message:'internal error'})
+                res.status(HttpStatus.BAD_REQUEST).json({message:'Internal Error occured'})
             }
             
         }
-    }
+   }
+
+   async getMyDashboard(req: Request, res: Response): Promise<void> {
+       try {
+        const userId = req.user!.userId;
+        const result = await this.doctorService.getMyDashboard(userId)
+        res.status(HttpStatus.OK).json(result)
+       } catch (error: unknown) {
+            if(error instanceof Error){
+                res.status(HttpStatus.BAD_REQUEST).json(error.message)
+            }else{
+                res.status(HttpStatus.BAD_REQUEST).json({message:'Internal Error occured'})
+            }
+            
+        }
+   }
 
 }

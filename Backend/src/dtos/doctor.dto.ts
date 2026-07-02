@@ -2,13 +2,9 @@ import { DoctorStatus, Availability } from "../types/doctor.js";
 
 
 export interface DoctorApplyDTO {
-    fullName:  string;
-    email:     string;
-    password:  string;
-    phone:     string;
     specialization:  string;
     qualification:   string;
-    experience:      string;
+    experience:      number;
     registrationNumber:  string;
     consultationFee: number;
     clinicName: string;
@@ -25,12 +21,9 @@ export interface DoctorApplyDTO {
 export interface DoctorApplicationDTO {
     id:  string;
     userId: string;
-    fullName: string;
-    email: string;
-    phone: string;
     specialization: string;
     qualification: string;
-    experience: string;
+    experience: number;
     registrationNumber: string;
     consultationFee: number;
     clinicName: string;
@@ -44,7 +37,17 @@ export interface DoctorApplicationDTO {
     approvedAt?:  Date;
     createdAt?: Date;
 }
+export interface RejectDoctorDTO {
+    rejectionReason:  string;
+}
 
+export interface DoctorDashboardDTO {
+  application:        DoctorApplicationDTO;
+  name:               string;    // ← from User
+  email:              string;
+  phone?:             string;
+  imageUrl?:          string;
+}
 export interface DoctorProfileDTO {
     id: string;
     userId: string;
@@ -68,7 +71,6 @@ export interface DoctorProfileDTO {
 
 export interface DoctorApplyResponseDTO {
     message: string;
-    token: string;
     application: DoctorApplicationDTO
 }
 

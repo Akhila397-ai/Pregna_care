@@ -43,6 +43,11 @@ const UserSchema = new Schema<IUserDocument>(
     },
     imageUrl: {
       type: String
+    },
+    onboardingType: {
+      type: String,
+      enum: ['pregnant','trying','doctor','exploring',null],
+      default: null,
     }
     
 

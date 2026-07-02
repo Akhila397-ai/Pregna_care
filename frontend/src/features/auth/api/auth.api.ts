@@ -9,7 +9,8 @@ import {
    ResetPasswordREquest,
    AuthResponse,
    OTPResponse,
-   MessageResponse 
+   MessageResponse,
+   SetOnboardingRequest
 } from '../types/auth.types'
 import ForgotPasswordPage from "../pages/ForgotPassword";
 
@@ -51,6 +52,16 @@ export const authApi = {
 
     resendOTP: async (data: ResendOTPRequest): Promise<OTPResponse> => {
         const res = await axiosInstance.post('/auth/resend-otp',data)
+        return res.data
+    },
+
+    refreshToken: async (): Promise<AuthResponse> => {
+        const res = await axiosInstance.post('/auth/refresh-token');
+            return res.data
+        
+    },
+    setOnboarding: async( data: SetOnboardingRequest): Promise<MessageResponse> => {
+        const res = await axiosInstance.post('/auth/set-onboarding',data);
         return res.data
     }
 

@@ -7,5 +7,6 @@ export interface IAuthController {
     forgotPassword(req: Request, res: Response): Promise<void>;
     resetPassword(req: Request, res: Response): Promise<void>;
     resendOtp(req: Request, res: Response): Promise<void>;
-
+    refreshToken(req: Request, res: Response): Promise<void>;
+    setOnboarding(req: Request, res: Response):  Promise<void>;
 }

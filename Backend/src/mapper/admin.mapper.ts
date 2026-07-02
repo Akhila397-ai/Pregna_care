@@ -2,7 +2,7 @@ import { Types } from "mongoose";
 import { userData } from "../types/user.js";
 import { IUserMappedData,IDoctorsMappedData,AdminAuthDTO} from "../dtos/admin.dto.js";
 import { doctorApplicationData, DoctorApplicationDocument } from "../types/doctor.js";
-
+import type {DoctorApplicationWithUser}  from "../types/doctor.js";
 
 
 type PopulatedDoctorApplication = doctorApplicationData & {
@@ -40,30 +40,32 @@ export const toUserMappedData = (
     createdAt: user.createdAt,
 })
 
-export const toDoctorMappedData = (
-    app:  DoctorApplicationDocument
+
+export const toDoctorsMappedData = (
+  { application, user }: DoctorApplicationWithUser
 ): IDoctorsMappedData => ({
-    _id:  app._id.toString(),
-    userId: app.userId.toString(),
-    fullName: app.fullName,
-    email: app.email,
-    phone: app.phone,
-    specialization: app.specialization,
-    qualification: app.qualification,
-    experience: app.experience,
-    registrationNumber: app.registrationNumber,
-    consultationFee: app.consultationFee,
-    clinicName: app.clinicName,
-    clinicAddress: app.clinicAddress,
-    imageUrl: app.profileImage,
-    documents: app.documents,
-    availability: app.availability,
-    status: app.status,
-    rejectionReason: app.rejectionReason,
-    approvedBy: app.approvedBy?.toString(),
-    approvedAt: app.approvedAt,
-    createdAt:app.createdAt,
-    isBlocked: app.isBlocked,
-    isDeleted: app.isDeleted,
-    isVerified: app.isVerified,
+    _id:    application._id.toString(),
+    userId: application.userId.toString(),
+    name:       user.name,
+    email:      user.email,
+    phone:      user.phone,
+    imageUrl:   user.imageUrl,
+    isBlocked:  user.isBlocked,
+    isDeleted:  user.isDeleted,
+    isVerified: user.isVerified,
+    specialization:     application.specialization,
+    qualification:      application.qualification,
+    experience:         application.experience,
+    registrationNumber: application.registrationNumber,
+    consultationFee:    application.consultationFee,
+    clinicName:         application.clinicName,
+    clinicAddress:      application.clinicAddress,
+    profileImage:       application.profileImage,
+    documents:          application.documents,
+    availability:       application.availability,
+    status:             application.status,
+    rejectionReason:    application.rejectionReason,
+    approvedBy:         application.approvedBy?.toString(),
+    approvedAt:         application.approvedAt,
+    createdAt:          application.createdAt,
 })

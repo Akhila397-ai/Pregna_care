@@ -8,9 +8,12 @@ import {
   forgotPasswordThunk,
   resetPasswordThunk,
   resendOTPThunk,
+  refreshTokenThunk,
+  setOnboardingThunk,
   logout,
   clearError,
 }                            from '../../../store/slices/auth.slice';
+import { OnboardingType } from '../types/auth.types';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -63,7 +66,7 @@ export const useAuth = () => {
   const login = async (email: string, password: string) => {
     const result = await dispatch(loginThunk({ email, password }));
     if (loginThunk.fulfilled.match(result)) {
-      navigate('/dashboard');
+      navigate('/onboarding');
     }
   };
 
@@ -104,6 +107,29 @@ const resetPassword = async (
     );
   };
 
+  const refreshToken = async () => {
+    const result = await dispatch(refreshTokenThunk());
+    if(refreshTokenThunk.fulfilled.match(result)){
+      const role = result.payload.user.role;
+      if(role === 'doctor') navigate('/doctor/dashboard')
+    }
+  }
+
+  const selectOnboarding = async (type: OnboardingType) => {
+    const result = await dispatch(setOnboardingThunk({onboardingType: type}));
+    if(setOnboardingThunk.fulfilled.match(result)){
+      if(type === 'pregnant'){
+        navigate('/onboarding/pregnant')
+      }else if(type === 'trying'){
+        navigate('/onboarding/trying')
+      }else if(type === 'doctor'){
+        navigate('/apply');
+      }else if(type === 'exploring'){
+        navigate('/dashboard/explore')
+      }
+    }
+  }
+
   // ── Logout ────────────────────────────────────
   const logoutUser = () => {
     dispatch(logout());
@@ -123,6 +149,8 @@ const resetPassword = async (
     forgotPassword,
     resetPassword,
     resendOTP,
+    refreshToken,
+    selectOnboarding,
     logoutUser,
     clearError: () => dispatch(clearError()),
   };

@@ -1,5 +1,5 @@
 import axiosInstance  from '../../../api/axiosInstance'
-import { DoctorApplyRequest,DoctorApplyResponse,DoctorApplicationResponse,DoctorProfileResponse,DoctorStatusResponse  } from '../types/doctor.types'
+import { DoctorApplyRequest,DoctorApplyResponse,DoctorApplicationResponse,DoctorProfileResponse,DoctorStatusResponse, DoctorDashboardResponse  } from '../types/doctor.types'
 
 export const doctorApi = {
 
@@ -16,13 +16,9 @@ export const doctorApi = {
         return res.data;
     },
 
-    getMyApplication: async (): Promise<DoctorApplicationResponse> => {
-        const res = await axiosInstance.get('/doctor/my-application');
-        return res.data
-    },
 
-    getMyProfile: async (): Promise<DoctorProfileResponse> => {
-        const res = await axiosInstance.get('/doctor/my-profile');
-        return res.data;
-    }
+    getMyDashboard: async (): Promise<DoctorDashboardResponse> => {
+    const res = await axiosInstance.get('/doctor/my-dashboard');
+    return res.data;
+  },
 }

@@ -3,7 +3,7 @@ import { injectable, inject } from 'inversify'
 import { TYPES } from '../../../container/types.js'
 import type { IAdminService } from '../interface/IAdmin.service.js'
 import type { IAdminRepository } from '../../../repositories/admin/interface/IAdmin.repository.js'
-import { toAdminAuthDTO,toUserMappedData,toDoctorMappedData } from '../../../mapper/admin.mapper.js'
+import { toAdminAuthDTO,toUserMappedData,toDoctorsMappedData} from '../../../mapper/admin.mapper.js'
 import { HttpResponse } from '../../../constants/messages.constant.js'
 import { HttpStatus } from '../../../constants/status.constant.js'
 import { privateDecrypt } from 'node:crypto'
@@ -53,13 +53,13 @@ export class AdminService implements IAdminService {
     //doctor managment
 
     async getAllDoctors(page: number, limit: number): Promise<GetMappedDoctorsResponse> {
-        const { doctors, total} = await this.adminRepository.findAllDoctors(
-            page, limit
-        );
+        const { doctors, total} = await this.adminRepository
+        .findAllDoctors(page,limit)
+
         return {
-          doctors: doctors.map(toDoctorMappedData),
-          totalDoctors: total,
-          totalPages: Math.ceil(total/limit)
+            doctors:  doctors.map(toDoctorsMappedData),
+            totalDoctors: total,
+            totalPages: Math.ceil(total/limit)
         }
     }
 

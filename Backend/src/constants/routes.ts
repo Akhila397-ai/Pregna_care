@@ -10,6 +10,7 @@ export const ROUTES = {
     RESET_PASSWORD:     '/reset-password',
     REFRESH_TOKEN:      '/refresh-token',
     ME:                 '/me',
+    SET_ONBOARDING:     '/set-onboarding',
   },
 
   ADMIN: {
@@ -36,7 +37,8 @@ export const ROUTES = {
     APPLY:              '/apply',
     MY_APPLICATION:  '/my-application',  // GET  — check application status
     MY_PROFILE:      '/my-profile', 
-    MY_STATUS: '/my-status'
+    MY_STATUS: '/my-status',
+    MY_DASHBOARD:'/my-dashboard'
   },
 
 } as const;

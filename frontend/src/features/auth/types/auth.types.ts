@@ -1,3 +1,10 @@
+export type OnboardingType = 'pregnant' | 'trying' | 'doctor' | 'exploring' | null;
+
+
+
+
+
+
 export interface RegisterRequest {
     name: string;
     email: string;
@@ -29,13 +36,19 @@ export interface ResendOTPRequest {
     purpose: string
 }
 
+export interface SetOnboardingRequest {
+    onboardingType:  OnboardingType;
+}
 //Response Type
 export interface UserAuthResponse {
     id: string;
     name: string;
     email: string;
+    role: string;
     isBlocked: boolean;
-    isVerified: boolean
+    isVerified: boolean;
+    isOnboarded: boolean;
+    onboardingType: OnboardingType;
 }
 
 export interface AuthResponse {

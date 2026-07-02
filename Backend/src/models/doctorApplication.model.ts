@@ -19,21 +19,8 @@ const DoctorApplicationSchema = new Schema<IDoctorApplicationDocument>(
         userId: {
             type:  Schema.Types.ObjectId,
             ref:  'User',
-            required: true
-        },
-        fullName:  {
-            type: String,
             required: true,
-            trim: true
-        },
-        email: {
-            type: String,
-            required: true,
-            lowercase: true
-        },
-        phone: {
-            type: String,
-            required: true
+            unique: true,
         },
         specialization: {
             type: String,

@@ -1,4 +1,5 @@
 import { AuthResponseDTO, OTPResponseDTO,MessageResponseDTO, VerifyOtpResponseDTO } from "../../../dtos/auth.dto.js";
+import { onboardingType } from "../../../types/user.js";
 
 
 
@@ -9,4 +10,6 @@ export interface IAUthService {
     forgotPassword(email: string): Promise<OTPResponseDTO>;
     resetPassword(email: string, newPassword: string): Promise<MessageResponseDTO>;
     resendOtp(email: string, purpose: string): Promise<OTPResponseDTO>;
+    refreshToken(userId: string):  Promise<AuthResponseDTO>;
+    setOnboarding(userId: string, onboardingType: onboardingType): Promise<MessageResponseDTO>;
 }

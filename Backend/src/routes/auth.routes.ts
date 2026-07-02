@@ -5,6 +5,7 @@ import { IAuthController } from "../controllers/auth/interface/IAuth.controller.
 import { ROUTES } from "../constants/routes.js";
 import { auth } from "google-auth-library";
 import { verifyResetJWT } from "../middleware/verifyResetJWT.middleware.js";
+import { authenticate } from "../middleware/auth.middleware.js";
 
 const router = Router();
 
@@ -19,6 +20,9 @@ router.route(ROUTES.AUTH.LOGIN).post(authController.login)
 router.route(ROUTES.AUTH.FORGOT_PASSWORD).post(authController.forgotPassword);
 router.route(ROUTES.AUTH.RESET_PASSWORD).post(verifyResetJWT,authController.resetPassword)
 router.route(ROUTES.AUTH.RESEND_OTP).post(authController.resendOtp)
+router.route(ROUTES.AUTH.REFRESH_TOKEN).post(authenticate,authController.refreshToken);
+router.route(ROUTES.AUTH.SET_ONBOARDING).post(authenticate, authController.setOnboarding);
+
 
 
 export default router;

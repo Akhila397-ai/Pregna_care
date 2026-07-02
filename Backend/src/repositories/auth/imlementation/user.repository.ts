@@ -1,6 +1,6 @@
 import { injectable }          from 'inversify';
 import { IUserRepository } from '../interface/IUser.repository.js';
-import { userData } from '../../../types/user.js';
+import { onboardingType, userData } from '../../../types/user.js';
 import { otpData,OTPPurpose } from '../../../types/otp.js';
 import userModel from '../../../models/User.model.js';
 import otpModel from '../../../models/otp.model.js';
@@ -11,6 +11,7 @@ export class UserRepository implements IUserRepository {
    async findById(id: string): Promise<(userData & { _id: Types.ObjectId }) | null> {
   return await userModel.findById(id).lean();
 }
+
 
    async create(data: Partial<userData>): Promise<userData & { _id: Types.ObjectId; }> {
        return await userModel.create(data)
@@ -39,6 +40,20 @@ export class UserRepository implements IUserRepository {
     async markVerified(id: string): Promise<void> {
         await userModel.findByIdAndUpdate(id, {$set: {isVerified: true}})
     }
+    async updateRole(id: string, role: string) {
+    await userModel.findByIdAndUpdate(
+      id,
+      { $set: { role } }
+    );
+  }
+  async setOnboarding(id: string, onboardingType: onboardingType): Promise<void> {
+      await userModel.findByIdAndUpdate(id,{
+        $set: {
+            onboardingType,
+            isOnboarded: true,
+        }
+      })
+  }
 
     //otp
 

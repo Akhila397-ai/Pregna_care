@@ -4,16 +4,13 @@ export type DoctorStatus = 'pending' | 'approved' | 'rejected';
 
 export interface Availability {
      days: string[];
-  startTime: string;
-  endTime: string;
+     startTime: string;
+     endTime: string;
 }
 
 
 export interface doctorApplicationData {
-    userId:    Types.ObjectId;
-    fullName:  string;
-    email:     string;
-    phone:     string;
+    userId: Types.ObjectId;
     specialization:  string;
     qualification:   string;
     experience:      number;
@@ -32,38 +29,29 @@ export interface doctorApplicationData {
     documents: string[];
     isBlocked: boolean;
     isVerified: boolean;
-    isDeleted: boolean
+    isDeleted: boolean;
 
 }
 export type ApplicationStatusUpdate = {
-  status: "approved" | "rejected";
+  status: "approved" | "rejected" | 'pending';
   approvedBy?: Types.ObjectId;
   approvedAt?: Date;
   rejectionReason?: string;
 };
 
-//Doctor profile(created after admin approvrd the request)
 
-export interface doctorProfileData {
-    userId:    Types.ObjectId;
-    applicationId: Types.ObjectId;
-    fullName:  string;
-    email: string;
-    phone: string;
-    specialization: string;
-    qualification: string;
-    experience: number;
-    registrationNumber: string;
-    consultationFee : number;
-    clinicName:  string;
-    clinicAddress:  string;
-    profileImage: string;
-    documents: string[];
-    availability:  Availability;
-    isActive:  boolean;
-    createdAt: Date;
-    updatedAt?:  Date;
+export interface DoctorApplicationWithUser {
+  application: DoctorApplicationDocument;
+  user: {
+    _id:        Types.ObjectId;
+    name:       string;
+    email:      string;
+    phone?:     string;
+    imageUrl?:  string;
+    isBlocked:  boolean;
+    isVerified: boolean;
+    isDeleted:  boolean;
+  };
 }
-
 export type DoctorApplicationDocument = 
 doctorApplicationData & { _id: Types.ObjectId};

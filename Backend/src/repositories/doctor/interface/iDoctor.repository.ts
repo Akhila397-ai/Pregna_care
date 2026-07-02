@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { doctorApplicationData, doctorProfileData,DoctorApplicationDocument } from "../../../types/doctor.js";
+import { doctorApplicationData,DoctorApplicationWithUser,DoctorApplicationDocument } from "../../../types/doctor.js";
 
 
 export interface IDoctorRepository {
@@ -19,20 +19,21 @@ export interface IDoctorRepository {
 
     updateApplicationStatus(
         id: string,
-        status: 'approved' | 'rejected',
+        status: 'approved' | 'rejected'|'pending',
         adminId?: string,
         rejectionReason?: string
     ): Promise<void>;
+    updateApplication(id: string,data: Partial<doctorApplicationData>): Promise<void>;
 
-    createProfile(
-        data: doctorProfileData
-    ): Promise<doctorProfileData & {_id: Types.ObjectId}  >
+//     createProfile(
+//         data: DoctorApplicationDocument
+//     ): Promise<DoctorApplicationDocument & {_id: Types.ObjectId}  >
 
-    findProfileByUserId(
-        userId: string
-    ): Promise<(doctorProfileData & {_id: Types.ObjectId}) | null>
+//     findProfileByUserId(
+//         userId: string
+//     ): Promise<(DoctorApplicationDocument & {_id: Types.ObjectId}) | null>
 
-    findProfileById(
-        id: string
-    ): Promise<(doctorProfileData & {_id: Types.ObjectId}) | null>
+//     findProfileById(
+//         id: string
+//     ): Promise<(DoctorApplicationDocument & {_id: Types.ObjectId}) | null>
 }

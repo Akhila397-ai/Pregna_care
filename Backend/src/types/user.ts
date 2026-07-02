@@ -1,4 +1,6 @@
 import { UserRole } from "./roles.js";
+
+export type onboardingType = 'pregnant' | 'trying' | 'doctor' | 'exploring' | null;
 export interface userData {
     name: string;
     email: string;
@@ -11,4 +13,6 @@ export interface userData {
     createdAt: Date;
     updatedAt: Date;
     imageUrl: string;
+    onboardingType: onboardingType;
+    isOnboarded: boolean;
 }

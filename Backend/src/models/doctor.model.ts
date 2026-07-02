@@ -30,24 +30,6 @@ const DoctorProfileSchema = new Schema<IDoctorApplicationDocument>(
             required: true,
             unique: true
         },
-        applicationId: {
-            type: Schema.Types.ObjectId,
-            ref: 'DoctorApplication',
-            required: true
-            
-        },
-        fullName: {
-            type: String,
-            required: true
-        },
-        email: {
-            type: String,
-            required: true
-        },
-        phone: {
-            type: String,
-            required: true
-        },
         specialization: {
             type: String,
             required: true
@@ -88,10 +70,6 @@ const DoctorProfileSchema = new Schema<IDoctorApplicationDocument>(
             type: AvailabilitySchema,
             required: true
         },
-        isActive: {
-            type: Boolean,
-            default: true
-        }
 
     },
     { timestamps: true}

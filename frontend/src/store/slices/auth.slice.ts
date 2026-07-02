@@ -8,6 +8,7 @@ import {
   ResetPasswordREquest,
   ResendOTPRequest,
   UserAuthResponse,
+  SetOnboardingRequest,OnboardingType
 } from '../../features/auth/types/auth.types';
 import { AxiosError } from 'axios';
 
@@ -128,6 +129,28 @@ export const resendOTPThunk = createAsyncThunk(
     }
   }
 );
+
+export const refreshTokenThunk = createAsyncThunk('auth/refreshToken',
+  async(_, {rejectWithValue}) => {
+      try {
+        return await authApi.refreshToken()
+        
+      } catch (err: any) {
+      return rejectWithValue(err.response?.data?.error || 'Failed.');
+    }
+  }
+)
+
+export const setOnboardingThunk = createAsyncThunk('auth/setOnboarding',
+  async( data: SetOnboardingRequest, { rejectWithValue}) => {
+    try {
+        await authApi.setOnboarding(data)
+        return data.onboardingType;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.error || 'Failed.');
+    }
+  }
+)
 
 // ── Slice ─────────────────────────────────────
 const authSlice = createSlice({
@@ -259,6 +282,42 @@ const authSlice = createSlice({
         state.loading = false;
         state.error   = action.payload as string;
       });
+
+
+      //refreshToke
+
+      builder
+      .addCase(refreshTokenThunk.pending, (state)=> {
+        state.loading = true; state.error = null;
+      })
+      .addCase(refreshTokenThunk.fulfilled, (state,action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        localStorage.setItem('accessToken',action.payload.token);
+      })
+      .addCase(refreshTokenThunk.rejected,(state,action)=> {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      //Set Onboarding
+      builder
+      .addCase(setOnboardingThunk.pending,(state) => {
+        state.loading = true; state.error = null;
+      })
+      .addCase(setOnboardingThunk.fulfilled, (state,action) => {
+        state.loading = false;
+        if(state.user){
+          state.user.isOnboarded = true;
+          state.user.onboardingType = action.payload;
+        }
+       
+      })
+      .addCase(setOnboardingThunk.rejected, (state,action)=> {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
   },
 });
 

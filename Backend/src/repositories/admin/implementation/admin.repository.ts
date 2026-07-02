@@ -4,7 +4,7 @@ import { IAdminRepository } from "../interface/IAdmin.repository.js";
 import UserModel from "../../../models/User.model.js";
 import { userData } from "../../../types/user.js";
 import doctorApplicationModel from "../../../models/doctorApplication.model.js";
-import { doctorApplicationData, DoctorApplicationDocument } from "../../../types/doctor.js";
+import { doctorApplicationData, DoctorApplicationDocument, DoctorApplicationWithUser } from "../../../types/doctor.js";
 
 
 
@@ -89,37 +89,111 @@ export class AdminRepository implements IAdminRepository {
 
     //doctor managmnt
 
-    async findAllDoctors(page: number, limit: number): Promise<{ doctors: DoctorApplicationDocument[]; total: number; }> {
+    async findAllDoctors(page: number, limit: number): Promise<{ doctors: DoctorApplicationWithUser[]; total: number; }> {
         const skip = (page -1) * limit;
         const total = await doctorApplicationModel
         .countDocuments({ isDeleted: false})
-        const doctors = await doctorApplicationModel
+        const applications = await doctorApplicationModel
         .find({ isDeleted: false})
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1})
         .lean() as DoctorApplicationDocument[];
 
-        return { doctors, total}
+        const userIds = applications.map((app)=> {
+          return app.userId
+        })
+
+        const users = await UserModel
+        .find({_id: {$in: userIds}})
+        .lean()
+
+        const userMap = new Map(
+         users.map((u) => [u._id.toString(), u])
+        );
+         
+
+       const item = applications
+       .map((app): DoctorApplicationWithUser | null => {
+        const user = userMap.get(app.userId.toString());
+
+        if(!user){
+            return null
+        }
+
+        return {
+            application: app,
+            user: {
+           _id: user._id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            imageUrl: user.imageUrl,
+            isBlocked: user.isBlocked,
+            isVerified: user.isVerified,
+            isDeleted: user.isDeleted,
+            },
+        };
+       })
+       .filter(
+        (item): item is DoctorApplicationWithUser => item !== null
+       );
+        return {
+            doctors: item,
+            total
+        }
     }
-    async findDoctorById(id: string): Promise<DoctorApplicationDocument | null> {
-        return await doctorApplicationModel
-        .findOne({ _id: id, isDeleted: false})
+
+    
+    async findDoctorById(id: string): Promise<DoctorApplicationWithUser | null> {
+        const app = await doctorApplicationModel
+        .findOne({_id:id, isDeleted: false})
         .lean()  as DoctorApplicationDocument | null;
+
+        if(!app) return null;
+
+        const user = await UserModel.findById(app.userId).lean();
+        if(!user) return null;
+
+        return {
+            application: app,
+            user: {
+                 _id:        user._id,
+            name:       user.name,
+            email:      user.email,
+            phone:      user.phone,
+            imageUrl:   user.imageUrl,
+            isBlocked:  user.isBlocked,
+            isVerified: user.isVerified,
+            isDeleted:  user.isDeleted,
+            }
+        }
     }
     async approveDoctor(id: string, adminId: string): Promise<void> {
         await doctorApplicationModel.findByIdAndUpdate(
             id,
             {
                 $set: {
-                    status:  'approved',
-                    isVerified: true,
-                    approvedBy: new Types.ObjectId(adminId),
-                    approvedAt: new Date()
+                     status:     'approved',
+                     approvedBy: new Types.ObjectId(adminId),
+                     approvedAt: new Date(),
                 },
             }
         );
+
+        const app = await doctorApplicationModel
+      .findById(id)
+      .select('userId')
+      .lean();
+
+    if (app) {
+      await UserModel.findByIdAndUpdate(
+        app.userId,
+        { $set: { role: 'doctor', isVerified: true } }
+      );
     }
+
+ }
 
     async rejectDoctor(id: string, rejectionReason: string): Promise<void> {
         await doctorApplicationModel.findByIdAndUpdate(
