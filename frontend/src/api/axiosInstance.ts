@@ -13,6 +13,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
+  console.log("Sending token:", token);
 
   if (
     token &&

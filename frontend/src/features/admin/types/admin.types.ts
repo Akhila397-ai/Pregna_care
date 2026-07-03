@@ -31,7 +31,7 @@ export interface getMappedUsersResponse {
 export interface IDoctorMappedData {
         _id:             string;
         userId:          string;
-        fullName:            string;
+        name:            string;
         email:           string;
         phone: string;
         specialization:  string;

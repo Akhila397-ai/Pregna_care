@@ -23,7 +23,7 @@ const DoctorManagementPage = () => {
   }, [page]);
 
   const filtered = doctors.filter((d) =>
-    d.fullName.toLowerCase().includes(search.toLowerCase()) ||
+    d.name.toLowerCase().includes(search.toLowerCase()) ||
     d.email.toLowerCase().includes(search.toLowerCase()) ||
     d.specialization.toLowerCase().includes(search.toLowerCase())
   );
@@ -105,16 +105,16 @@ const DoctorManagementPage = () => {
                         <img
                           src={
                             doctor.profileImage ||
-                            `https://ui-avatars.com/api/?name=${doctor.fullName}&background=d4f5e2&color=2ecc71`
+                            `https://ui-avatars.com/api/?name=${doctor.name}&background=d4f5e2&color=2ecc71`
                           }
-                          alt={doctor.fullName}
+                          alt={doctor.name}
                           className="w-9 h-9 rounded-full object-cover
                             border border-[#dde8dd]"
                         />
                         <div>
                           <p className="text-sm font-semibold text-[#1a2e1a]
                             whitespace-nowrap">
-                            {doctor.fullName}       {/* ← from User */}
+                            {doctor.name}       {/* ← from User */}
                           </p>
                           <p className="text-xs text-[#8fba8f]">
                             {doctor.email}
@@ -283,7 +283,7 @@ const DoctorManagementPage = () => {
             <p className="text-sm text-[#5a7a5a] mb-4">
               Rejecting{' '}
               <span className="font-semibold text-[#1a2e1a]">
-                {selectedDoctor.fullName}
+                {selectedDoctor.name}
               </span>
               . Please provide a reason.
             </p>

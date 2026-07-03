@@ -1,6 +1,7 @@
 import { useEffect }  from 'react';
 import { useDoctor }  from '../hooks/useDoctor';
-
+import { useAppSelector } from '../../../store/hooks';
+import { useNavigate } from 'react-router-dom';
 const DoctorPendingPage = () => {
   const {
     application,
@@ -8,9 +9,22 @@ const DoctorPendingPage = () => {
     checkStatusAndRedirect,
     logout,
   } = useDoctor();
+  const navigate = useNavigate()
+
+  const user = useAppSelector((state) => state.auth.user);
 
   // ← on every load, check if status changed
   useEffect(() => {
+    if(!user){
+      navigate('/login');
+      return
+    }
+
+    if(user.role === 'admin'){
+       console.warn('[DoctorPendingPage] admin landed here — redirecting');
+      navigate('/admin/dashboard');
+      return;
+    }
     checkStatusAndRedirect();
   }, []);
 
@@ -50,7 +64,7 @@ const DoctorPendingPage = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-[#8fba8f] font-medium">Name</span>
                   <span className="text-[#1a2e1a] font-semibold">
-                    {application.fullName}
+                    {application.clinicName}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

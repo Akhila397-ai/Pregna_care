@@ -17,7 +17,9 @@ export class DoctorRepository implements IDoctorRepository {
   }
   
   async findApplicationByUserId(userId: string): Promise<DoctorApplicationDocument | null> {
+    console.log("Searching for userId:", userId);
      const doc = await doctorApplicationModel.findOne({ userId }).lean();
+     console.log("Result:", doc);
 
     return doc as DoctorApplicationDocument | null;
   }

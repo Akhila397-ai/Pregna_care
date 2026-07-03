@@ -19,6 +19,7 @@ export class DoctorController implements IDoctorController {
      apply = async(req: Request, res: Response): Promise<void> => {
         try {
             const userId = req.user!.userId;
+            console.log(userId)
             const result = await this.doctorService.apply(userId,req.body)
             res.status(HttpStatus.CREATED).json(result)
         } catch (error: unknown) {

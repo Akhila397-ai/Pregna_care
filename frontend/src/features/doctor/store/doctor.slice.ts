@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { doctorApi } from '../api/doctor.api';
 import { DoctorApplyRequest,DoctorApplicationResponse,DoctorStatusResponse,DoctorDashboardResponse,DoctorStatus} from '../types/doctor.types';
-
+import { RootState } from '../../../store';
 interface DoctorState {
   application: DoctorApplicationResponse | null;
   dashboard:   DoctorDashboardResponse   | null;
@@ -36,9 +36,22 @@ export const doctorApplyThunk = createAsyncThunk(
 );
 
 export const getMyStatusThunk = createAsyncThunk(
-  'doctor/getMyStatus',
+  'doctor/getMyStatus', 
   async (_, { rejectWithValue }) => {
+     console.log('[getMyStatusThunk] CALLED — stack trace:')
+       console.trace()
     try {
+      const state = getState() as RootState;
+      const user = state.auth.user;
+      if (!user) {
+        return rejectWithValue('No user logged in.');
+      }
+
+      if (user.role === 'admin') {
+        console.warn('[getMyStatusThunk] Blocked — admin is logged in');
+        return rejectWithValue('Admin cannot check doctor status.');
+      }
+
       return await doctorApi.getMyStatus();
     } catch (err: any) {
       return rejectWithValue(

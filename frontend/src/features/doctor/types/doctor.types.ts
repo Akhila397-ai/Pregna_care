@@ -57,7 +57,7 @@ export interface DoctorProfileResponse {
     id:      string;
     userId:  string;
     applicationId:  string;
-    fullName:  string;
+    name:  string;
     email: string;
     phone: string;
     specialization: string;

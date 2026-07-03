@@ -14,6 +14,7 @@ import {
   clearError,
 }                            from '../../../store/slices/auth.slice';
 import { OnboardingType } from '../types/auth.types';
+import axiosInstance from '../../../api/axiosInstance';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -64,10 +65,45 @@ export const useAuth = () => {
 
   // ── Login ─────────────────────────────────────
   const login = async (email: string, password: string) => {
-    const result = await dispatch(loginThunk({ email, password }));
-    if (loginThunk.fulfilled.match(result)) {
+   const result = await dispatch(loginThunk({ email, password}));
+   if(loginThunk.fulfilled.match(result)){
+    const {role, isOnboarded, onboardingType} = result.payload.user;
+
+    if(role === 'admin'){
+      navigate('/admin/login');
+      return
+    }
+
+    if(role === 'doctor'){
+      try {
+        const statusRes = await axiosInstance.get('/doctor/my-status');
+        const status = statusRes.data.status;
+
+        if(status === 'approved'){
+          navigate('/doctor/dashboard');
+        } else if(status === 'rejected'){
+          navigate('/doctor/rejected')
+        }else {
+          navigate('/doctor/pending')
+        }
+      } catch  {
+        navigate('/doctor/pending');
+      }
+      return
+    }
+    if(!isOnboarded){
+      navigate('/onboarding');
+    } else if (onboardingType === 'pregnant') {
+      navigate('/dashboard/pregnancy');
+    } else if (onboardingType === 'trying') {
+      navigate('/dashboard/menstruation');
+    } else if (onboardingType === 'exploring') {
+      navigate('/dashboard/explore');
+    } else {
       navigate('/onboarding');
     }
+    }
+   
   };
 
   // ── Forgot Password ───────────────────────────
@@ -123,7 +159,7 @@ const resetPassword = async (
       }else if(type === 'trying'){
         navigate('/onboarding/trying')
       }else if(type === 'doctor'){
-        navigate('/apply');
+        navigate('/doctor/apply');
       }else if(type === 'exploring'){
         navigate('/dashboard/explore')
       }

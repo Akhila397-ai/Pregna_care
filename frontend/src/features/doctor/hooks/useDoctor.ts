@@ -27,7 +27,7 @@ export const useDoctor = () => {
     error,
   } = useAppSelector((state) => state.doctor);
 
-  const { user } = useAppSelector((state) => state.auth);
+  const { user,token } = useAppSelector((state) => state.auth);
 
   // Apply as Doctor
   const apply = async (data: DoctorApplyRequest) => {
@@ -40,6 +40,12 @@ export const useDoctor = () => {
 
   // Check Application Status
   const checkStatusAndRedirect = async () => {
+
+    if(!token || !user) return;
+    if(user.role === 'admin'){
+      console.warn(`[useDoctor] checkStatusRedirect blocked - user is admin`);
+      return;
+    }
     const result = await dispatch(getMyStatusThunk());
 
     if (!getMyStatusThunk.fulfilled.match(result)) return;
@@ -66,20 +72,24 @@ export const useDoctor = () => {
 
   // Doctor Dashboard
   const fetchDashboard = async () => {
+     if (!user || user.role === 'admin') return;
     await dispatch(getMyDashboardThunk());
   };
 
   // Fetch Status
   const fetchStatus = async () => {
+    if (!user || user.role === 'admin') return;
     await dispatch(getMyStatusThunk());
   };
 
   // Logout
-  const logout = () => {
-    dispatch(clearDoctorState());
-    navigate('/login');
-  };
+ const logout = () => {
+    localStorage.removeItem("accessToken");
 
+    dispatch(clearDoctorState());
+
+    navigate("/login");
+};
   return {
     application,
     dashboard,

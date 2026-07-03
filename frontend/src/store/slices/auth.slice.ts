@@ -223,10 +223,16 @@ const authSlice = createSlice({
         state.error   = null;
       })
       .addCase(loginThunk.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user    = action.payload.user;
-        state.token   = action.payload.token;
-        localStorage.setItem('accessToken', action.payload.token);
+        console.log(action.payload.user);
+         console.log("Login user:", action.payload.user);
+         console.log("Login token:", action.payload.token);
+         const payload = JSON.parse(atob(action.payload.token.split(".")[1]));
+        console.log("Decoded JWT:", payload);
+  
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+
+        localStorage.setItem("accessToken", action.payload.token);
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -284,7 +290,7 @@ const authSlice = createSlice({
       });
 
 
-      //refreshToke
+      //refreshToken
 
       builder
       .addCase(refreshTokenThunk.pending, (state)=> {

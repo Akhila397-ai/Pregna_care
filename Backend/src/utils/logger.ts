@@ -6,3 +6,4 @@ export class Logger {
         console.error(`[ERROR] ${message}`)
     }
 }
+

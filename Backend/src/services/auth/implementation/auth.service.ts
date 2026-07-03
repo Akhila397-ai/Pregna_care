@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import jwt from "jsonwebtoken";
 import { injectable,inject } from 'inversify';
 import { TYPES } from '../../../container/types.js';
 import type { IUserRepository } from '../../../repositories/auth/interface/IUser.repository.js';
@@ -98,8 +99,12 @@ export class AuthService implements IAUthService {
         if(!isMatch){
             throw new Error(HttpResponse.INVALID_PASSWORD)
         }
+        console.log("DB user:", user._id.toString(), user.role);
+
 
         const accessToken = generateAccessToken(user._id.toString(),user.role);
+        const payload = jwt.decode(accessToken);
+console.log("Generated token payload:", payload);
         const refreshToken = generateRefreshToken(user._id.toString())
 
         return {
