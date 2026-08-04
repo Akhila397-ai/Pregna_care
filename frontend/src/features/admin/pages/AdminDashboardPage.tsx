@@ -1,8 +1,10 @@
 import { Link }     from 'react-router-dom';
 import { useAdmin } from '../hooks/useAdmin';
+import { useAuth } from '../../auth/hooks/useAuth';
 
 const AdminDashboardPage = () => {
-  const { admin, logout } = useAdmin();
+  const {user, logoutUser} = useAuth();
+  const { admin } = useAdmin();
 
   return (
     <div className="min-h-screen bg-[#f5f7f0]">
@@ -22,7 +24,7 @@ const AdminDashboardPage = () => {
             Welcome, {admin?.name}
           </span>
           <button
-            onClick={logout}
+            onClick={logoutUser}
             className="text-sm px-4 py-2 rounded-xl bg-red-50 text-red-600
               hover:bg-red-100 font-medium transition"
           >

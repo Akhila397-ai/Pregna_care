@@ -12,6 +12,7 @@ export interface IAdminController {
 
     //doctor management
     getAllDoctors(req: Request, res: Response):   Promise<void>;
+    verifyDoctor(req: Request, res: Response): Promise<void>;
     approveDoctor(req: Request, res: Response):  Promise<void>;
     rejectDoctor(req: Request, res: Response):   Promise<void>;
     blockDoctor(req: Request, res: Response):    Promise<void>;

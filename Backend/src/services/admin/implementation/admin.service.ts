@@ -9,9 +9,13 @@ import { HttpStatus } from '../../../constants/status.constant.js'
 import { privateDecrypt } from 'node:crypto'
 import { MessageResponseDTO } from '../../../dtos/auth.dto.js'
 import { GetMappedDoctorsResponse, GetMappedUsersResponse } from '../../../dtos/admin.dto.js'
+import { getPresignedUrl } from '../../../utils/s3Upload.js'
+import { VerifyDoctorDTO, } from '../../../dtos/admin.dto.js'
+import { DoctorStatus, DoctorApplicationWithUser,DoctorApplicationDocument} from '../../../types/doctor.js'
+import { application } from 'express'
 
 
-injectable()
+@injectable()
 export class AdminService implements IAdminService {
     constructor(
         @inject(TYPES.AdminRepository) private adminRepository: IAdminRepository,
@@ -53,15 +57,49 @@ export class AdminService implements IAdminService {
     //doctor managment
 
     async getAllDoctors(page: number, limit: number): Promise<GetMappedDoctorsResponse> {
-        const { doctors, total} = await this.adminRepository
-        .findAllDoctors(page,limit)
+       const {doctors: items, total} = await this.adminRepository
+       .findAllDoctors(page,limit)
 
-        return {
-            doctors:  doctors.map(toDoctorsMappedData),
-            totalDoctors: total,
-            totalPages: Math.ceil(total/limit)
-        }
+       const doctors = await Promise.all(
+        items.map(async (item: DoctorApplicationWithUser) => {
+            const { application, user} = item;
+            const presignedUrls = await this._resolvePresignedUrls(application);
+            return toDoctorsMappedData({application,user},presignedUrls)
+        })
+       );
+       return {
+        doctors,
+        totalDoctors: total,
+        totalPages: Math.ceil(total/limit)
+       }
     }
+
+async verifyDoctor(doctorId: string, adminId: string,dto: VerifyDoctorDTO): Promise<MessageResponseDTO> {
+    const doctor = await this.adminRepository.findDoctorById(doctorId);
+    if (!doctor) throw new Error(HttpResponse.DOCTOR_NOT_FOUND);
+
+    const statusMap: Record<VerifyDoctorDTO['action'], DoctorStatus> = {
+      approve:                 'approved',
+      reject:                  'rejected',
+      more_documents_required: 'more_documents_required',
+      under_review:            'under_review',
+    };
+     const status = statusMap[dto.action];
+
+    await this.adminRepository.verifyDoctor(
+      doctorId, status, adminId, dto.remarks
+    );
+
+    const messageMap: Record<VerifyDoctorDTO['action'], string> = {
+      approve:                 HttpResponse.DOCTOR_APPROVED,
+      reject:                  HttpResponse.DOCTOR_REJECTED,
+      more_documents_required: 'Requested more documents from doctor.',
+      under_review:            'Application moved to under review.',
+    };
+
+    return { message: messageMap[dto.action] };
+
+}
 
     async approveDoctor(
     doctorId: string,
@@ -102,5 +140,25 @@ export class AdminService implements IAdminService {
         await  this.adminRepository.delete(doctorId)
         return {message: HttpResponse.DOCTOR_DELETE_SUCCESS}
     }
+
+    private async _resolvePresignedUrls(application: any) {
+    const [degreeUrl, regUrl, govUrl] = await Promise.all([
+      application.degreeCertificateUrl
+        ? getPresignedUrl(application.degreeCertificateUrl)
+        : undefined,
+      application.registrationCertificateUrl
+        ? getPresignedUrl(application.registrationCertificateUrl)
+        : undefined,
+      application.governmentIdUrl
+        ? getPresignedUrl(application.governmentIdUrl)
+        : undefined,
+    ]);
+    return {
+      degreeCertificateUrl:       degreeUrl,
+      registrationCertificateUrl: regUrl,
+      governmentIdUrl:            govUrl,
+    };
+  }
+
 
 }

@@ -61,5 +61,10 @@ export const HttpResponse = {
   DOCTOR_UNBLOCK_SUCCESS:   'Doctor has been unblocked successfully.',
   DOCTOR_DELETE_SUCCESS:    'Doctor has been deleted successfully.',
   DOCTOR_PROFILE_NOT_FOUND: 'Doctor profile not found.',
+  
 
+  // ← Portal mismatch messages
+  WRONG_PORTAL_USER:   'Access denied. This portal is for patients only. Please use the Doctor or Admin login page.',
+  WRONG_PORTAL_DOCTOR: 'Access denied. This portal is for doctors only. Please use the Doctor Login page (/doctor/login).',
+  WRONG_PORTAL_ADMIN:  'Access denied. This portal is for admins only. Please use the Admin Login page (/admin/login).',
 }

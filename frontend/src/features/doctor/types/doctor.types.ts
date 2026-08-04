@@ -8,6 +8,7 @@ export interface Availability {
 
 
 
+
 //DTOs
 export interface DoctorApplyRequest {
     specialization: string;
@@ -17,18 +18,22 @@ export interface DoctorApplyRequest {
     consultationFee: number;
     clinicName:  string;
     clinicAddress:  string;
-    profileImage:  string;
-    documents: string[];
     availability:  Availability;
 }
 
 
 //Response
-export type DoctorStatus = 'pending' | 'approved' | 'rejected';
+export type DoctorStatus =
+  | 'pending'
+  | 'under_review'
+  | 'approved'
+  | 'rejected'
+  | 'more_documents_required';
 
 export interface DoctorApplicationResponse {
   id:                 string;
   userId:             string;
+  fullName:           string;
   specialization:     string;
   qualification:      string;
   experience:         number;
@@ -36,13 +41,15 @@ export interface DoctorApplicationResponse {
   consultationFee:    number;
   clinicName:         string;
   clinicAddress:      string;
-  profileImage:       string;
-  documents:          string[];
+  profileImage?:       string;
   availability:       Availability;
+  degreeCertificateUrl?:       string;
+  registrationCertificateUrl?: string;
+  governmentIdUrl?:            string;
   status:             DoctorStatus;
-  rejectionReason?:   string;
-  approvedBy?:        string;
-  approvedAt?:        string;
+  verificationRemarks?: string;
+  verifiedBy?:          string;
+  verifiedAt?:          string;
   createdAt?:         string;
 }
 export interface DoctorDashboardResponse {
@@ -83,5 +90,22 @@ export interface DoctorStatusResponse {
     status:   DoctorStatus;
     application: DoctorApplicationResponse;
     name: string;
-    rejectionReason?: string;
+    verificationRemarks?: string;
+}
+
+export interface DoctorApplyFormData {
+    fullName:  string;
+    specialization:  string;
+    qualification: string;
+    experience:  number;
+    registrationNumber: string;
+    consultationFee: number;
+    clinicName: string;
+    clinicAddress: string;
+    availability: Availability;
+    degreeCertificate: File | null;
+    registrationCertificate: File | null;
+    governmentId:   File | null;
+    profileImage: File | null;
+
 }

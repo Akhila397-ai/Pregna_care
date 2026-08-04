@@ -17,8 +17,22 @@ import DoctorRejectedPage from '../features/doctor/pages/DoctorRejectedPage';
 import DoctorDashboardPage from '../features/doctor/pages/DoctorDashboard';
 import DoctorManagementPage from '../features/admin/pages/DoctorManagementPage';
  const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-  const token = useAppSelector((state) => state.auth.token);
-  if (!token) return <Navigate to="/login" replace />;
+  const { token, user, initialized} = useAppSelector((s) => s.auth)
+  if(!initialized){
+    return (
+      <div className="min-h-screen flex items-center justify-center
+        bg-[#f5f7f0]">
+        <svg className="animate-spin w-8 h-8 text-[#2ecc71]"
+          fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10"
+            stroke="currentColor" strokeWidth="4"/>
+          <path className="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+      </div>
+    );
+  }
+  if (!token || !user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
@@ -27,23 +41,49 @@ const RequireRole = ({
   roles,
   fallback = '/login',
 }: {
+  
   children: React.ReactNode;
   roles:    string[];
   fallback?: string;
 }) => {
-  const user  = useAppSelector((state) => state.auth.user);
-  const token = useAppSelector((state) => state.auth.token);
+  const authState = useAppSelector((state) => state.auth);
+  const { user, token, initialized} = useAppSelector((state) => state.auth)
+  console.log('[RequireRole] state:', {
+    token:       token ? token.slice(0, 15) + '...' : null,
+    user:        user ? { role: user.role, name: user.name } : null,
+    initialized,
+    requiredRoles: roles,
+  });
 
-  if (!token || !user) return <Navigate to="/login" replace />;
-
-  if (!roles.includes(user.role)) {
-    // redirect to appropriate page based on actual role
-    if (user.role === 'admin')  return <Navigate to="/admin/dashboard" replace />;
-    if (user.role === 'doctor') return <Navigate to="/doctor/pending" replace />;
-    if (user.role === 'user')   return <Navigate to="/onboarding" replace />;
-    return <Navigate to={fallback} replace />;
+  if(!initialized){
+    return (
+       <div className="min-h-screen flex items-center justify-center
+        bg-[#f5f7f0]">
+        <svg className="animate-spin w-8 h-8 text-[#2ecc71]"
+          fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10"
+            stroke="currentColor" strokeWidth="4"/>
+          <path className="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+      </div>
+    )
   }
 
+if (!token || !user) {
+    console.log('[RequireRole] no token/user → redirect to login');
+    return <Navigate to="/login" replace />;
+  }
+
+
+  if (!roles.includes(user.role)) {
+    console.log('[RequireRole] wrong role:', user.role, '→ redirecting');
+    if (user.role === 'admin')  return <Navigate to="/admin/dashboard" replace />;
+    if (user.role === 'doctor') return <Navigate to="/doctor/pending"  replace />;
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  console.log('[RequireRole] access granted for role:', user.role);
   return <>{children}</>;
 };
 
@@ -51,20 +91,27 @@ const RequireRole = ({
 
 const AppRoutes = () => (
   <Routes>
+
+
+    {/*login*/}
     <Route path="/"                element={<Navigate to="/login" />} />
-    <Route path="/register"        element={<RegisterPage />} />
+
+
     <Route path="/login"           element={<LoginPage />} />
+    <Route path="/register"        element={<RegisterPage />} />
     <Route path="/verify-otp"      element={<OTPPage />} />
     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
     <Route path="/reset-password"  element={<ResetPasswordPage />} />
+    <Route path='/doctor/login' element= { <DoctorLoginPage/> }/>
+    <Route path='/admin/login'  element={<AdminLoginPage/>} />
+    
+    
+
+    
+    
 
     {/* Admin*/}
-    <Route path='/admin/login'  element={
-      <RequireRole roles={['admin']}>
-           <AdminLoginPage/>
-      </RequireRole>
-      
-      } />
+    
     <Route path='/admin/dashboard'  element={
       <RequireRole roles={['admin']}>
           <AdminDashboardPage/>
@@ -93,11 +140,7 @@ const AppRoutes = () => (
 
     {/* Doctor*/}
 
-    <Route path='/doctor/login' element= {
-      <RequireRole roles={['doctor']}>
-      <DoctorLoginPage/>
-      </RequireRole>
-      }/>
+    
 
     <Route path='/doctor/apply' element={
       <RequireRole roles={['user']}>
@@ -106,15 +149,15 @@ const AppRoutes = () => (
      
       }/>
     <Route path='/doctor/pending' element={
-      <RequireRole roles={['doctor']}>
- <DoctorPendingPage/>
-      </RequireRole>
+      <RequireAuth>
+        <DoctorPendingPage />
+      </RequireAuth>
      
       }/>
     <Route path='/doctor/rejected' element={
-      <RequireRole roles={['doctor']}>
-  <DoctorRejectedPage/>
-      </RequireRole>
+     <RequireAuth>
+      <DoctorRejectedPage/>
+     </RequireAuth>
     
       }/>
     <Route path='/doctor/dashboard' element= {

@@ -2,8 +2,6 @@ import { useNavigate }    from 'react-router-dom';
 import { useAppDispatch,
          useAppSelector } from '../../../store/hooks';
 import {
-  adminLoginThunk,
-  adminLogout,
   getUsersThunk,
   blockUserThunk,
   unblockUserThunk,
@@ -15,6 +13,8 @@ import {
   unblockDoctorThunk,
   deleteDoctorThunk,
   clearAdminError,
+  verifyDoctorThunk,
+  clearAdminData,
 } from '../../../store/slices/admin.slice';
 
 export const useAdmin = () => {
@@ -22,23 +22,13 @@ export const useAdmin = () => {
   const navigate = useNavigate();
 
   const {
-    admin, token, loading, error,
+     loading, error,
     users, totalUsers, totalPages,
     doctors, totalDoctors, doctorPages,
   } = useAppSelector((state) => state.admin);
 
-  // ── Auth ──────────────────────────────────────
-  const login = async (email: string, password: string) => {
-    const result = await dispatch(adminLoginThunk({ email, password }));
-    if (adminLoginThunk.fulfilled.match(result)) {
-      navigate('/admin/dashboard');
-    }
-  };
-
-  const logout = () => {
-    dispatch(adminLogout());
-    navigate('/admin/login');
-  };
+ 
+ const {user} = useAppSelector((state) => state.auth);
 
   // ── User Management ───────────────────────────
   const getUsers = (page = 1, limit = 10) => {
@@ -62,6 +52,14 @@ export const useAdmin = () => {
     dispatch(getDoctorsThunk({ page, limit }));
   };
 
+  const verifyDoctor = (
+    doctorId: string,
+    action: 'approve' | 'reject' | 'more_documents_required' | 'under_review',
+    remarks?: string
+  ) => {
+    dispatch(verifyDoctorThunk({ doctorId, action, remarks}))
+  }
+
   const approveDoctor = (doctorId: string) => {
     dispatch(approveDoctorThunk(doctorId));
   };
@@ -83,17 +81,20 @@ export const useAdmin = () => {
   };
 
   return {
+    //admin user info form auth state
+    admin: user,
     // state
-    admin, token, loading, error,
+    loading, error,
     users, totalUsers, totalPages,
     doctors, totalDoctors, doctorPages,
-    // auth
-    login, logout,
+
     // users
     getUsers, blockUser, unblockUser, deleteUser,
     // doctors
     getDoctors, approveDoctor, rejectDoctor,
     blockDoctor, unblockDoctor, deleteDoctor,
+    verifyDoctor,
     clearError: () => dispatch(clearAdminError()),
+    clearData: () => dispatch(clearAdminData()),
   };
 };

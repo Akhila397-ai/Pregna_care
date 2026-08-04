@@ -22,17 +22,23 @@ interface AuthState {
   pendingEmail: string | null;
   otpPurpose:   string | null;
   resetToken: string | null;
+  initialized: boolean;
 }
+
+const storedToken = sessionStorage.getItem('accessToken');
+console.log('[auth.slice] initial token from sessionStorage:', storedToken)
+
 
 const initialState: AuthState = {
   user:         null,
-  token:        localStorage.getItem('accessToken'),
+  token:        sessionStorage.getItem('accessToken'),
   loading:      false,
    resetToken: null,
   error:        null,
   otpSent:      false,
   pendingEmail: null,
   otpPurpose:   null,
+  initialized: false,
 };
 
 // ── Thunks ────────────────────────────────────
@@ -69,16 +75,15 @@ export const loginThunk = createAsyncThunk(
   'auth/login',
   async (data: LoginRequest, { rejectWithValue }) => {
     try {
-      return await authApi.login(data);
+      return await authApi.login(data)
     } catch (err: any) {
       return rejectWithValue(
-        err.response?.data?.message ||
-        err.response?.data ||
-        'Login failed.'
-      );
+        err.response?.data?.error || 'Login Failed'
+      )
+      
     }
   }
-);
+)
 
 export const forgotPasswordThunk = createAsyncThunk(
   'auth/forgotPassword',
@@ -152,6 +157,23 @@ export const setOnboardingThunk = createAsyncThunk('auth/setOnboarding',
   }
 )
 
+export const getMeThunk = createAsyncThunk(
+  'auth/getMe',
+  async(_, { rejectWithValue}) => {
+    try {
+      console.log('[getMeThunk] fetching user...');
+      const result = await authApi.getMe();
+      console.log('[getMeThunk] success:', result.role)
+      return result;
+    } catch (err: any) {
+      console.error('[getMeThunk] failed:', err.response?.status)
+      return rejectWithValue(
+        err.response?.data?.error || 'Session expired.'
+      );
+    }
+  }
+)
+
 // ── Slice ─────────────────────────────────────
 const authSlice = createSlice({
   name: 'auth',
@@ -162,11 +184,15 @@ const authSlice = createSlice({
       state.token        = null;
       state.pendingEmail = null;
       state.otpPurpose   = null;
-      localStorage.removeItem('accessToken');
+      state.initialized = true;
+      sessionStorage.removeItem('accessToken');
     },
     clearError: (state) => {
       state.error = null;
     },
+    setInitialized: (state) => {
+      state.initialized = true;
+    }
   },
   extraReducers: (builder) => {
 
@@ -223,16 +249,11 @@ const authSlice = createSlice({
         state.error   = null;
       })
       .addCase(loginThunk.fulfilled, (state, action) => {
-        console.log(action.payload.user);
-         console.log("Login user:", action.payload.user);
-         console.log("Login token:", action.payload.token);
-         const payload = JSON.parse(atob(action.payload.token.split(".")[1]));
-        console.log("Decoded JWT:", payload);
-  
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-
-        localStorage.setItem("accessToken", action.payload.token);
+          state.loading = false;
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          state.initialized = true
+          sessionStorage.setItem('accessToken', action.payload.token)
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -300,7 +321,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        localStorage.setItem('accessToken',action.payload.token);
+        sessionStorage.setItem('accessToken',action.payload.token);
       })
       .addCase(refreshTokenThunk.rejected,(state,action)=> {
         state.loading = false;
@@ -324,8 +345,27 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+
+      builder
+      .addCase(getMeThunk.pending, (state) => {
+        state.loading = true
+      })
+      .addCase(getMeThunk.fulfilled, (state,action)=> {
+        state.loading = false;
+        state.user = action.payload;
+        state.initialized = true;
+         console.log('[auth.slice] getMe fulfilled, role:', action.payload.role);
+      })
+      .addCase(getMeThunk.rejected, (state) => {
+        state.loading = false;
+        state.initialized = true;
+        state.user = null;
+        state.token = null;
+        sessionStorage.removeItem('accessToken')
+        console.log('[auth.slice] getMe rejected, clearing auth');
+      })
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, setInitialized } = authSlice.actions;
 export default authSlice.reducer;

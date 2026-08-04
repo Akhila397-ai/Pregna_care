@@ -6,138 +6,186 @@ import  type { IDoctorRepository }         from '../../../repositories/doctor/in
 import type { IUserRepository }           from '../../../repositories/auth/interface/IUser.repository.js';
 import type { IDoctorService }            from '../interface/IDoctor.service.js';
 import  type { IEmailService }             from '../../email/interface/IEmail.service.js';
-import { toDoctorApplicationDTO, toDoctorDashboardDTO}        from '../../../mapper/doctor.mapper.js';
+import { toDoctorApplicationDTO,toDoctorStatusDTO, toDoctorDashboardDTO}        from '../../../mapper/doctor.mapper.js';
 import { hashPassword }              from '../../../utils/hashPassword.js';
 import { generateAccessToken }       from '../../../utils/generateToken.js';
 import { generateOTP }               from '../../../utils/generateOtp.js';
 import { HttpResponse } from '../../../constants/messages.constant.js';
-import { DoctorApplyDTO, DoctorApplyResponseDTO, DoctorDashboardDTO }            from '../../../dtos/doctor.dto.js';
+import { DoctorApplyDTO, DoctorApplyResponseDTO, DoctorDashboardDTO, DoctorStatusResponseDTO }            from '../../../dtos/doctor.dto.js';
 import doctorApplicationModel from '../../../models/doctorApplication.model.js';
+import { uploadToS3,generateS3Key,getPresignedUrl,validateFile,PDF_ONLY,ALLOWED_MIME_TYPES, IMAGE_ONLY } from '../../../utils/s3Upload.js';
+import { Expr } from 'aws-sdk/clients/cloudsearchdomain.js';
+import { DoctorApplicationDocument } from '../../../types/doctor.js';
+import { Type } from '@aws-sdk/client-s3';
 
+export interface UploadFiles {
+  profileImage?:   Express.Multer.File[];
+  degreeCertificate ?: Express.Multer.File[];
+  registrationCertificate?: Express.Multer.File[];
+  governmentId?:            Express.Multer.File[];
+}
 @injectable()
 export class DoctorService implements IDoctorService {
   constructor(
     @inject(TYPES.DoctorRepository) private doctorRepository: IDoctorRepository,
     @inject(TYPES.UserRepository)   private userRepository:   IUserRepository,
-    @inject(TYPES.EmailService)     private emailService:     IEmailService,
   ) {}
 
-  async apply(userId: string, data: DoctorApplyDTO): Promise<DoctorApplyResponseDTO> {
-      
-    const user = await this.userRepository.findById(userId)
-     if(!user) throw new Error(HttpResponse.USER_NOT_FOUND)
-    
-    const exixting = await this.doctorRepository
-    .findApplicationByUserId(userId);
+  async apply(
+    userId:  string,
+    data:    DoctorApplyDTO,
+    files:   {
+      [field: string]: Express.Multer.File[];
+    }
+  ) {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new Error(HttpResponse.USER_NOT_FOUND);
 
-    if(exixting){
-        if(exixting.status === 'pending'){
-            throw new Error('You already have a pending application')
-        }
-        if(exixting.status === 'approved'){
-            throw new Error("Your application has already been approved")
-        }
+    const existing = await this.doctorRepository.findApplicationByUserId(userId);
+    if (existing) {
+  if (
+    existing.application.status === 'pending' ||
+    existing.application.status === 'under_review'
+  ) {
+    throw new Error('You already have a pending application.');
+  }
 
-        await this.doctorRepository.updateApplicationStatus(
-            exixting._id.toString(),
-            'pending'
-        );
+  if (existing.application.status === 'approved') {
+    throw new Error('Your application is already approved.');
+  }
+}
 
-       const updated = await this.doctorRepository.updateApplication(
-        exixting._id.toString(),
-        {
-           ...data,
-           status: 'pending',
-           rejectionReason: undefined,
-           approvedBy: undefined,
-           approvedAt: undefined,
-        }
-       );
+    // ── Validate files ────────────────────────
+    const profileImageFile = files.profileImage?.[0];
+    const degreeFile = files.degreeCertificate?.[0];
+    const regFile    = files.registrationCertificate?.[0];
+    const govFile    = files.governmentId?.[0];
 
-
-
-        return {
-            message: 'Application resubmitted successfully',
-            application: toDoctorApplicationDTO(updated!)
-        }
-
+    if (!degreeFile || !regFile || !govFile) {
+      throw new Error('All three documents are required.');
     }
 
-    const application = await this.doctorRepository.createApplication({
-      userId:             new Types.ObjectId(userId),  // ← from JWT
+    const profilevalidation = validateFile(
+      profileImageFile.mimetype,
+      profileImageFile.size,
+      IMAGE_ONLY
+    );
+    if(!profilevalidation.valid){
+      throw new Error(`Profile Image: ${profilevalidation.error}`);
+    }
+
+    // degree — PDF only
+    const degreeValidation = validateFile(
+      degreeFile.mimetype, degreeFile.size, PDF_ONLY
+    );
+    if (!degreeValidation.valid) {
+      throw new Error(`Degree Certificate: ${degreeValidation.error}`);
+    }
+
+    // registration — PDF only
+    const regValidation = validateFile(
+      regFile.mimetype, regFile.size, PDF_ONLY
+    );
+    if (!regValidation.valid) {
+      throw new Error(`Registration Certificate: ${regValidation.error}`);
+    }
+
+    // government ID — PDF/JPG/PNG
+    const govValidation = validateFile(
+      govFile.mimetype, govFile.size, ALLOWED_MIME_TYPES
+    );
+    if (!govValidation.valid) {
+      throw new Error(`Government ID: ${govValidation.error}`);
+    }
+
+    // ── Upload to S3 ──────────────────────────
+    const profileKey = generateS3Key('doctor-profiles', profileImageFile.mimetype)
+    const degreeKey = generateS3Key('doctor-docs/degrees',  degreeFile.mimetype);
+    const regKey    = generateS3Key('doctor-docs/registrations', regFile.mimetype);
+    const govKey    = generateS3Key('doctor-docs/government-ids', govFile.mimetype);
+
+    await Promise.all([
+      uploadToS3(profileImageFile.buffer, profileKey, profileImageFile.mimetype),
+      uploadToS3(degreeFile.buffer, degreeKey, degreeFile.mimetype),
+      uploadToS3(regFile.buffer,    regKey,    regFile.mimetype),
+      uploadToS3(govFile.buffer,    govKey,    govFile.mimetype),
+    ]);
+
+    //Building APplicationData
+
+    const applicationData = {
+      userId:   new Types.ObjectId(userId),
+      fullName:           data.fullName,
       specialization:     data.specialization,
       qualification:      data.qualification,
-      experience:         data.experience,
+      experience:         Number(data.experience),
       registrationNumber: data.registrationNumber,
-      consultationFee:    data.consultationFee,
+      consultationFee:    Number(data.consultationFee),
       clinicName:         data.clinicName,
       clinicAddress:      data.clinicAddress,
-      profileImage:       data.profileImage,
-      documents:          data.documents,
       availability:       data.availability,
-      status:             'pending',
-      isBlocked:          false,
-      isDeleted:          false,
-      isVerified:      false
-    });
+      profileImage:                   profileKey,   // ← S3 key
+      degreeCertificateUrl:           degreeKey,    // ← S3 key
+      registrationCertificateUrl:     regKey,       // ← S3 key
+      governmentIdUrl:                govKey,       // ← S3 key
+      status:    'pending'  as const,
+      isBlocked: false,
+      isDeleted: false,
+    }
 
+    // ── Create application ────────────────────
+    let application: DoctorApplicationDocument;
+
+    if (existing && existing.application.status === 'rejected' ||
+        existing && existing.application.status === 'more_documents_required') {
+      // resubmit
+      await doctorApplicationModel.findByIdAndUpdate(
+        existing.application._id,
+        {
+          $set: {
+            ...applicationData,
+            verificationRemarks:        undefined,
+            verifiedBy:                 undefined,
+            verifiedAt:                 undefined,
+          },
+        }
+      );
+      const updated = await this.doctorRepository
+        .findApplicationById(existing.application._id.toString());
+      application = updated!;
+    } else {
+      application = await this.doctorRepository.createApplication(applicationData);
+    }
 
     return {
       message:     HttpResponse.DOCTOR_APPLICATION_SENT,
       application: toDoctorApplicationDTO(application),
     };
+  }
 
-}
+
 
 
   async getMyStatus(userId: string) {
+   const result = await this.doctorRepository.findApplicationByUserId(userId);
 
-    console.log('[getMyStatus] userId:', userId);
+   if(!result){
+    throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
+   }
 
-    const application = await this.doctorRepository
-      .findApplicationByUserId(userId);
-
-    console.log('[getMyStatus] application found:', application ? 'YES' : 'NO');
-
-    if (!application) {
-      throw new Error(HttpResponse.DOCTOR_NOT_FOUND);
-    }
-
-    return {
-      status:          application.status,
-      application:     toDoctorApplicationDTO(application),
-      rejectionReason: application.rejectionReason,
-    };
+   const presignedUrls = await this._resolvePresignedUrls(result.application)
+   return toDoctorStatusDTO(result,presignedUrls)
   }
-
 async getMyDashboard(userId: string): Promise<DoctorDashboardDTO> {
-    const result =  await this.doctorRepository
-    .findApplicationByUserId(userId)
-
-    if(!result) throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
-
-      if(result.status !== 'approved'){
-        throw new Error('Doctor not approved yet')
-      }
-     const user = await this.userRepository.findById(userId);
-
-    if (!user) {
-        throw new Error(HttpResponse.USER_NOT_FOUND);
+     const result = await this.doctorRepository
+      .findApplicationByUserId(userId);
+    if (!result) throw new Error(HttpResponse.DOCTOR_NOT_FOUND);
+    if (result.application.status !== 'approved') {
+      throw new Error('Doctor not approved yet.');
     }
 
-    return toDoctorDashboardDTO({
-        application: result,
-        user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            phone: user.phone,
-            imageUrl: user.imageUrl,
-            isBlocked: user.isBlocked,
-            isVerified: user.isVerified,
-            isDeleted: user.isDeleted,
-        },
-    });
+    const presignedUrls = await this._resolvePresignedUrls(result.application);
+    return toDoctorDashboardDTO(result, presignedUrls);
 
 
 }
@@ -148,4 +196,32 @@ async getMyDashboard(userId: string): Promise<DoctorDashboardDTO> {
   //   if (!profile) return null;
   //   return toDoctorProfileDTO(profile);
   // }
+ private async _resolvePresignedUrls(
+    application: DoctorApplicationDocument
+  ): Promise<{
+    degreeCertificateUrl?:       string;
+    registrationCertificateUrl?: string;
+    governmentIdUrl?:            string;
+  }> {
+    const [degreeUrl, regUrl, govUrl] = await Promise.allSettled([
+      application.degreeCertificateUrl
+        ? getPresignedUrl(application.degreeCertificateUrl)
+        : Promise.resolve(undefined),
+      application.registrationCertificateUrl
+        ? getPresignedUrl(application.registrationCertificateUrl)
+        : Promise.resolve(undefined),
+      application.governmentIdUrl
+        ? getPresignedUrl(application.governmentIdUrl)
+        : Promise.resolve(undefined),
+    ]);
+
+    return {
+      degreeCertificateUrl: degreeUrl.status === 'fulfilled'
+        ? degreeUrl.value : undefined,
+      registrationCertificateUrl: regUrl.status === 'fulfilled'
+        ? regUrl.value : undefined,
+      governmentIdUrl: govUrl.status === 'fulfilled'
+        ? govUrl.value : undefined,
+    };
+  }
 }

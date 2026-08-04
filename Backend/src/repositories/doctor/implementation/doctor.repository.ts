@@ -16,17 +16,39 @@ export class DoctorRepository implements IDoctorRepository {
       return doc.toObject() as DoctorApplicationDocument;
   }
   
-  async findApplicationByUserId(userId: string): Promise<DoctorApplicationDocument | null> {
-    console.log("Searching for userId:", userId);
-     const doc = await doctorApplicationModel.findOne({ userId }).lean();
-     console.log("Result:", doc);
+  async findApplicationByUserId(
+  userId: string
+): Promise<DoctorApplicationWithUser | null> {
 
-    return doc as DoctorApplicationDocument | null;
-  }
+    const application = await doctorApplicationModel
+        .findOne({ userId })
+        .lean() as DoctorApplicationDocument | null;
+
+    if (!application) return null;
+
+    const user = await UserModel.findById(application.userId).lean();
+
+    if (!user) return null;
+
+    return {
+        application,
+        user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            fullName: user.fullName,
+            phone: user.phone,
+            imageUrl: user.imageUrl,
+            isBlocked: user.isBlocked,
+            isVerified: user.isVerified,
+            isDeleted: user.isDeleted,
+        },
+    };
+}
 
   async findApplicationById(id: string): Promise<DoctorApplicationDocument | null> {
       const doc = await doctorApplicationModel
-      .findOne({id})
+      .findOne({_id:id})
       .lean()
 
       return doc as DoctorApplicationDocument | null

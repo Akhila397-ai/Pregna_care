@@ -4,7 +4,8 @@ import { IAdminRepository } from "../interface/IAdmin.repository.js";
 import UserModel from "../../../models/User.model.js";
 import { userData } from "../../../types/user.js";
 import doctorApplicationModel from "../../../models/doctorApplication.model.js";
-import { doctorApplicationData, DoctorApplicationDocument, DoctorApplicationWithUser } from "../../../types/doctor.js";
+import { doctorApplicationData, DoctorApplicationDocument, DoctorApplicationWithUser, DoctorStatus } from "../../../types/doctor.js";
+import { stat } from "node:fs";
 
 
 
@@ -127,6 +128,7 @@ export class AdminRepository implements IAdminRepository {
            _id: user._id,
             name: user.name,
             email: user.email,
+            fullName: user.fullName,
             phone: user.phone,
             imageUrl: user.imageUrl,
             isBlocked: user.isBlocked,
@@ -141,6 +143,31 @@ export class AdminRepository implements IAdminRepository {
         return {
             doctors: item,
             total
+        }
+    }
+
+    async verifyDoctor(id: string, status: DoctorStatus, adminId: string, remarks?: string): Promise<void> {
+        await doctorApplicationModel.findByIdAndUpdate(
+            id,
+            {
+                $set: {
+                    status,
+                    verifiedBy:  new Types.ObjectId(adminId),
+                    verifiedAt: new Date(),
+                    verificationRemarks: remarks ?? '',
+                }
+            }
+        );
+
+        if(status === 'approved'){
+            const app = await doctorApplicationModel
+            .findById(id).select('userId').lean();
+            if(app){
+                await UserModel.findByIdAndUpdate(
+                    app.userId,
+                    { $set: { role: 'doctor', isVerified: true}}
+                )
+            }
         }
     }
 
@@ -162,6 +189,7 @@ export class AdminRepository implements IAdminRepository {
             name:       user.name,
             email:      user.email,
             phone:      user.phone,
+            fullName: user.fullName,
             imageUrl:   user.imageUrl,
             isBlocked:  user.isBlocked,
             isVerified: user.isVerified,

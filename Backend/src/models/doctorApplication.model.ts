@@ -22,6 +22,11 @@ const DoctorApplicationSchema = new Schema<IDoctorApplicationDocument>(
             required: true,
             unique: true,
         },
+         fullName: {
+             type: String,
+             required: true,
+             trim: true
+         },
         specialization: {
             type: String,
             required: true,
@@ -55,41 +60,52 @@ const DoctorApplicationSchema = new Schema<IDoctorApplicationDocument>(
             type: String,
             required: true
         },
-        documents: {
-            type:[String],
-            required: true
-        },
         availability: {
             type : AvailabilitySchema,
             required: true
         },
-        status: {
-            type: String,
-            enum: ['pending','approved','rejected'],
-            default: 'pending'
+         status: {
+        type:    String,
+        enum: [
+            'pending',
+            'under_review',
+            'approved',
+            'rejected',
+            'more_documents_required',
+        ],
+        default: 'pending',
         },
-        rejectionReason: {
-            type: String,
+        verificationRemarks: {
+             type: String 
+        },
+        verifiedBy: {
+        type: Schema.Types.ObjectId,
+        ref:  'User',
+        },
+        verifiedAt: { 
+            type: Date 
         },
         isBlocked: {
             type: Boolean,
             default: false
         },
-        isVerified: {
-            type: Boolean,
-            default: false,
-        },
         isDeleted: {
             type: Boolean,
             default: false,
         },
-        approvedBy: {
-            type: Schema.Types.ObjectId,
-            ref: "User",
+
+        degreeCertificateUrl:{ 
+           type: String,
+           required: true
         },
-        approvedAt: {
-            type: Date,
-        },
+    registrationCertificateUrl: {
+         type: String,
+        required: true
+     },
+    governmentIdUrl:{
+         type: String, 
+         required: true 
+       },
         
     },
     {timestamps: true}

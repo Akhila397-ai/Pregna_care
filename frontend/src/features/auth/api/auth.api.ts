@@ -10,7 +10,8 @@ import {
    AuthResponse,
    OTPResponse,
    MessageResponse,
-   SetOnboardingRequest
+   SetOnboardingRequest,
+   UserAuthResponse
 } from '../types/auth.types'
 import ForgotPasswordPage from "../pages/ForgotPassword";
 
@@ -62,6 +63,10 @@ export const authApi = {
     },
     setOnboarding: async( data: SetOnboardingRequest): Promise<MessageResponse> => {
         const res = await axiosInstance.post('/auth/set-onboarding',data);
+        return res.data
+    },
+    getMe: async (): Promise<UserAuthResponse> => {
+        const res = await axiosInstance.get('/auth/me')
         return res.data
     }
 

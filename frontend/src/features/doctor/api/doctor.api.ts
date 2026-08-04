@@ -1,14 +1,54 @@
 import axiosInstance  from '../../../api/axiosInstance'
-import { DoctorApplyRequest,DoctorApplyResponse,DoctorApplicationResponse,DoctorProfileResponse,DoctorStatusResponse, DoctorDashboardResponse  } from '../types/doctor.types'
+import {DoctorApplyFormData, DoctorApplyRequest,DoctorApplyResponse,DoctorApplicationResponse,DoctorProfileResponse,DoctorStatusResponse, DoctorDashboardResponse  } from '../types/doctor.types'
 
 export const doctorApi = {
 
     //apply
     apply: async (
-        data: DoctorApplyRequest
+        data: DoctorApplyFormData
     ): Promise<DoctorApplyResponse> => {
-        const res = await axiosInstance.post('/doctor/apply',data);
+
+        const formData = new FormData();
+
+        formData.append('fullName', data.fullName);
+        formData.append('specialization', data.specialization);
+        formData.append('qualification',data.qualification);
+        formData.append('experience',data.experience.toString());
+        formData.append('registrationNumber',data.registrationNumber)
+        formData.append('consultationFee',data.consultationFee.toString());
+        formData.append('clinicName',data.clinicName);
+        formData.append('clinicAddress',data.clinicAddress);
+
+        formData.append('availability',JSON.stringify(data.availability));
+
+        if(data.profileImage){
+            formData.append('profileImage', data.profileImage)
+        }
+        if(data.degreeCertificate){
+            formData.append('degreeCertificate',data.degreeCertificate)
+        }
+
+        if(data.registrationCertificate){
+            formData.append('registrationCertificate',data.registrationCertificate)
+        }
+
+        if(data.governmentId){
+           formData.append('governmentId', data.governmentId);
+        }
+        console.log('[doctorApi.apply] FormData fields:');
+    for (const [key, value] of formData.entries()) {
+      console.log(' ', key, ':', value instanceof File ? value.name : value);
+    }
+
+
+
+
+        const res = await axiosInstance.post('/doctor/apply',formData, {
+            headers: {'Content-Type': 'multipart/form-data'}
+        });
+
         return res.data;
+           
     },
 
     getMyStatus: async (): Promise<DoctorStatusResponse> => {

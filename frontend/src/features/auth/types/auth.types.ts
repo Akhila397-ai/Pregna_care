@@ -1,6 +1,7 @@
+
+
 export type OnboardingType = 'pregnant' | 'trying' | 'doctor' | 'exploring' | null;
-
-
+export type UserRole = 'user' | 'doctor' | 'admin';
 
 
 
@@ -12,8 +13,9 @@ export interface RegisterRequest {
 }
 
 export interface LoginRequest {
-    email: string;
+    email: string; 
     password: string
+    expectedRole:UserRole;
 }
 
 export interface VerifyOTPRequest {

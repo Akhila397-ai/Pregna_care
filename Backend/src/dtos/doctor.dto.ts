@@ -2,6 +2,7 @@ import { DoctorStatus, Availability } from "../types/doctor.js";
 
 
 export interface DoctorApplyDTO {
+    fullName: string;
     specialization:  string;
     qualification:   string;
     experience:      number;
@@ -9,8 +10,6 @@ export interface DoctorApplyDTO {
     consultationFee: number;
     clinicName: string;
     clinicAddress: string;
-    profileImage: string;
-    documents: string[];
     availability: {
         days:  string[];
         startTime: string;
@@ -21,6 +20,7 @@ export interface DoctorApplyDTO {
 export interface DoctorApplicationDTO {
     id:  string;
     userId: string;
+    fullName: string;
     specialization: string;
     qualification: string;
     experience: number;
@@ -29,12 +29,15 @@ export interface DoctorApplicationDTO {
     clinicName: string;
     clinicAddress: string;
     profileImage: string;
-    documents: string[];
     availability: Availability;
+    degreeCertificateUrl?:       string;
+    registrationCertificateUrl?: string;
+    governmentIdUrl?:            string;
     status:  DoctorStatus;
-    rejectionReason?: string;
-    approvedBy?: string;
-    approvedAt?:  Date;
+    verificationRemarks?: string;
+    verifiedBy?:          string;
+    verifiedAt?:          Date;
+
     createdAt?: Date;
 }
 export interface RejectDoctorDTO {
@@ -77,5 +80,6 @@ export interface DoctorApplyResponseDTO {
 export interface DoctorStatusResponseDTO {
     status:   DoctorStatus;
     application: DoctorApplicationDTO;
-    rejectionReason?: string;
+    name: string;
+    verificationRemarks?: string;
 }

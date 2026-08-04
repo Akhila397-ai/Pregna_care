@@ -34,6 +34,7 @@ export interface IDoctorMappedData {
         name:            string;
         email:           string;
         phone: string;
+        fullName: string;
         specialization:  string;
         qualification: string;
         experience: number;
@@ -48,6 +49,11 @@ export interface IDoctorMappedData {
           startTime: string;
           endTime: string;
         }
+        degreeCertificateUrl?:       string;
+    registrationCertificateUrl?: string;
+    governmentIdUrl?:            string;
+        verificationRemarks: string;
+        verifiedAt: Date;
         status: DoctorStatus;
         rejectionReason?: string;
         isBlocked: boolean;

@@ -15,15 +15,9 @@ const DoctorPendingPage = () => {
 
   // ← on every load, check if status changed
   useEffect(() => {
-    if(!user){
-      navigate('/login');
+    if(user?.role === 'admin'){
+      navigate('/admin/dashboard', {replace: true});
       return
-    }
-
-    if(user.role === 'admin'){
-       console.warn('[DoctorPendingPage] admin landed here — redirecting');
-      navigate('/admin/dashboard');
-      return;
     }
     checkStatusAndRedirect();
   }, []);
@@ -64,7 +58,7 @@ const DoctorPendingPage = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-[#8fba8f] font-medium">Name</span>
                   <span className="text-[#1a2e1a] font-semibold">
-                    {application.clinicName}
+                    {application.fullName}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

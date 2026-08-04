@@ -22,6 +22,7 @@ router.route(ROUTES.AUTH.RESET_PASSWORD).post(verifyResetJWT,authController.rese
 router.route(ROUTES.AUTH.RESEND_OTP).post(authController.resendOtp)
 router.route(ROUTES.AUTH.REFRESH_TOKEN).post(authenticate,authController.refreshToken);
 router.route(ROUTES.AUTH.SET_ONBOARDING).post(authenticate, authController.setOnboarding);
+router.route(ROUTES.AUTH.ME).get(authenticate, authController.getMe);
 
 
 

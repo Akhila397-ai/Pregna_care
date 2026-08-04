@@ -1,7 +1,7 @@
 import { Types } from "mongoose";
 import { IBaseRepository } from "../../base.repository.js";
 import { userData } from "../../../types/user.js";
-import { doctorApplicationData, DoctorApplicationDocument, DoctorApplicationWithUser } from "../../../types/doctor.js";
+import { doctorApplicationData, DoctorApplicationDocument, DoctorApplicationWithUser, DoctorStatus } from "../../../types/doctor.js";
 
 
 export interface IAdminRepository extends IBaseRepository<userData> {
@@ -30,6 +30,7 @@ export interface IAdminRepository extends IBaseRepository<userData> {
 
    findDoctorById(id: string): Promise<DoctorApplicationWithUser | null>
     approveDoctor(id: string,adminId: string): Promise<void>;
+    verifyDoctor(id: string, status: DoctorStatus, adminId: string, remarks?: string): Promise<void>;
     rejectDoctor(id: string, rejectionReason: string): Promise<void>;
     blockDoctor(id: string): Promise<void>;
     unblockDoctor(id: string): Promise<void>;

@@ -1,5 +1,6 @@
 import { AdminAuthResponseDTO,GetMappedDoctorsResponse,GetMappedUsersResponse } from "../../../dtos/admin.dto.js";
 import { MessageResponseDTO } from "../../../dtos/auth.dto.js";
+import { VerifyDoctorDTO } from "../../../dtos/admin.dto.js";
 
 
 export interface IAdminService {
@@ -13,7 +14,9 @@ export interface IAdminService {
 
     //doctorManagement
     getAllDoctors(page: number, limit: number): Promise<GetMappedDoctorsResponse>;
-    approveDoctor(doctorId: string,adminId: string): Promise<MessageResponseDTO> 
+    approveDoctor(doctorId: string,adminId: string): Promise<MessageResponseDTO>
+    verifyDoctor(doctorId: string, adminId:  string,dto:VerifyDoctorDTO ): Promise<MessageResponseDTO>;
+  
     rejectDoctor(doctorId: string,adminId: string): Promise<MessageResponseDTO>
     blockDoctor(doctorId: string): Promise<MessageResponseDTO>;
     unblockDoctor(doctorId: string): Promise<MessageResponseDTO>

@@ -11,7 +11,7 @@ export interface IDoctorRepository {
 
     findApplicationByUserId(
         userId: string
-    ): Promise<DoctorApplicationDocument | null>
+    ): Promise<DoctorApplicationWithUser | null>
 
     findApplicationById(
         id: string

@@ -1,27 +1,47 @@
-import { useState }  from 'react';
+import { use, useEffect, useState }  from 'react';
 import { useAdmin }  from '../hooks/useAdmin';
 import {
   validateAdminLogin,
   AdminLoginErrors,
   hasErrors,
 } from '../utils/validation';
+import { useAuth } from '../../auth/hooks/useAuth';
+import { useAppSelector } from '../../../store/hooks';
+import { useNavigate } from 'react-router-dom';
 
 const AdminLoginPage = () => {
-  const { login, loading, error } = useAdmin();
+  const navigate = useNavigate()
+  const { login, loading, error} = useAuth();
+  const { user, token} = useAppSelector((state) => state.auth);
 
   const [email,        setEmail]        = useState('');
   const [password,     setPassword]     = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [focused,      setFocused]      = useState<string | null>(null);
   const [errors,       setErrors]       = useState<AdminLoginErrors>({});
+  
+  
+  useEffect(() => {
+    if(token && user?.role === 'admin') {
+      navigate('/admin/dashboard', { replace: true})
+    }
+  }, [token, user])
 
   const handleLogin = async () => {
     const errs = validateAdminLogin(email, password);
     if (hasErrors(errs)) { setErrors(errs); return; }
     setErrors({});
-    await login(email, password);
+    await login(email, password,'admin');
   };
 
+  const inputCls = (field: string) =>
+    `w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white
+     text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
+     transition-all duration-200 text-sm ${
+    focused === field
+      ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
+      : 'border-[#dde8dd]'
+  }`;
   return (
     <div className="h-screen overflow-hidden flex flex-col lg:flex-row font-sans bg-[#f5f7f0]">
 

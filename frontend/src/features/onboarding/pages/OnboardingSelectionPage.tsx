@@ -50,6 +50,7 @@ const OPTIONS: {
 
 const OnboardingSelectionPage = () => {
   const { user, selectOnboarding, loading, logoutUser } = useAuth();
+  console.log("loading:", loading);
 
   return (
     <div className="min-h-screen bg-[#f5f7f0] font-sans">

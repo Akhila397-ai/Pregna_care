@@ -1,9 +1,16 @@
 import { Types } from "mongoose";
 import { userData } from "../types/user.js";
 import { IUserMappedData,IDoctorsMappedData,AdminAuthDTO} from "../dtos/admin.dto.js";
-import { doctorApplicationData, DoctorApplicationDocument } from "../types/doctor.js";
-import type {DoctorApplicationWithUser}  from "../types/doctor.js";
+import { doctorApplicationData, DoctorApplicationDocument,DoctorApplicationWithUser } from "../types/doctor.js";
 
+
+
+type PresignedUrls = {
+    profileImage ?: string;
+    degreeCertificateUrl?:  string;
+    registrationCertificateUrl?: string;
+    governmentIdUrl?: string;
+}
 
 type PopulatedDoctorApplication = doctorApplicationData & {
     _id: Types.ObjectId;
@@ -42,30 +49,40 @@ export const toUserMappedData = (
 
 
 export const toDoctorsMappedData = (
-  { application, user }: DoctorApplicationWithUser
+  { application, user }: DoctorApplicationWithUser,
+  presignedUrls: PresignedUrls
+   = {}
 ): IDoctorsMappedData => ({
     _id:    application._id.toString(),
     userId: application.userId.toString(),
+
     name:       user.name,
-    email:      user.email,
-    phone:      user.phone,
-    imageUrl:   user.imageUrl,
-    isBlocked:  user.isBlocked,
-    isDeleted:  user.isDeleted,
-    isVerified: user.isVerified,
-    specialization:     application.specialization,
-    qualification:      application.qualification,
-    experience:         application.experience,
-    registrationNumber: application.registrationNumber,
-    consultationFee:    application.consultationFee,
-    clinicName:         application.clinicName,
-    clinicAddress:      application.clinicAddress,
-    profileImage:       application.profileImage,
-    documents:          application.documents,
-    availability:       application.availability,
-    status:             application.status,
-    rejectionReason:    application.rejectionReason,
-    approvedBy:         application.approvedBy?.toString(),
-    approvedAt:         application.approvedAt,
-    createdAt:          application.createdAt,
+  email:      user.email,
+  phone:      user.phone,
+  imageUrl:   user.imageUrl,
+  isBlocked:  user.isBlocked,
+  isDeleted:  user.isDeleted,
+  isVerified: user.isVerified,
+
+  // ← from DoctorApplication
+  fullName:           application.fullName,
+  specialization:     application.specialization,
+  qualification:      application.qualification,
+  experience:         application.experience,
+  registrationNumber: application.registrationNumber,
+  consultationFee:    application.consultationFee,
+  clinicName:         application.clinicName,
+  clinicAddress:      application.clinicAddress,
+  availability:       application.availability,
+  status:             application.status,
+  verificationRemarks: application.verificationRemarks,
+  verifiedBy:         application.verifiedBy?.toString(),
+  verifiedAt:         application.verifiedAt,
+  createdAt:          application.createdAt,
+
+  // ← presigned URLs
+  profileImage:               presignedUrls.profileImage,
+  degreeCertificateUrl:       presignedUrls.degreeCertificateUrl,
+  registrationCertificateUrl: presignedUrls.registrationCertificateUrl,
+  governmentIdUrl:            presignedUrls.governmentIdUrl,
 })

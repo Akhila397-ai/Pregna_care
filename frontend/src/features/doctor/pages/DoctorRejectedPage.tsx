@@ -1,12 +1,18 @@
 import { useEffect }  from 'react';
-import { Link }       from 'react-router-dom';
+import { Link, useNavigate }       from 'react-router-dom';
 import { useDoctor }  from '../hooks/useDoctor';
+import { useAppSelector } from '../../../store/hooks';
 
 const DoctorRejectedPage = () => {
-  const { application, fetchApplication, logout } = useDoctor();
-
+  const { application, fetchStatus, logout } = useDoctor();
+  const navigate = useNavigate();
+  const user = useAppSelector((s) => s.auth.user)
   useEffect(() => {
-    fetchApplication();
+    if(user?.role === 'admin'){
+      navigate('/admin/dashboard', {replace: true})
+      return
+    }
+    fetchStatus()
   }, []);
 
   return (
@@ -31,13 +37,13 @@ const DoctorRejectedPage = () => {
         </p>
 
         {/* Rejection Reason */}
-        {application?.rejectionReason && (
+        {application?.verificationRemarks && (
           <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-left mb-6">
             <p className="text-xs font-semibold text-red-600 mb-1">
               Reason for Rejection:
             </p>
             <p className="text-sm text-red-700">
-              {application.rejectionReason}
+              {application.verificationRemarks}
             </p>
           </div>
         )}

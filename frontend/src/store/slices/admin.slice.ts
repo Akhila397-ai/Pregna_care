@@ -6,23 +6,22 @@ import {
   IUserMappedData,
   IDoctorMappedData,
 } from '../../features/admin/types/admin.types';
+import { DoctorStatus } from '../../features/doctor/types/doctor.types';
 
 interface AdminState {
-  admin:       AdminAuthResponse | null;
-  token:       string | null;
-  users:       IUserMappedData[];
-  totalUsers:  number;
-  totalPages:  number;
-  doctors:     IDoctorMappedData[];
-  totalDoctors: number;
+  users:  IUserMappedData[];
+  totalUsers: number;
+  totalPages: number;
+
+  doctors: IDoctorMappedData[];
+  totalDoctors:  number;
   doctorPages:  number;
-  loading:     boolean;
-  error:       string | null;
+
+  loading:  boolean;
+  error: string | null;
 }
 
 const initialState: AdminState = {
-  admin:        null,
-  token:        localStorage.getItem('adminToken'),
   users:        [],
   totalUsers:   0,
   totalPages:   0,
@@ -35,19 +34,6 @@ const initialState: AdminState = {
 
 // ── Thunks ────────────────────────────────────
 
-export const adminLoginThunk = createAsyncThunk<
-  AdminAuthResponse, 
-  AdminLoginRequest 
->(
-  'admin/login',
-  async (data, { rejectWithValue }) => {
-    try {
-      return await adminApi.login(data);
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.error || 'Login failed.');
-    }
-  }
-);
 
 export const getUsersThunk = createAsyncThunk(
   'admin/getUsers',
@@ -106,6 +92,32 @@ export const getDoctorsThunk = createAsyncThunk(
     }
   }
 );
+
+export const verifyDoctorThunk = createAsyncThunk(
+  'admin/verifyDoctor',
+  async(
+    {
+      doctorId,
+      action,
+      remarks
+    }: {
+      doctorId: string;
+      action:'approve' | 'reject' | 'more_documents_required' | 'under_review';
+      remarks?: string;
+    },
+    {rejectWithValue}
+
+  ) => {
+    try {
+      await adminApi.verifyDoctor(doctorId,action,remarks);
+      return { doctorId,action};
+    } catch (error) {
+       return rejectWithValue(
+        error.response?.data?.error || 'Verification failed.'
+      );
+    }
+  }
+)
 
 export const approveDoctorThunk = createAsyncThunk(
   'admin/approveDoctor',
@@ -177,33 +189,20 @@ const adminSlice = createSlice({
   name: 'admin',
   initialState,
   reducers: {
-    adminLogout: (state) => {
-      state.admin = null;
-      state.token = null;
-      localStorage.removeItem('adminToken');
-    },
-    clearAdminError: (state) => {
-      state.error = null;
-    },
+   clearAdminData: (state) => {
+    state.users = [];
+    state.totalUsers = 0;
+    state.totalPages = 0;
+    state.doctors = []
+    state.totalDoctors = 0;
+    state.doctorPages = 0;
+    state.error = null;
+   },
+   clearAdminError: (state) => {
+    state.error = null;
+   },
   },
   extraReducers: (builder) => {
-
-    // ── Login ──────────────────────────────────
-    builder
-      .addCase(adminLoginThunk.pending, (state) => {
-        state.loading = true;
-        state.error   = null;
-      })
-      .addCase(adminLoginThunk.fulfilled, (state, action) => {
-        state.loading = false;
-        state.admin   = action.payload.user as any;
-        state.token   = action.payload.token;
-        localStorage.setItem("accessToken", action.payload.token);
-      })
-      .addCase(adminLoginThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.error   = action.payload as string;
-      });
 
     // ── Get Users ──────────────────────────────
     builder
@@ -221,6 +220,21 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error   = action.payload as string;
       });
+
+      builder
+      .addCase(verifyDoctorThunk.fulfilled,(state,action) => {
+        const {doctorId, action: act} = action.payload;
+        const doctor = state.doctors.find((d)=> d._id === doctorId)
+        if(doctor){
+          const statusMap = {
+            approve: 'approved',
+            reject: 'rejected',
+            more_documents_required: 'more_documents_required',
+            under_review:'under_review'
+          } as const;
+          doctor.status = statusMap[act];
+        }
+      })
 
     // ── Block User ─────────────────────────────
     builder
@@ -295,5 +309,5 @@ const adminSlice = createSlice({
   },
 });
 
-export const { adminLogout, clearAdminError } = adminSlice.actions;
+export const { clearAdminData, clearAdminError } = adminSlice.actions;
 export default adminSlice.reducer;

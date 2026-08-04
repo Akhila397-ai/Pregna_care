@@ -4,16 +4,20 @@ import adminReducer from './slices/admin.slice'
 import doctorReducer from '../features/doctor/store/doctor.slice'
 
 const traceMiddleware: Middleware = () => (next) => (action: any) => {
-  if (
-    action.type === 'doctor/getMyStatus/pending' ||
-    action.type === 'doctor/getMyDashboard/pending'
-  ) {
-    console.group(`🔴 [Redux] ${action.type}`);
-    console.trace('dispatched from:');
-    console.groupEnd();
+  if (process.env.NODE_ENV === 'development') {
+    if (
+      typeof action.type === 'string' &&
+      (action.type.includes('doctor/getMyStatus') ||
+       action.type.includes('doctor/getMyDashboard'))
+    ) {
+      console.group(`[Redux] ${action.type}`);
+      console.trace();
+      console.groupEnd();
+    }
   }
   return next(action);
 };
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,

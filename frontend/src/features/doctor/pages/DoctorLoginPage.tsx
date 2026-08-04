@@ -20,7 +20,7 @@ const DoctorLoginPage = () => {
     const errs = validateLogin(email, password);
     if (hasErrors(errs)) { setErrors(errs); return; }
     setErrors({});
-    await login(email, password);
+    await login(email, password, 'doctor');
     // ← useAuth.login() checks role and redirects:
     // role === 'doctor' → /doctor/dashboard (if approved)
     // role === 'user'   → /onboarding

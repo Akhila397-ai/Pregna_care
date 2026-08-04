@@ -1,14 +1,7 @@
 import axiosInstance from "../../../api/axiosInstance";
-import { AdminAuthResponse, AdminLoginRequest,AdminLoginResponse,GetMappedDoctorsResponse,getMappedUsersResponse } from "../types/admin.types";
+import { GetMappedDoctorsResponse,getMappedUsersResponse } from "../types/admin.types";
 
 export const adminApi = {
-   login: async (data: AdminLoginRequest): Promise<AdminAuthResponse> => {
-    const res = await axiosInstance.post<AdminAuthResponse>(
-        '/auth/login',
-        data
-    );
-    return res.data;
-},
 
     getAllUsers: async(
         page: number,
@@ -54,6 +47,11 @@ rejectDoctor: async (doctorId: string,rejectionReason: string): Promise<{ messag
   );
 
   return res.data;
+},
+
+verifyDoctor: async (doctorId: string,action: string,remarks?: string): Promise<{message: string}> => {
+const res = await axiosInstance.patch(`admin/doctors/${doctorId}/verify`,{action,remarks})
+return res.data;
 },
 
    blockDoctor: async (doctorId: string): Promise<{ message: string }> => {

@@ -9,4 +9,5 @@ export interface IAuthController {
     resendOtp(req: Request, res: Response): Promise<void>;
     refreshToken(req: Request, res: Response): Promise<void>;
     setOnboarding(req: Request, res: Response):  Promise<void>;
+    getMe(req: Request, res: Response): Promise<void>;
 }

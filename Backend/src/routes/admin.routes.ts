@@ -16,6 +16,7 @@ router.route(ROUTES.ADMIN.BLOCK_USER).patch(...isAdmin,adminController.blockUser
 router.route(ROUTES.ADMIN.UNBLOCK_USER).patch(...isAdmin,adminController.unblockUser);
 router.route(ROUTES.ADMIN.DELETE_USER).patch(...isAdmin,adminController.deleteUser);
 router.route(ROUTES.ADMIN.DOCTORS).get(...isAdmin,adminController.getAllDoctors);
+router.route(ROUTES.ADMIN.VERIFY_DOCTOR).patch(...isAdmin,adminController.verifyDoctor);
 router.route(ROUTES.ADMIN.BLOCK_DOCTOR).patch(...isAdmin,adminController.blockDoctor);
 router.route(ROUTES.ADMIN.UNBLOCK_DOCTOR).patch(...isAdmin,adminController.unblockDoctor);
 router.route(ROUTES.ADMIN.DELETE_DOCTOR).patch(...isAdmin,adminController.deleteDoctor);

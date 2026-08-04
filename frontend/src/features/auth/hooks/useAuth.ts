@@ -13,8 +13,10 @@ import {
   logout,
   clearError,
 }                            from '../../../store/slices/auth.slice';
-import { OnboardingType } from '../types/auth.types';
+import { OnboardingType, UserRole } from '../types/auth.types';
 import axiosInstance from '../../../api/axiosInstance';
+import { clearAdminData } from '../../../store/slices/admin.slice';
+import { clearDoctorState } from '../../doctor/store/doctor.slice';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -63,14 +65,16 @@ export const useAuth = () => {
     }
   };
 
-  // ── Login ─────────────────────────────────────
-  const login = async (email: string, password: string) => {
-   const result = await dispatch(loginThunk({ email, password}));
-   if(loginThunk.fulfilled.match(result)){
-    const {role, isOnboarded, onboardingType} = result.payload.user;
+  // ── Login(All roles) ─────────────────────────────────────
+  const login = async (email: string, password: string, expectedRole: UserRole) => {
+   const result = await dispatch(loginThunk({ email, password, expectedRole}));
 
+   console.log('[useAuth.login] result:', result);
+   if(loginThunk.fulfilled.match(result)){
+    const { role, isOnboarded, onboardingType} = result.payload.user;
+    console.log('[useAuth.login] role:', role);
     if(role === 'admin'){
-      navigate('/admin/login');
+      navigate('/admin/dashboard',{replace: true})
       return
     }
 
@@ -78,31 +82,48 @@ export const useAuth = () => {
       try {
         const statusRes = await axiosInstance.get('/doctor/my-status');
         const status = statusRes.data.status;
-
         if(status === 'approved'){
-          navigate('/doctor/dashboard');
-        } else if(status === 'rejected'){
+          navigate('/doctor/dashboard')
+        }else if(status === 'rejected'){
           navigate('/doctor/rejected')
-        }else {
+        }else{
           navigate('/doctor/pending')
         }
       } catch  {
-        navigate('/doctor/pending');
+        navigate('/doctor/pending')
+        
       }
       return
     }
-    if(!isOnboarded){
-      navigate('/onboarding');
+      try {
+        const statusRes = await axiosInstance.get('/doctor/my-status');
+        const appStatus = statusRes.data.status;
+
+        if(appStatus === 'pending' || appStatus === 'under_review') {
+          navigate('/doctor/rejected', { replace: true })
+          return
+        }
+        if (appStatus === 'rejected' || appStatus === 'more_documents_required') {
+        navigate('/doctor/rejected', { replace: true });
+        return;
+      } 
+      } catch {
+
+      }
+    
+
+    if (!isOnboarded) {
+      navigate('/onboarding', { replace: true });
     } else if (onboardingType === 'pregnant') {
-      navigate('/dashboard/pregnancy');
+      navigate('/dashboard/pregnancy', { replace: true });
     } else if (onboardingType === 'trying') {
-      navigate('/dashboard/menstruation');
+      navigate('/dashboard/menstruation', { replace: true });
     } else if (onboardingType === 'exploring') {
-      navigate('/dashboard/explore');
+      navigate('/dashboard/explore', { replace: true });
     } else {
-      navigate('/onboarding');
+      navigate('/onboarding', { replace: true });
     }
-    }
+   }
    
   };
 
@@ -169,6 +190,8 @@ const resetPassword = async (
   // ── Logout ────────────────────────────────────
   const logoutUser = () => {
     dispatch(logout());
+    dispatch(clearAdminData())
+    dispatch(clearDoctorState())
     navigate('/login');
   };
 

@@ -99,6 +99,36 @@ export class AdminController implements IAdminController {
     }
   }
 
+   async verifyDoctor(req: Request, res: Response): Promise<void> {
+       try {
+        const doctorId = req.params.id
+        if(Array.isArray(doctorId)){
+            throw new Error('invalid doctprId')
+        }
+        const adminId = req.user!.userId;
+        const dto = req.body;
+
+        if(!['approve','reject','more_documents_required', 'under_review']
+            .includes(dto.action)){
+               res.status(HttpStatus.BAD_REQUEST).json({
+                error: 'Invalid Action'
+               });
+               return;
+            }
+            const result = await this.adminService.verifyDoctor(
+                doctorId, adminId, dto
+            );
+            res.status(HttpStatus.OK).json(result)
+        
+       } catch (error: unknown) {
+            if(error instanceof Error){
+                res.status(HttpStatus.BAD_REQUEST).json(error.message)
+            }else{
+                res.status(HttpStatus.BAD_REQUEST).json({message:'internal error'})
+            }
+        }
+   }
+
    approveDoctor = async(req: Request, res: Response): Promise<void>=> {
       try {
 

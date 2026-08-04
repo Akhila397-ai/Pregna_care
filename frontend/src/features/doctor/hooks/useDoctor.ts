@@ -12,7 +12,7 @@ import {
   clearDoctorError,
 } from '../store/doctor.slice';
 
-import { DoctorApplyRequest } from '../types/doctor.types';
+import { DoctorApplyFormData, DoctorApplyRequest } from '../types/doctor.types';
 
 export const useDoctor = () => {
   const dispatch = useAppDispatch();
@@ -30,19 +30,19 @@ export const useDoctor = () => {
   const { user,token } = useAppSelector((state) => state.auth);
 
   // Apply as Doctor
-  const apply = async (data: DoctorApplyRequest) => {
+  const apply = async (data: DoctorApplyFormData) => {
     const result = await dispatch(doctorApplyThunk(data));
 
     if (doctorApplyThunk.fulfilled.match(result)) {
-      navigate('/doctor/pending');
+      navigate('/doctor/pending', { replace: true});
     }
   };
 
   // Check Application Status
   const checkStatusAndRedirect = async () => {
 
-    if(!token || !user) return;
-    if(user.role === 'admin'){
+    if(!token) return;
+    if(user?.role === 'admin'){
       console.warn(`[useDoctor] checkStatusRedirect blocked - user is admin`);
       return;
     }
@@ -56,7 +56,7 @@ export const useDoctor = () => {
       case 'approved':
         alert('Your application has been approved. Please login again.');
         dispatch(clearDoctorState());
-        navigate('/login');
+        navigate('/doctor/login');
         break;
 
       case 'rejected':
@@ -84,11 +84,11 @@ export const useDoctor = () => {
 
   // Logout
  const logout = () => {
-    localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("accessToken");
 
     dispatch(clearDoctorState());
 
-    navigate("/login");
+    navigate("/doctor/login", {replace: true});
 };
   return {
     application,

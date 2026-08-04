@@ -24,6 +24,7 @@ export const ROUTES = {
 
     // ── Doctor Management ──────────────────────
     DOCTORS:            '/doctors',
+    VERIFY_DOCTOR: '/doctors/:doctorId/verify',
     APPROVE_DOCTOR:     '/doctors/:doctorId/approve',
     REJECT_DOCTOR:      '/doctors/:doctorId/reject',
     BLOCK_DOCTOR:       '/doctors/:doctorId/block',

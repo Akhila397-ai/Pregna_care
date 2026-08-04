@@ -22,7 +22,7 @@ const LoginPage = () => {
     setErrors(validationError)
     return
    }
-    await login(email, password);
+    await login(email, password, 'user');
   };
 
   return (

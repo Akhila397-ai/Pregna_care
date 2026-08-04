@@ -15,8 +15,10 @@ import type { IEmailService } from '../../email/interface/IEmail.service.js';
 import  { AuthResponseDTO, MessageResponseDTO, OTPResponseDTO, VerifyOtpResponseDTO } from '../../../dtos/auth.dto.js';
 import { error } from 'node:console';
 import { access } from 'node:fs';
-import { UserRole } from '../../../types/roles.js';
+import { ROLE_PORTAL_NAMES, UserRole } from '../../../types/roles.js';
 import { onboardingType } from '../../../types/user.js';
+import { UserAuthDTO } from '../../../dtos/user.dto.js';
+import { LoginDTO } from '../../../dtos/auth.dto.js';
 
 @injectable()
 export class AuthService implements IAUthService {
@@ -83,7 +85,9 @@ export class AuthService implements IAUthService {
 
 }
 
-    async login(email: string, password: string): Promise<AuthResponseDTO> {
+    async login(data: LoginDTO): Promise<AuthResponseDTO> {
+
+        const { email, password, expectedRole } = data;
         const user = await this.userRepository.findByEmail(email);
         if(!user){
             throw new Error(HttpResponse.USER_NOT_FOUND)
@@ -100,7 +104,16 @@ export class AuthService implements IAUthService {
             throw new Error(HttpResponse.INVALID_PASSWORD)
         }
         console.log("DB user:", user._id.toString(), user.role);
-
+         
+        if(user.role !== expectedRole){
+            const portalMessage = this._getPortalErrorMessage(
+                user.role,
+                expectedRole
+            );
+            const error = new Error(portalMessage);
+            (error as any).statusCode = 403;
+            throw error;
+        }
 
         const accessToken = generateAccessToken(user._id.toString(),user.role);
         const payload = jwt.decode(accessToken);
@@ -112,6 +125,26 @@ console.log("Generated token payload:", payload);
             token: accessToken
         }
         
+    }
+
+    private _getPortalErrorMessage(
+        actualRole:  UserRole,
+        expectedRole:  UserRole
+    ): string {
+        const correctPortal = ROLE_PORTAL_NAMES[actualRole]
+
+        if(expectedRole === 'admin'){
+             return `Access denied. Admin portal is for administrators only. Please use the ${correctPortal}.`;
+        }
+
+        if(expectedRole === 'doctor'){
+             return `Access denied. Doctor portal is for verified doctors only. Please use the ${correctPortal}.`;
+        }
+
+        if(expectedRole === 'user'){
+             return `Access denied. This portal is for patients only. Please use the ${correctPortal}.`;
+        }
+        return HttpResponse.FORBIDDEN;
     }
 
      async forgotPassword(email: string): Promise<OTPResponseDTO> {
@@ -217,6 +250,13 @@ console.log("Generated token payload:", payload);
 
         await this.userRepository.markOtpAsused(otp._id.toString()); 
 
+    }
+    async getMe(userId: string): Promise<UserAuthDTO> {
+        const user = await this.userRepository.findById(userId);
+        if(!user) throw new Error(HttpResponse.USER_NOT_FOUND)
+        if(user.isBlocked) throw new Error(HttpResponse.USER_BLOCKED)
+        if(user.isDeleted) throw new Error(HttpResponse.USER_NOT_FOUND)
+            return toUserAuthDTO(user)
     }
 }
 

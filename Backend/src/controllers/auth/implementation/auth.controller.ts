@@ -6,6 +6,7 @@ import type { IAUthService } from '../../../services/auth/interface/IAuth.servic
 import { IAuthController } from '../interface/IAuth.controller.js'
 import { HttpStatus } from '../../../constants/status.constant.js'
 import { HttpResponse } from '../../../constants/messages.constant.js'
+import { error } from 'node:console'
 
 
 @injectable()
@@ -46,8 +47,9 @@ export class AuthController implements IAuthController {
 
     login = async (req: Request, res: Response): Promise<void> => {
        try {
-          const { email, password} = req.body;
-          const result = await this.authService.login(email,password)
+          const { email, password,expectedRole} = req.body;
+          const result = await this.authService.login({email,password,expectedRole})
+          
           res.status(HttpStatus.OK).json(result)
        } catch (error: unknown) {
         if(error instanceof  Error){
@@ -143,6 +145,21 @@ export class AuthController implements IAuthController {
             res.status(HttpStatus.BAD_REQUEST).json({message: 'Invalid'})
         
        }
+  }
+
+  getMe = async(req: Request, res: Response): Promise<void> => {
+    try {
+        const userId = req.user!.userId;
+        const result = await this.authService.getMe(userId);
+        res.status(HttpStatus.OK).json(result)
+    } catch (error: unknown) {
+        if(error instanceof Error){
+            res.status(HttpStatus.BAD_REQUEST).json({message:error.message})
+        }else
+            res.status(HttpStatus.BAD_REQUEST).json({message: 'Invalid'})
+        
+       }
+      
   }
 
 
