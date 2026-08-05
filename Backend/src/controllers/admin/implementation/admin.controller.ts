@@ -99,7 +99,7 @@ export class AdminController implements IAdminController {
     }
   }
 
-   async verifyDoctor(req: Request, res: Response): Promise<void> {
+    verifyDoctor = async(req: Request, res: Response): Promise<void> => {
        try {
         const doctorId = req.params.id
         if(Array.isArray(doctorId)){
