@@ -1,5 +1,5 @@
 import axiosInstance from "../../../api/axiosInstance";
-import { GetMappedDoctorsResponse,getMappedUsersResponse } from "../types/admin.types";
+import { DocumentPresignedUrl, DocumentType, GetMappedDoctorsResponse, getMappedUsersResponse } from "../types/admin.types";
 
 export const adminApi = {
 
@@ -48,9 +48,18 @@ rejectDoctor: async (doctorId: string,rejectionReason: string): Promise<{ messag
 
   return res.data;
 },
+getDocumentUrl: async (
+  doctorId: string,
+  documentType: DocumentType
+): Promise<DocumentPresignedUrl> => {
+  const res = await axiosInstance.get(
+    `/admin/doctors/${doctorId}/document/${documentType}`
+  );
+  return res.data;;
+},
 
 verifyDoctor: async (doctorId: string,action: string,remarks?: string): Promise<{message: string}> => {
-const res = await axiosInstance.patch(`admin/doctors/${doctorId}/verify`,{action,remarks})
+const res = await axiosInstance.patch(`/admin/doctors/${doctorId}/verify`,{action,remarks})
 return res.data;
 },
 

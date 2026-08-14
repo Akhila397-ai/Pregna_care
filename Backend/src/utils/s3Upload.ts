@@ -62,13 +62,14 @@ export const uploadToS3 = async (
 };
 
 export const getPresignedUrl = async (
-  key: string
+  key: string,
+  expiresIn: number = 600 // 24 hours (86400s)
 ): Promise<string> => {
   const command = new GetObjectCommand({
     Bucket: S3_BUCKET,
     Key:    key,
   });
-  return await getSignedUrl(s3Client, command, { expiresIn: 900 });
+  return await getSignedUrl(s3Client, command, { expiresIn });
 };
 
 export const deleteFromS3 = async (key: string): Promise<void> => {

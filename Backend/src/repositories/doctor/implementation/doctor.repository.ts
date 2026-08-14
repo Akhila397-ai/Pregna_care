@@ -19,14 +19,17 @@ export class DoctorRepository implements IDoctorRepository {
   async findApplicationByUserId(
   userId: string
 ): Promise<DoctorApplicationWithUser | null> {
-
+    const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
     const application = await doctorApplicationModel
-        .findOne({ userId })
+        .findOne({
+            $or: [{ userId: userObjectId }, { _id: userObjectId }],
+            isDeleted: false
+        })
         .lean() as DoctorApplicationDocument | null;
 
     if (!application) return null;
 
-    const user = await UserModel.findById(application.userId).lean();
+    const user = await UserModel.findOne({ _id: application.userId, isDeleted: false }).lean();
 
     if (!user) return null;
 

@@ -50,8 +50,6 @@ export const toUserMappedData = (
 
 export const toDoctorsMappedData = (
   { application, user }: DoctorApplicationWithUser,
-  presignedUrls: PresignedUrls
-   = {}
 ): IDoctorsMappedData => ({
     _id:    application._id.toString(),
     userId: application.userId.toString(),
@@ -81,8 +79,12 @@ export const toDoctorsMappedData = (
   createdAt:          application.createdAt,
 
   // ← presigned URLs
-  profileImage:               presignedUrls.profileImage,
-  degreeCertificateUrl:       presignedUrls.degreeCertificateUrl,
-  registrationCertificateUrl: presignedUrls.registrationCertificateUrl,
-  governmentIdUrl:            presignedUrls.governmentIdUrl,
+  profileImage:                application.profileImage || undefined,
+  degreeCertificateUrl:       application.degreeCertificateUrl || undefined,
+  registrationCertificateUrl: application.registrationCertificateUrl || undefined,
+  governmentIdUrl:            application.governmentIdUrl || undefined,
+
+  hasDegreeCertificate:       !!application.degreeCertificateUrl,
+  hasRegistrationCertificate: !!application.registrationCertificateUrl,
+  hasGovernmentId:            !!application.governmentIdUrl,
 })

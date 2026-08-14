@@ -147,8 +147,9 @@ export class AdminRepository implements IAdminRepository {
     }
 
     async verifyDoctor(id: string, status: DoctorStatus, adminId: string, remarks?: string): Promise<void> {
-        await doctorApplicationModel.findByIdAndUpdate(
-            id,
+        const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        const app = await doctorApplicationModel.findOneAndUpdate(
+            { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
             {
                 $set: {
                     status,
@@ -156,25 +157,22 @@ export class AdminRepository implements IAdminRepository {
                     verifiedAt: new Date(),
                     verificationRemarks: remarks ?? '',
                 }
-            }
-        );
+            },
+            { new: true }
+        ).lean();
 
-        if(status === 'approved'){
-            const app = await doctorApplicationModel
-            .findById(id).select('userId').lean();
-            if(app){
-                await UserModel.findByIdAndUpdate(
-                    app.userId,
-                    { $set: { role: 'doctor', isVerified: true}}
-                )
-            }
+        if (status === 'approved' && app) {
+            await UserModel.findByIdAndUpdate(
+                app.userId,
+                { $set: { role: 'doctor', isVerified: true } }
+            );
         }
     }
 
-    
     async findDoctorById(id: string): Promise<DoctorApplicationWithUser | null> {
+        const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
         const app = await doctorApplicationModel
-        .findOne({_id:id, isDeleted: false})
+        .findOne({ $or: [{ _id: docObjectId }, { userId: docObjectId }], isDeleted: false })
         .lean()  as DoctorApplicationDocument | null;
 
         if(!app) return null;
@@ -197,98 +195,88 @@ export class AdminRepository implements IAdminRepository {
             }
         }
     }
+
     async approveDoctor(id: string, adminId: string): Promise<void> {
-        await doctorApplicationModel.findByIdAndUpdate(
-            id,
+        const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        const app = await doctorApplicationModel.findOneAndUpdate(
+            { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
             {
                 $set: {
                      status:     'approved',
                      approvedBy: new Types.ObjectId(adminId),
                      approvedAt: new Date(),
                 },
-            }
-        );
+            },
+            { new: true }
+        ).lean();
 
-        const app = await doctorApplicationModel
-      .findById(id)
-      .select('userId')
-      .lean();
-
-    if (app) {
-      await UserModel.findByIdAndUpdate(
-        app.userId,
-        { $set: { role: 'doctor', isVerified: true } }
-      );
+        if (app) {
+          await UserModel.findByIdAndUpdate(
+            app.userId,
+            { $set: { role: 'doctor', isVerified: true } }
+          );
+        }
     }
 
- }
-
     async rejectDoctor(id: string, rejectionReason: string): Promise<void> {
-        await doctorApplicationModel.findByIdAndUpdate(
-            id,
+        const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        await doctorApplicationModel.findOneAndUpdate(
+            { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
             {
                 $set: {
                     status:   'rejected',
                     rejectionReason: rejectionReason
                 }
             }
-        )
+        );
     }
 
     async blockDoctor(id: string): Promise<void> {
-        await doctorApplicationModel.findByIdAndUpdate(
-            id,
-            {$set: {isBlocked: true}}
-        );
-        const app = await doctorApplicationModel
-        .findById(id)
-        .select('userId')
-        .lean()
+        const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        const app = await doctorApplicationModel.findOneAndUpdate(
+            { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
+            {$set: {isBlocked: true}},
+            { new: true }
+        ).lean();
 
-        if(app) {
+        if (app) {
             await UserModel.findByIdAndUpdate(
                 app.userId,
                 {$set: { isBlocked: true}}
-            )
+            );
         }
     }
 
     async unblockDoctor(id: string): Promise<void> {
-        await doctorApplicationModel.findByIdAndUpdate(
-           id,
-           { $set: { isBlocked: false}}
-        )
+        const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        const app = await doctorApplicationModel.findOneAndUpdate(
+           { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
+           { $set: { isBlocked: false}},
+           { new: true }
+        ).lean();
 
-        const app = await doctorApplicationModel
-        .findById(id)
-        .select('userId')
-        .lean()
-
-        if(app) {
+        if (app) {
             await UserModel.findByIdAndUpdate(
                 app.userId,
                 { $set: {isBlocked: false}}
-            )
+            );
         }
     }
 
     async softDeleteDoctor(id: string): Promise<void> {
-        await doctorApplicationModel.findByIdAndUpdate(
-            id,
-            { $set: { isDeleted: true}}
-        );
+        const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        const app = await doctorApplicationModel.findOneAndUpdate(
+            { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
+            { $set: { isDeleted: true}},
+            { new: true }
+        ).lean();
 
-         const app = await doctorApplicationModel
-      .findById(id)
-      .select('userId')
-      .lean();
-
-    if (app) {
-      await UserModel.findByIdAndUpdate(
-        app.userId,
-        { $set: { isDeleted: true } }
-      );
-    }
+        if (app) {
+          await UserModel.findByIdAndUpdate(
+            app.userId,
+            { $set: { isDeleted: true } }
+          );
+        }
     }
 
 

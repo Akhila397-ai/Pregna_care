@@ -1,5 +1,10 @@
 import { useEffect, useState }  from 'react';
 import { useAdmin }             from '../hooks/useAdmin';
+import { adminApi } from '../api/admin.api';
+
+export type DocumentType = | 'degreeCertificate'
+  | 'registrationCertificate'
+  | 'governmentId'; 
 import { IDoctorMappedData }   from '../types/admin.types';
 
 // ── Document Viewer Modal ─────────────────────
@@ -12,11 +17,9 @@ const DocumentViewerModal = ({
   title:   string;
   onClose: () => void;
 }) => {
-  const isPDF = url.toLowerCase().includes('.pdf') ||
-                url.includes('doctor-docs/degrees') ||
-                url.includes('doctor-docs/reg-certs') ||
-                url.includes('%2Fdegrees') ||
-                url.includes('%2Freg-certs');
+  const isPDF = url.includes('.pdf') ||
+                url.includes('degrees') ||
+                url.includes('reg-certs');
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center
@@ -24,7 +27,6 @@ const DocumentViewerModal = ({
       <div className="bg-white rounded-2xl shadow-2xl w-full
         max-w-4xl max-h-[95vh] flex flex-col">
 
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4
           border-b border-[#dde8dd] flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -37,45 +39,35 @@ const DocumentViewerModal = ({
                 />
               </svg>
             </div>
-            <h3 className="font-bold text-[#1a2e1a] text-base">
-              {title}
-            </h3>
+            <h3 className="font-bold text-[#1a2e1a]">{title}</h3>
           </div>
           <div className="flex items-center gap-2">
-            
-             <a href={url}
+            <a
+              href={url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-1.5
                 rounded-lg bg-[#2ecc71] text-white text-xs
                 font-semibold hover:bg-[#27b860] transition"
             >
-              <svg className="w-3.5 h-3.5" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round"
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
-              Open in New Tab
+              Open in New Tab ↗
             </a>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg bg-gray-100
-                hover:bg-gray-200 flex items-center justify-center
-                text-gray-600 transition text-lg font-bold"
+              className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200
+                flex items-center justify-center text-gray-600
+                font-bold transition"
             >
               ✕
             </button>
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-hidden p-4 min-h-0">
           {isPDF ? (
             <iframe
               src={url}
-              className="w-full h-[75vh] rounded-xl border
-                border-[#dde8dd]"
+              className="w-full h-[75vh] rounded-xl border border-[#dde8dd]"
               title={title}
             />
           ) : (
@@ -91,205 +83,6 @@ const DocumentViewerModal = ({
           )}
         </div>
       </div>
-    // </div>
-  );
-};
-
-// ── Doctor Detail Modal ───────────────────────
-const DoctorDetailModal = ({
-  doctor,
-  onClose,
-  onViewDoc,
-}: {
-  doctor:    IDoctorMappedData;
-  onClose:   () => void;
-  onViewDoc: (url: string, title: string) => void;
-}) => {
-  const documents = [
-    {
-      key:   'degreeCertificateUrl',
-      label: 'Medical Degree Certificate',
-      icon:  '🎓',
-      url:   doctor.degreeCertificateUrl,
-    },
-    {
-      key:   'registrationCertificateUrl',
-      label: 'Medical Registration Certificate',
-      icon:  '📋',
-      url:   doctor.registrationCertificateUrl,
-    },
-    {
-      key:   'governmentIdUrl',
-      label: 'Government ID',
-      icon:  '🪪',
-      url:   doctor.governmentIdUrl,
-    },
-  ];
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center
-      justify-center z-40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full
-        max-w-2xl max-h-[90vh] overflow-y-auto">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4
-          border-b border-[#dde8dd] sticky top-0 bg-white z-10">
-          <h3 className="font-bold text-[#1a2e1a] text-lg">
-            Doctor Details
-          </h3>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200
-              flex items-center justify-center text-gray-600 transition
-              text-lg font-bold"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="p-6 space-y-6">
-
-          {/* Profile */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-[#d4f5e2]
-              flex items-center justify-center text-[#2ecc71]
-              font-bold text-2xl flex-shrink-0">
-              {doctor.name?.charAt(0).toUpperCase() || 'D'}
-            </div>
-            <div>
-              <h4 className="text-lg font-bold text-[#1a2e1a]">
-                {doctor.fullName || doctor.name}
-              </h4>
-              <p className="text-sm text-[#5a7a5a]">{doctor.email}</p>
-              {doctor.phone && (
-                <p className="text-sm text-[#5a7a5a]">{doctor.phone}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Professional Info */}
-          <div>
-            <h5 className="text-xs font-bold text-[#8fba8f]
-              uppercase tracking-wider mb-3">
-              Professional Information
-            </h5>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'Specialization', value: doctor.specialization },
-                { label: 'Qualification',  value: doctor.qualification },
-                { label: 'Experience',     value: `${doctor.experience} years` },
-                { label: 'Reg. Number',    value: doctor.registrationNumber },
-                { label: 'Consultation Fee', value: `$${doctor.consultationFee}` },
-                { label: 'Clinic Name',    value: doctor.clinicName },
-                { label: 'Clinic Address', value: doctor.clinicAddress },
-                {
-                  label: 'Available Days',
-                  value: doctor.availabilty?.days?.join(', ') || '—',
-                },
-                {
-                  label: 'Timing',
-                  value: doctor.availabilty
-                    ? `${doctor.availabilty.startTime} – ${doctor.availabilty.endTime}`
-                    : '—',
-                },
-                {
-                  label: 'Applied On',
-                  value: doctor.createdAt
-                    ? new Date(doctor.createdAt).toLocaleDateString()
-                    : '—',
-                },
-              ].map((item) => (
-                <div key={item.label}
-                  className="bg-[#f5f7f0] rounded-xl px-4 py-3">
-                  <p className="text-xs text-[#8fba8f] font-medium mb-0.5">
-                    {item.label}
-                  </p>
-                  <p className="text-sm font-semibold text-[#1a2e1a]
-                    break-words">
-                    {item.value || '—'}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Documents */}
-          <div>
-            <h5 className="text-xs font-bold text-[#8fba8f]
-              uppercase tracking-wider mb-3">
-              Submitted Documents
-            </h5>
-            <div className="space-y-3">
-              {documents.map((doc) => (
-                <div key={doc.key}
-                  className="flex items-center justify-between
-                    bg-[#f5f7f0] rounded-xl px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{doc.icon}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-[#1a2e1a]">
-                        {doc.label}
-                      </p>
-                      <p className="text-xs text-[#8fba8f]">
-                        {doc.url ? 'Uploaded ✓' : 'Not uploaded'}
-                      </p>
-                    </div>
-                  </div>
-                  {doc.url ? (
-                    <button
-                      onClick={() => onViewDoc(doc.url!, doc.label)}
-                      className="flex items-center gap-1.5 px-3 py-1.5
-                        rounded-lg bg-[#2ecc71] text-white text-xs
-                        font-semibold hover:bg-[#27b860] transition"
-                    >
-                      <svg className="w-3.5 h-3.5" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor"
-                        strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round"
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        <path strokeLinecap="round" strokeLinejoin="round"
-                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                        />
-                      </svg>
-                      View
-                    </button>
-                  ) : (
-                    <span className="text-xs text-red-400 font-medium">
-                      Missing
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Verification Remarks */}
-          {doctor.verificationRemarks && (
-            <div className="bg-orange-50 border border-orange-100
-              rounded-xl px-4 py-3">
-              <p className="text-xs font-semibold text-orange-700 mb-1">
-                Verification Remarks:
-              </p>
-              <p className="text-sm text-orange-800">
-                {doctor.verificationRemarks}
-              </p>
-            </div>
-          )}
-
-          {/* Verification Info */}
-          {doctor.verifiedAt && (
-            <div className="bg-[#f5f7f0] rounded-xl px-4 py-3">
-              <p className="text-xs text-[#8fba8f] font-medium mb-0.5">
-                Reviewed At
-              </p>
-              <p className="text-sm font-semibold text-[#1a2e1a]">
-                {new Date(doctor.verifiedAt).toLocaleString()}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 };
@@ -299,33 +92,50 @@ const DoctorManagementPage = () => {
   const {
     doctors, totalDoctors, doctorPages,
     loading, error,
-    getDoctors,
-    verifyDoctor,
+    getDoctors, verifyDoctor,
     blockDoctor, unblockDoctor, deleteDoctor,
   } = useAdmin();
 
   const [page,           setPage]           = useState(1);
   const [search,         setSearch]         = useState('');
-
-  // ← reject modal
-  const [rejectModal,     setRejectModal]     = useState(false);
-  const [selectedDoctor,  setSelectedDoctor]  = useState<IDoctorMappedData | null>(null);
+  const [rejectModal,    setRejectModal]    = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<IDoctorMappedData | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [detailModal,    setDetailModal]    = useState<IDoctorMappedData  | null>(null);
 
-  // ← document viewer
-  const [docModal,  setDocModal]  = useState<{
+  // ← document viewer state
+  const [docModal,      setDocModal]      = useState<{
     url:   string;
     title: string;
   } | null>(null);
-
-  // ← doctor detail modal
-  const [detailModal, setDetailModal] = useState<IDoctorMappedData | null>(null);
+  const [docLoading,    setDocLoading]    = useState<string | null>(null);
+  const [docError,      setDocError]      = useState<string | null>(null);
 
   const limit = 10;
 
   useEffect(() => {
     getDoctors(page, limit);
   }, [page]);
+
+  // ← fetch fresh presigned URL when admin clicks view
+  const handleViewDocument = async (
+    doctorId:     string,
+    documentType : DocumentType ,
+    title:        string
+  ) => {
+    setDocLoading(documentType);
+    setDocError(null);
+    try {
+      const result = await adminApi.getDocumentUrl(doctorId, documentType as DocumentType);
+      setDocModal({ url: result.url, title });
+    } catch (err: any) {
+      setDocError(
+        err.response?.data?.error || 'Failed to load document.'
+      );
+    } finally {
+      setDocLoading(null);
+    }
+  };
 
   const filtered = doctors.filter((d) =>
     (d.name?.toLowerCase() || '').includes(search.toLowerCase()) ||
@@ -349,19 +159,59 @@ const DoctorManagementPage = () => {
     more_documents_required: 'More Docs',
   }[status] ?? status);
 
-  const handleApprove = async (doctorId: string) => {
-    await verifyDoctor(doctorId, 'approve');
-    getDoctors(page, limit);
-  };
-
-  const handleRejectConfirm = async () => {
-    if (!selectedDoctor || !rejectionReason.trim()) return;
-    await verifyDoctor(selectedDoctor._id, 'reject', rejectionReason);
-    setRejectModal(false);
-    setRejectionReason('');
-    setSelectedDoctor(null);
-    getDoctors(page, limit);
-  };
+  // ── Document buttons component ────────────────
+  const DocButton = ({
+    doctorId,
+    docType,
+    label,
+    icon,
+    exists,
+  }: {
+    doctorId: string;
+    docType:  DocumentType;
+    label:    string;
+    icon:     string;
+    exists:   boolean;
+  }) => (
+    <button
+      onClick={() =>
+        exists && handleViewDocument(doctorId, docType, label)
+      }
+      disabled={!exists || docLoading === docType}
+      title={exists ? `View ${label}` : `${label} not uploaded`}
+      className={`flex items-center gap-1 text-xs px-2 py-1
+        rounded-lg transition font-medium whitespace-nowrap ${
+        !exists
+          ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+          : docLoading === docType
+          ? 'bg-[#e8f8ef] text-[#2ecc71] cursor-wait'
+          : 'bg-[#e8f8ef] text-[#2ecc71] hover:bg-[#d4f5e2] cursor-pointer'
+      }`}
+    >
+      {docLoading === docType ? (
+        <svg className="animate-spin w-3 h-3" fill="none"
+          viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10"
+            stroke="currentColor" strokeWidth="4"/>
+          <path className="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8v8H4z"/>
+        </svg>
+      ) : (
+        <span>{icon}</span>
+      )}
+      {label.split(' ')[0]}
+      {exists && docLoading !== docType && (
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path strokeLinecap="round" strokeLinejoin="round"
+            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+          />
+        </svg>
+      )}
+    </button>
+  );
 
   return (
     <div className="p-6">
@@ -386,10 +236,24 @@ const DoctorManagementPage = () => {
         />
       </div>
 
+      {/* Errors */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700
           text-sm rounded-xl px-4 py-3 mb-4">
           {error}
+        </div>
+      )}
+      {docError && (
+        <div className="bg-red-50 border border-red-200 text-red-700
+          text-sm rounded-xl px-4 py-3 mb-4 flex items-center
+          justify-between">
+          {docError}
+          <button
+            onClick={() => setDocError(null)}
+            className="text-red-500 hover:text-red-700 font-bold"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -421,8 +285,8 @@ const DoctorManagementPage = () => {
                     <div className="flex items-center justify-center gap-2">
                       <svg className="animate-spin w-5 h-5 text-[#2ecc71]"
                         fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10"
-                          stroke="currentColor" strokeWidth="4"/>
+                        <circle className="opacity-25" cx="12" cy="12"
+                          r="10" stroke="currentColor" strokeWidth="4"/>
                         <path className="opacity-75" fill="currentColor"
                           d="M4 12a8 8 0 018-8v8H4z"/>
                       </svg>
@@ -445,11 +309,19 @@ const DoctorManagementPage = () => {
                     {/* Doctor */}
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-[#d4f5e2]
-                          flex items-center justify-center text-[#2ecc71]
-                          font-bold text-sm flex-shrink-0">
-                          {doctor.name?.charAt(0).toUpperCase() || 'D'}
-                        </div>
+                        <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 bg-[#d4f5e2]">
+  {doctor.profileImage ? (
+    <img
+      src={doctor.profileImage}
+      alt={doctor.fullName || doctor.name}
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <div className="w-full h-full flex items-center justify-center text-[#2ecc71] font-bold text-sm">
+      {(doctor.fullName || doctor.name)?.charAt(0).toUpperCase() || 'D'}
+    </div>
+  )}
+</div>
                         <div>
                           <p className="text-sm font-semibold text-[#1a2e1a]
                             whitespace-nowrap">
@@ -462,106 +334,55 @@ const DoctorManagementPage = () => {
                       </div>
                     </td>
 
-                    {/* Specialization */}
                     <td className="px-4 py-4 text-sm text-[#5a7a5a]
                       whitespace-nowrap">
                       {doctor.specialization}
                     </td>
 
-                    {/* Qualification */}
                     <td className="px-4 py-4 text-sm text-[#5a7a5a]">
                       {doctor.qualification}
                     </td>
 
-                    {/* Experience */}
                     <td className="px-4 py-4 text-sm text-[#5a7a5a]
                       whitespace-nowrap">
                       {doctor.experience} yrs
                     </td>
 
-                    {/* Fee */}
                     <td className="px-4 py-4 text-sm text-[#5a7a5a]
                       whitespace-nowrap">
                       ${doctor.consultationFee}
                     </td>
 
-                    {/* Clinic */}
                     <td className="px-4 py-4 text-sm text-[#5a7a5a]">
                       <p className="max-w-[100px] truncate">
                         {doctor.clinicName}
                       </p>
                     </td>
 
-                    {/* Documents — quick view buttons */}
+                    {/* Documents — fetch fresh URL on click */}
                     <td className="px-4 py-4">
-                      <div className="flex flex-col gap-1">
-                        {[
-                          {
-                            label: '🎓',
-                            title: 'Degree Certificate',
-                            url:   doctor.degreeCertificateUrl,
-                          },
-                          {
-                            label: '📋',
-                            title: 'Registration Cert.',
-                            url:   doctor.registrationCertificateUrl,
-                          },
-                          {
-                            label: '🪪',
-                            title: 'Government ID',
-                            url:   doctor.governmentIdUrl,
-                          },
-                        ].map((doc) => (
-                          <button
-                            key={doc.title}
-                            onClick={() =>
-                              doc.url && setDocModal({
-                                url:   doc.url,
-                                title: doc.title,
-                              })
-                            }
-                            disabled={!doc.url}
-                            title={doc.url ? `View ${doc.title}` : `${doc.title} not uploaded`}
-                            className={`flex items-center gap-1 text-xs
-                              px-2 py-1 rounded-lg transition
-                              whitespace-nowrap font-medium ${
-                              doc.url
-                                ? 'bg-[#e8f8ef] text-[#2ecc71] hover:bg-[#d4f5e2] cursor-pointer'
-                                : 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                            }`}
-                          >
-                            {doc.label} {doc.title.split(' ')[0]}
-                            {doc.url ? (
-                              <svg className="w-3 h-3 ml-0.5" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor"
-                                strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                />
-                              </svg>
-                            ) : (
-                              <svg className="w-3 h-3 ml-0.5" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor"
-                                strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round"
-                                  d="M6 18L18 6M6 6l12 12"/>
-                              </svg>
-                            )}
-                          </button>
-                        ))}
-
-                        {/* View all details */}
-                        <button
-                          onClick={() => setDetailModal(doctor)}
-                          className="flex items-center gap-1 text-xs
-                            px-2 py-1 rounded-lg bg-blue-50 text-blue-600
-                            hover:bg-blue-100 transition font-medium
-                            whitespace-nowrap"
-                        >
-                          📄 Full Details
-                        </button>
+                      <div className="flex flex-col gap-1.5">
+                        <DocButton
+                          doctorId={doctor._id}
+                          docType="degreeCertificate"
+                          label="Degree Certificate"
+                          icon="🎓"
+                          exists={doctor.hasDegreeCertificate}
+                        />
+                        <DocButton
+                          doctorId={doctor._id}
+                          docType="registrationCertificate"
+                          label="Registration Cert."
+                          icon="📋"
+                          exists={doctor.hasRegistrationCertificate}
+                        />
+                        <DocButton
+                          doctorId={doctor._id}
+                          docType="governmentId"
+                          label="Government ID"
+                          icon="🪪"
+                          exists={doctor.hasGovernmentId}
+                        />
                       </div>
                     </td>
 
@@ -589,10 +410,12 @@ const DoctorManagementPage = () => {
                     {/* Actions */}
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-1.5 flex-wrap">
-
                         {doctor.status === 'pending' && (
                           <button
-                            onClick={() => handleApprove(doctor._id)}
+                            onClick={async () => {
+                              await verifyDoctor(doctor._id, 'approve');
+                              getDoctors(page, limit);
+                            }}
                             className="text-xs px-2.5 py-1.5 rounded-lg
                               bg-green-50 text-green-700 hover:bg-green-100
                               font-medium transition whitespace-nowrap"
@@ -703,9 +526,9 @@ const DoctorManagementPage = () => {
               onChange={(e) => setRejectionReason(e.target.value)}
               placeholder="Enter rejection reason..."
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border-2 border-[#dde8dd]
-                bg-white text-sm outline-none focus:border-[#2ecc71]
-                resize-none mb-4"
+              className="w-full px-4 py-3 rounded-xl border-2
+                border-[#dde8dd] bg-white text-sm outline-none
+                focus:border-[#2ecc71] resize-none mb-4"
             />
             <div className="flex gap-3">
               <button
@@ -721,7 +544,18 @@ const DoctorManagementPage = () => {
                 Cancel
               </button>
               <button
-                onClick={handleRejectConfirm}
+                onClick={async () => {
+                  if (!rejectionReason.trim()) return;
+                  await verifyDoctor(
+                    selectedDoctor._id,
+                    'reject',
+                    rejectionReason
+                  );
+                  setRejectModal(false);
+                  setRejectionReason('');
+                  setSelectedDoctor(null);
+                  getDoctors(page, limit);
+                }}
                 disabled={!rejectionReason.trim()}
                 className="flex-1 py-2.5 rounded-xl bg-red-500
                   hover:bg-red-600 text-white font-bold text-sm
@@ -734,19 +568,7 @@ const DoctorManagementPage = () => {
         </div>
       )}
 
-      {/* Doctor Detail Modal */}
-      {detailModal && (
-        <DoctorDetailModal
-          doctor={detailModal}
-          onClose={() => setDetailModal(null)}
-          onViewDoc={(url, title) => {
-            setDetailModal(null);
-            setDocModal({ url, title });
-          }}
-        />
-      )}
-
-      {/* Document Viewer Modal */}
+      {/* Document Viewer */}
       {docModal && (
         <DocumentViewerModal
           url={docModal.url}

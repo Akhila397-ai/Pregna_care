@@ -29,39 +29,47 @@ export interface getMappedUsersResponse {
 }
 
 export interface IDoctorMappedData {
-        _id:             string;
-        userId:          string;
-        name:            string;
-        email:           string;
-        phone: string;
-        fullName: string;
-        specialization:  string;
-        qualification: string;
-        experience: number;
-        registrationNumber: string;
-        consultationFee: number;
-        clinicName: string;
-        clinicAddress: string;
-        profileImage:  string;
-        documents:  string[];
-        availabilty: {
-          days:  string[];
-          startTime: string;
-          endTime: string;
-        }
-        degreeCertificateUrl?:       string;
-    registrationCertificateUrl?: string;
-    governmentIdUrl?:            string;
-        verificationRemarks: string;
-        verifiedAt: Date;
-        status: DoctorStatus;
-        rejectionReason?: string;
-        isBlocked: boolean;
-        isVerified: boolean;
-        isDeleted: boolean;
-        approvedBy?: string;
-        approvedAt?: string;
-        createdAt?: string;
+      _id:    string;
+  userId: string;
+
+  name:       string;
+  email:      string;
+  phone?:     string;
+  imageUrl?:  string;
+  isBlocked:  boolean;
+  isDeleted:  boolean;
+  isVerified: boolean;
+
+  fullName:           string;
+  specialization:     string;
+  qualification:      string;
+  experience:         number;
+  registrationNumber: string;
+  consultationFee:    number;
+  clinicName:         string;
+  clinicAddress:      string;
+  availability: {
+    days:      string[];
+    startTime: string;
+    endTime:   string;
+  };
+  profileImage: string,
+  status:               DoctorStatus;
+  verificationRemarks?: string;
+  verifiedBy?:          string;
+  verifiedAt?:          Date;
+  createdAt?:           Date;
+
+  // ← S3 keys (not presigned URLs)
+  degreeCertificateKey?:       string;
+  registrationCertificateKey?: string;
+  governmentIdKey?:            string;
+
+  // ← existence flags
+  hasDegreeCertificate:       boolean;
+  hasRegistrationCertificate: boolean;
+  hasGovernmentId:            boolean;
+
 }
 export interface GetMappedDoctorsResponse {
   doctors:      IDoctorMappedData[];
@@ -89,4 +97,14 @@ export interface AdminLoginResponse {
   token: string;
 }
 
+export interface DocumentPresignedUrl {
+  url: string;
+  expiresIn: number;
+  key: string;
+}
+
+export type DocumentType =
+  | 'degreeCertificate'
+  | 'registrationCertificate'
+  | 'governmentId';
 

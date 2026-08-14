@@ -13,6 +13,10 @@ import { getPresignedUrl } from '../../../utils/s3Upload.js'
 import { VerifyDoctorDTO, } from '../../../dtos/admin.dto.js'
 import { DoctorStatus, DoctorApplicationWithUser,DoctorApplicationDocument} from '../../../types/doctor.js'
 import { application } from 'express'
+import { DocumentType } from '../interface/IAdmin.service.js'
+import { DocumentPresignedUrlDTO } from '../../../dtos/admin.dto.js'
+import { PresignedURI } from 'aws-sdk/clients/iotanalytics.js'
+import { toDoctorApplicationDTO } from '../../../mapper/doctor.mapper.js'
 
 
 @injectable()
@@ -57,16 +61,12 @@ export class AdminService implements IAdminService {
     //doctor managment
 
     async getAllDoctors(page: number, limit: number): Promise<GetMappedDoctorsResponse> {
-       const {doctors: items, total} = await this.adminRepository
+       const { doctors:items, total} = await this.adminRepository
        .findAllDoctors(page,limit)
 
-       const doctors = await Promise.all(
-        items.map(async (item: DoctorApplicationWithUser) => {
-            const { application, user} = item;
-            const presignedUrls = await this._resolvePresignedUrls(application);
-            return toDoctorsMappedData({application,user},presignedUrls)
-        })
-       );
+    const doctors = items.map(toDoctorsMappedData)
+
+
        return {
         doctors,
         totalDoctors: total,
@@ -137,7 +137,7 @@ async verifyDoctor(doctorId: string, adminId: string,dto: VerifyDoctorDTO): Prom
     async deleteDoctor(doctorId: string): Promise<MessageResponseDTO> {
         const doctor = await this.adminRepository.findDoctorById(doctorId)
         if(!doctor) throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
-        await  this.adminRepository.delete(doctorId)
+        await  this.adminRepository.softDeleteDoctor(doctorId)
         return {message: HttpResponse.DOCTOR_DELETE_SUCCESS}
     }
 
@@ -159,6 +159,35 @@ async verifyDoctor(doctorId: string, adminId: string,dto: VerifyDoctorDTO): Prom
       governmentIdUrl:            govUrl,
     };
   }
+  async getDoctorDocumentUrl(doctorId: string, documentType: DocumentType): Promise<DocumentPresignedUrlDTO> {
+      const result = await this.adminRepository.findDoctorById(doctorId);
+  if (!result) throw new Error(HttpResponse.DOCTOR_NOT_FOUND);
 
+  const { application } = result;
 
+  // ← get the correct S3 key based on document type
+  const keyMap: Record< DocumentType, string | undefined> = {
+    degreeCertificate:       application.degreeCertificateUrl,
+    registrationCertificate: application.registrationCertificateUrl,
+    governmentId:            application.governmentIdUrl,
+  };
+
+  const s3Key = keyMap[documentType];
+  if (!s3Key) {
+    throw new Error(
+      `Document "${documentType}" not found for this application.`
+    );
+  }
+
+  // ← generate FRESH presigned URL with 10 min expiry
+  const EXPIRY_SECONDS = 600; // 10 minutes
+  const url = await getPresignedUrl(s3Key, EXPIRY_SECONDS);
+  
+    return {
+    url,
+    expiresIn: EXPIRY_SECONDS,
+    key:       s3Key,
+  };
 }
+}
+

@@ -72,6 +72,10 @@ export interface IDoctorsMappedData {
   registrationCertificateUrl?: string;
   governmentIdUrl?:            string;
 
+  hasDegreeCertificate:       boolean;
+  hasRegistrationCertificate: boolean;
+  hasGovernmentId:            boolean;
+
   status:               DoctorStatus;
   verificationRemarks?: string;
   verifiedBy?:          string;
@@ -90,4 +94,10 @@ export interface GetMappedDoctorsResponse {
 export interface VerifyDoctorDTO {
     action: 'approve' | 'reject' | 'more_documents_required' | 'under_review';
     remarks?: string;
+}
+
+export interface DocumentPresignedUrlDTO {
+  url:       string;
+  expiresIn: number;  // seconds
+  key:       string;
 }

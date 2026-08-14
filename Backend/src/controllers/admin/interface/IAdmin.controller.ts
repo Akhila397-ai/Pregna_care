@@ -18,5 +18,6 @@ export interface IAdminController {
     blockDoctor(req: Request, res: Response):    Promise<void>;
     unblockDoctor(req: Request, res: Response):  Promise<void>;
     deleteDoctor(req: Request, res: Response):   Promise<void>;
+    getDoctorDocumentUrl(req: Request, res: Response): Promise<void>;
 
 }

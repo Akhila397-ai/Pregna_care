@@ -1,6 +1,12 @@
 import { AdminAuthResponseDTO,GetMappedDoctorsResponse,GetMappedUsersResponse } from "../../../dtos/admin.dto.js";
 import { MessageResponseDTO } from "../../../dtos/auth.dto.js";
 import { VerifyDoctorDTO } from "../../../dtos/admin.dto.js";
+import { DocumentPresignedUrlDTO } from "../../../dtos/admin.dto.js";
+
+export type DocumentType =
+  | 'degreeCertificate'
+  | 'registrationCertificate'
+  | 'governmentId';
 
 
 export interface IAdminService {
@@ -21,4 +27,8 @@ export interface IAdminService {
     blockDoctor(doctorId: string): Promise<MessageResponseDTO>;
     unblockDoctor(doctorId: string): Promise<MessageResponseDTO>
     deleteDoctor(doctorId: string): Promise<MessageResponseDTO>;
+     getDoctorDocumentUrl(
+    doctorId:     string,
+    documentType: DocumentType
+  ): Promise<DocumentPresignedUrlDTO>;
 }
