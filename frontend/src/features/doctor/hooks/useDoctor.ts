@@ -54,9 +54,7 @@ export const useDoctor = () => {
 
     switch (status) {
       case 'approved':
-        alert('Your application has been approved. Please login again.');
-        dispatch(clearDoctorState());
-        navigate('/doctor/login');
+        navigate('/doctor/dashboard', { replace: true });
         break;
 
       case 'rejected':

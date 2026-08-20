@@ -15,12 +15,16 @@ const DoctorPendingPage = () => {
 
   // ← on every load, check if status changed
   useEffect(() => {
-    if(user?.role === 'admin'){
-      navigate('/admin/dashboard', {replace: true});
-      return
+    if (user?.role === 'admin') {
+      navigate('/admin/dashboard', { replace: true });
+      return;
+    }
+    if (user?.role === 'doctor') {
+      navigate('/doctor/dashboard', { replace: true });
+      return;
     }
     checkStatusAndRedirect();
-  }, []);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-[#f5f7f0] flex items-center justify-center font-sans px-6">

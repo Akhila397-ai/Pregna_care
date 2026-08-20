@@ -1,0 +1,18 @@
+[33m1aa0ec6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m, [m[1;31morigin/dev[m[33m)[m Doctor management update and remove .env
+[33m54e1ca8[m dcotor manangment by admin
+[33m0d921c0[m cleared error regarding tey session managemnt
+[33m63ef0cd[m working on the bug related to statusChanging
+[33mbac82f5[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m updated the project with onboading setup, bug related to apply as-doctor dtected,working on it
+[33mf86e3ef[m Worked on the doctor apply, application flow
+[33m06d05fc[m doctor application, doctor managemnt done
+[33m41f4993[m started working on doctor_side backend
+[33m7a5757e[m security changes in usermanagment
+[33m351c3f5[m Uersmanagmnt Done, fix bug regarding the adminToken,frontned
+[33m069e822[m AdminSide backend usermanagment, doctormanagment done
+[33m1d82249[m made security improvements in reset password by generating resetJWTToken
+[33m0cc7009[m made some changes regarding role based authentication, adminBackend started
+[33me75d850[m Validation of login,registration,resetPassword updated!
+[33m8587850[m frontend changes done,userside authentication done
+[33m01b7551[m Make changes regarding the repo,Backend cleared
+[33mbc942b0[m Cleaned repo: removed node_modules and env, restructured backend and frontend
+[33m98b45ed[m Initial commit: setup PregnaCare frontend and backend

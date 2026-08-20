@@ -79,7 +79,7 @@ if (!token || !user) {
   if (!roles.includes(user.role)) {
     console.log('[RequireRole] wrong role:', user.role, '→ redirecting');
     if (user.role === 'admin')  return <Navigate to="/admin/dashboard" replace />;
-    if (user.role === 'doctor') return <Navigate to="/doctor/pending"  replace />;
+    if (user.role === 'doctor') return <Navigate to="/doctor/dashboard" replace />;
     return <Navigate to="/onboarding" replace />;
   }
 
