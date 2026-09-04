@@ -2,7 +2,7 @@ import mongoose, {Schema, Document} from "mongoose";
 import { doctorProfileData } from "../types/doctor.js";
 
 
-export interface IDoctorApplicationDocument extends doctorProfileData, Document {}
+export interface IDoctorProfileDocument extends doctorProfileData, Document {}
 
 const AvailabilitySchema = new Schema (
     {
@@ -22,7 +22,7 @@ const AvailabilitySchema = new Schema (
     {_id: false}
 );
 
-const DoctorProfileSchema = new Schema<IDoctorApplicationDocument>(
+const DoctorProfileSchema = new Schema<IDoctorProfileDocument>(
     {
         userId: {
             type: Schema.Types.ObjectId,
@@ -75,7 +75,9 @@ const DoctorProfileSchema = new Schema<IDoctorApplicationDocument>(
     { timestamps: true}
 );
 
-export default  mongoose.model<IDoctorApplicationDocument>(
+export default (mongoose.models.DoctorProfile as mongoose.Model<IDoctorProfileDocument>) ||
+  mongoose.model<IDoctorProfileDocument>(
     'DoctorProfile',
     DoctorProfileSchema
-)
+  );
+

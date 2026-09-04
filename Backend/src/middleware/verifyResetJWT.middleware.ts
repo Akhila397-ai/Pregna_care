@@ -30,9 +30,10 @@ export const verifyResetJWT = (
     const decodedRaw = jwt.decode(token);
    
 
+    const resetSecret = process.env.JWT_RESET_SECRET || process.env.JWT_SECRET;
     const decoded = jwt.verify(
       token,
-      process.env.JWT_RESET_SECRET as string
+      resetSecret as string
     ) as ResetPayload;
 
 

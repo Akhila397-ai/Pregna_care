@@ -111,7 +111,8 @@ const DoctorApplicationSchema = new Schema<IDoctorApplicationDocument>(
     {timestamps: true}
 );
 
-export default mongoose.model<IDoctorApplicationDocument>(
+export default (mongoose.models.DoctorApplication as mongoose.Model<IDoctorApplicationDocument>) ||
+  mongoose.model<IDoctorApplicationDocument>(
     'DoctorApplication',
     DoctorApplicationSchema
-);
+  );

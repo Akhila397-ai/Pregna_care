@@ -9,14 +9,13 @@ import  type { IEmailService }             from '../../email/interface/IEmail.se
 import { toDoctorApplicationDTO,toDoctorStatusDTO, toDoctorDashboardDTO}        from '../../../mapper/doctor.mapper.js';
 import { hashPassword }              from '../../../utils/hashPassword.js';
 import { generateAccessToken }       from '../../../utils/generateToken.js';
-import { generateOTP }               from '../../../utils/generateOtp.js';
 import { HttpResponse } from '../../../constants/messages.constant.js';
-import { DoctorApplyDTO, DoctorApplyResponseDTO, DoctorDashboardDTO, DoctorStatusResponseDTO }            from '../../../dtos/doctor.dto.js';
+import { DoctorApplyDTO, DoctorApplyResponseDTO, DoctorDashboardDTO, DoctorStatusResponseDTO } from '../../../dtos/doctor.dto.js';
 import doctorApplicationModel from '../../../models/doctorApplication.model.js';
 import { uploadToS3,generateS3Key,getPresignedUrl,validateFile,PDF_ONLY,ALLOWED_MIME_TYPES, IMAGE_ONLY } from '../../../utils/s3Upload.js';
-import { Expr } from 'aws-sdk/clients/cloudsearchdomain.js';
 import { DoctorApplicationDocument } from '../../../types/doctor.js';
-import { Type } from '@aws-sdk/client-s3';
+
+
 
 export interface UploadFiles {
   profileImage?:   Express.Multer.File[];
@@ -65,13 +64,22 @@ export class DoctorService implements IDoctorService {
       throw new Error('All three documents are required.');
     }
 
-    const profilevalidation = validateFile(
-      profileImageFile.mimetype,
-      profileImageFile.size,
-      IMAGE_ONLY
-    );
-    if(!profilevalidation.valid){
-      throw new Error(`Profile Image: ${profilevalidation.error}`);
+    let profileKey: string = '';
+    const uploadPromises: Promise<string>[] = [];
+
+    if (profileImageFile) {
+      const profileValidation = validateFile(
+        profileImageFile.mimetype,
+        profileImageFile.size,
+        IMAGE_ONLY
+      );
+      if (!profileValidation.valid) {
+        throw new Error(`Profile Image: ${profileValidation.error}`);
+      }
+      profileKey = generateS3Key('doctor-profiles', profileImageFile.mimetype);
+      uploadPromises.push(
+        uploadToS3(profileImageFile.buffer, profileKey, profileImageFile.mimetype)
+      );
     }
 
     // degree — PDF only
@@ -98,20 +106,21 @@ export class DoctorService implements IDoctorService {
       throw new Error(`Government ID: ${govValidation.error}`);
     }
 
-    // ── Upload to S3 ──────────────────────────
-    const profileKey = generateS3Key('doctor-profiles', profileImageFile.mimetype)
-    const degreeKey = generateS3Key('doctor-docs/degrees',  degreeFile.mimetype);
+    // ── Upload to S3 / Storage ─────────────────
+    const degreeKey = generateS3Key('doctor-docs/degrees', degreeFile.mimetype);
     const regKey    = generateS3Key('doctor-docs/registrations', regFile.mimetype);
     const govKey    = generateS3Key('doctor-docs/government-ids', govFile.mimetype);
 
-    await Promise.all([
-      uploadToS3(profileImageFile.buffer, profileKey, profileImageFile.mimetype),
+    uploadPromises.push(
       uploadToS3(degreeFile.buffer, degreeKey, degreeFile.mimetype),
-      uploadToS3(regFile.buffer,    regKey,    regFile.mimetype),
-      uploadToS3(govFile.buffer,    govKey,    govFile.mimetype),
-    ]);
+      uploadToS3(regFile.buffer, regKey, regFile.mimetype),
+      uploadToS3(govFile.buffer, govKey, govFile.mimetype)
+    );
+
+    await Promise.all(uploadPromises);
 
     //Building APplicationData
+
 
     const applicationData = {
       userId:   new Types.ObjectId(userId),

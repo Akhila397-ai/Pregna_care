@@ -7,44 +7,47 @@ import { error } from 'node:console';
 
 @injectable()
 export class EmailService implements IEmailService {
+  private transporter: Transporter | null = null;
 
-   private  transporter : Transporter;
+  private getTransporter(): Transporter {
+    const user = process.env.EMAIL_USER;
+    const pass = process.env.EMAIL_PASS;
 
-   constructor() {
-    this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth : {
-            user: process.env.EMAIL_USER as string,
-            pass: process.env.EMAIL_PASS as string
-        }
-    })
+    if (!user || !pass) {
+      throw new Error("Email service is not configured (EMAIL_USER or EMAIL_PASS missing).");
+    }
 
-    this.transporter.verify((error)=>{
-        if(error){
-             console.error('[EmailService] Connection failed:', error.message);
-        }else {
-             console.log('[EmailService] Ready to send emails');
-        }
-    })
-   }
+    if (!this.transporter) {
+      this.transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user,
+          pass,
+        },
+      });
+    }
 
-   async sendOtp(to: string, otp: string, purpose: string): Promise<void> {
-       const mailOptions: SendMailOptions = {
-        from: process.env.EMAIL_USER,
-        to,
-        subject: this._getSubject(purpose),
-        html: this._getTemplate(otp,purpose)
-       }
-       try {
-        const info = await this.transporter.sendMail(mailOptions);
-        console.log(`[EmailService] OTP sent | to: ${to} | messageId: ${info.messageId}`);
+    return this.transporter;
+  }
 
-       } catch (error:unknown) {
-        console.error(`[EmailService] Failed | to: ${to} | error: ${error}`);
-        throw new Error('Failed to send OTP email. Please try again.');
-        
-       }
-   }
+  async sendOtp(to: string, otp: string, purpose: string): Promise<void> {
+    const transporter = this.getTransporter();
+    const mailOptions: SendMailOptions = {
+      from: process.env.EMAIL_USER,
+      to,
+      subject: this._getSubject(purpose),
+      html: this._getTemplate(otp, purpose),
+    };
+
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      console.log(`[EmailService] OTP sent | to: ${to} | messageId: ${info.messageId}`);
+    } catch (error: unknown) {
+      console.error(`[EmailService] Failed | to: ${to} | error: ${error}`);
+      throw new Error("Failed to send OTP email. Please try again.");
+    }
+  }
+
 
    private _getSubject(purpose: string): string {
     const subjects: Record<string, string> = {

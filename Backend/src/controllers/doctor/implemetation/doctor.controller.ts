@@ -19,20 +19,17 @@ export class DoctorController implements IDoctorController {
      apply = async(req: Request, res: Response): Promise<void> => {
         try {
             if(!req.user?.userId){
-                res.status(HttpStatus.UNAUTHORIZED).json({error: 'Not authenticated'})
+                res.status(HttpStatus.UNAUTHORIZED).json({error: 'Not authenticated'});
                 return;
             }
 
-            console.log('[DoctorController.apply] body fields:', Object.keys(req.body));
-      console.log('[DoctorController.apply] files:', req.files);
-
             const files = req.files as {
-                [filedname: string]: Express.Multer.File[]
+                [fieldname: string]: Express.Multer.File[]
             };
-            if(!files){
+            if(!files || Object.keys(files).length === 0){
                 res.status(HttpStatus.BAD_REQUEST).json({
-                    error: 'No files recieved'
-                })
+                    error: 'No files received'
+                });
                 return;
             }
 
@@ -43,76 +40,70 @@ export class DoctorController implements IDoctorController {
                 : req.body.availability;
             } catch (error) {
                 res.status(HttpStatus.BAD_REQUEST).json({
-          error: 'Invalid availability format.'
-        });
-        return;
-                
+                    error: 'Invalid availability format.'
+                });
+                return;
             }
 
-           const bodyData = {
-        fullName:           req.body.fullName,
-        specialization:     req.body.specialization,
-        qualification:      req.body.qualification,
-        experience:         Number(req.body.experience),
-        registrationNumber: req.body.registrationNumber,
-        consultationFee:    Number(req.body.consultationFee),
-        clinicName:         req.body.clinicName,
-        clinicAddress:      req.body.clinicAddress,
-        availability,
-        
-      };
+            const bodyData = {
+                fullName:           req.body.fullName,
+                specialization:     req.body.specialization,
+                qualification:      req.body.qualification,
+                experience:         Number(req.body.experience),
+                registrationNumber: req.body.registrationNumber,
+                consultationFee:    Number(req.body.consultationFee),
+                clinicName:         req.body.clinicName,
+                clinicAddress:      req.body.clinicAddress,
+                availability,
+            };
 
             const result = await this.doctorService.apply(
                 req.user.userId,
                 bodyData,
                 files
-            )
-            res.status(HttpStatus.CREATED).json(result)
+            );
+            res.status(HttpStatus.CREATED).json(result);
         } catch (error: unknown) {
+            console.error('[DoctorController.apply] Error:', error);
             if(error instanceof Error){
-                res.status(HttpStatus.BAD_REQUEST).json(error.message)
-            }else{
-                res.status(HttpStatus.BAD_REQUEST).json({message:'Internal Error occured'})
+                const isInternal = error.message.includes('credentials') || error.message.includes('ECONNREFUSED') || error.message.includes('AWS');
+                const userMessage = isInternal
+                  ? 'Unable to submit doctor application at the moment. Please try again later.'
+                  : error.message;
+                res.status(HttpStatus.BAD_REQUEST).json({ error: userMessage });
+            } else {
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Unable to submit doctor application at the moment. Please try again later.' });
             }
-            
         }
     }
 
-
-
-   getMyStatus = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const userId = req.user!.userId;
-
-    // ← add this log
-    console.log('userId from JWT:', userId);
-    console.log('typeof userId:', typeof userId);
-
-    const result = await this.doctorService.getMyStatus(userId);
-    res.status(HttpStatus.OK).json(result);
-  } catch (error: unknown) {
+    getMyStatus = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const userId = req.user!.userId;
+            const result = await this.doctorService.getMyStatus(userId);
+            res.status(HttpStatus.OK).json(result);
+        } catch (error: unknown) {
+            console.error('[DoctorController.getMyStatus] Error:', error);
             if(error instanceof Error){
-                res.status(HttpStatus.BAD_REQUEST).json(error.message)
-            }else{
-                res.status(HttpStatus.BAD_REQUEST).json({message:'Internal Error occured'})
+                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
+            } else {
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Internal error occurred' });
             }
-            
         }
-   }
+    }
 
-   async getMyDashboard(req: Request, res: Response): Promise<void> {
-       try {
-        const userId = req.user!.userId;
-        const result = await this.doctorService.getMyDashboard(userId)
-        res.status(HttpStatus.OK).json(result)
-       } catch (error: unknown) {
+    getMyDashboard = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const userId = req.user!.userId;
+            const result = await this.doctorService.getMyDashboard(userId);
+            res.status(HttpStatus.OK).json(result);
+        } catch (error: unknown) {
+            console.error('[DoctorController.getMyDashboard] Error:', error);
             if(error instanceof Error){
-                res.status(HttpStatus.BAD_REQUEST).json(error.message)
-            }else{
-                res.status(HttpStatus.BAD_REQUEST).json({message:'Internal Error occured'})
+                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
+            } else {
+                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: 'Internal error occurred' });
             }
-            
         }
-   }
-
+    }
 }

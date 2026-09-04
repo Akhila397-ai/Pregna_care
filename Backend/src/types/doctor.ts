@@ -77,3 +77,22 @@ export interface DoctorApplicationWithUser {
     isDeleted:  boolean;
   };
 }
+
+export interface doctorProfileData {
+  userId: Types.ObjectId;
+  specialization: string;
+  qualification: string;
+  experience: number;
+  registrationNumber: string;
+  consultationFee: number;
+  clinicName: string;
+  clinicAddress: string;
+  profileImage: string;
+  documents: string[];
+  availability: Availability;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export type DoctorProfileDocument = doctorProfileData & { _id: Types.ObjectId };
+
