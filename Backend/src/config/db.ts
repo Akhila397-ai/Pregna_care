@@ -1,21 +1,20 @@
 import mongoose from "mongoose";
+import { env } from "./env.js";
+import { logger } from "../shared/logger/logger.js";
 
 export const ConnectDB = async (): Promise<void> => {
-  const mongoUri = process.env.MONGO_URI;
+  const mongoUri = env.MONGO_URI;
 
   if (!mongoUri) {
-    console.error("[Database] Connection Error: MONGO_URI is not defined in environment variables.");
+    logger.error("[Database] Connection Error: MONGO_URI is not defined.");
     process.exit(1);
   }
 
   try {
     await mongoose.connect(mongoUri);
-    console.log("DataBase connected");
+    logger.info("DataBase connected successfully");
   } catch (error: any) {
-    console.error("[Database] Connection failed:", error?.message || error);
+    logger.error("[Database] Connection failed:", error?.message || error);
     process.exit(1);
   }
 };
-
-
-

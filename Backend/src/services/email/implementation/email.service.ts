@@ -1,50 +1,85 @@
 import 'reflect-metadata';
 import { injectable } from 'inversify';
-import nodemailer, {Transporter, SendMailOptions} from 'nodemailer';
+import nodemailer, { Transporter, SendMailOptions } from 'nodemailer';
 import { IEmailService } from '../interface/IEmail.service.js';
-import { error } from 'node:console';
-
+import { env } from '../../../config/env.js';
+import { logger } from '../../../shared/logger/logger.js';
 
 @injectable()
 export class EmailService implements IEmailService {
   private transporter: Transporter | null = null;
 
-  private getTransporter(): Transporter {
-    const user = process.env.EMAIL_USER;
-    const pass = process.env.EMAIL_PASS;
+  private getTransporter(): Transporter | null {
+    const user = env.EMAIL_USER;
+    const pass = env.EMAIL_PASS;
+    const host = env.EMAIL_HOST;
+    const port = env.EMAIL_PORT;
+    const secure = env.EMAIL_SECURE;
 
     if (!user || !pass) {
-      throw new Error("Email service is not configured (EMAIL_USER or EMAIL_PASS missing).");
+      if (env.NODE_ENV === 'production') {
+        throw new Error("Email service is not configured (EMAIL_USER or EMAIL_PASS missing).");
+      }
+      return null;
     }
 
     if (!this.transporter) {
-      this.transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user,
-          pass,
-        },
-      });
+      if (host) {
+        this.transporter = nodemailer.createTransport({
+          host,
+          port: port || 587,
+          secure,
+          auth: {
+            user,
+            pass,
+          },
+        });
+      } else {
+        this.transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user,
+            pass,
+          },
+        });
+      }
     }
 
     return this.transporter;
   }
 
   async sendOtp(to: string, otp: string, purpose: string): Promise<void> {
-    const transporter = this.getTransporter();
-    const mailOptions: SendMailOptions = {
-      from: process.env.EMAIL_USER,
-      to,
-      subject: this._getSubject(purpose),
-      html: this._getTemplate(otp, purpose),
-    };
+    // 🔐 Dev Console OTP Output Banner
+    console.log(`\n======================================================`);
+    console.log(`🔐 [DEV OTP] Purpose: ${purpose?.toUpperCase() || 'VERIFICATION'}`);
+    console.log(`📧 Target Email: ${to}`);
+    console.log(`🔑 OTP CODE:  👉 [ ${otp} ] 👈`);
+    console.log(`======================================================\n`);
 
     try {
+      const transporter = this.getTransporter();
+      if (!transporter) {
+        console.warn(`[EmailService] ⚡ EMAIL_USER/EMAIL_PASS not configured. Using console OTP.`);
+        return;
+      }
+
+      const mailOptions: SendMailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject: this._getSubject(purpose),
+        html: this._getTemplate(otp, purpose),
+      };
+
       const info = await transporter.sendMail(mailOptions);
-      console.log(`[EmailService] OTP sent | to: ${to} | messageId: ${info.messageId}`);
+      console.log(`[EmailService] OTP email sent | to: ${to} | messageId: ${info.messageId}`);
     } catch (error: unknown) {
-      console.error(`[EmailService] Failed | to: ${to} | error: ${error}`);
-      throw new Error("Failed to send OTP email. Please try again.");
+      console.error(`[EmailService] SMTP delivery failed | to: ${to} | error: ${error}`);
+
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error("Failed to send OTP email. Please try again.");
+      }
+
+      console.warn(`[EmailService] ⚡ Dev fallback: Proceeding without failing. Use the console OTP above: [ ${otp} ]`);
     }
   }
 

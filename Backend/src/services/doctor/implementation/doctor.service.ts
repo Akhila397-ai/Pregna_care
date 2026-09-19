@@ -2,17 +2,14 @@ import 'reflect-metadata';
 import { injectable, inject }        from 'inversify';
 import { Types }                     from 'mongoose';
 import { TYPES }                     from '../../../container/types.js';
-import  type { IDoctorRepository }         from '../../../repositories/doctor/interface/iDoctor.repository.js';
-import type { IUserRepository }           from '../../../repositories/auth/interface/IUser.repository.js';
-import type { IDoctorService }            from '../interface/IDoctor.service.js';
-import  type { IEmailService }             from '../../email/interface/IEmail.service.js';
-import { toDoctorApplicationDTO,toDoctorStatusDTO, toDoctorDashboardDTO}        from '../../../mapper/doctor.mapper.js';
-import { hashPassword }              from '../../../utils/hashPassword.js';
-import { generateAccessToken }       from '../../../utils/generateToken.js';
+import type { IDoctorRepository } from '../../../repositories/doctor/interface/IDoctor.repository.js';
+import type { IUserRepository } from '../../../repositories/auth/interface/IUser.repository.js';
+import type { IDoctorService } from '../interface/IDoctor.service.js';
+import { toDoctorApplicationDTO, toDoctorStatusDTO, toDoctorDashboardDTO } from '../../../mapper/doctor.mapper.js';
 import { HttpResponse } from '../../../constants/messages.constant.js';
-import { DoctorApplyDTO, DoctorApplyResponseDTO, DoctorDashboardDTO, DoctorStatusResponseDTO } from '../../../dtos/doctor.dto.js';
+import { DoctorApplyDTO, DoctorDashboardDTO } from '../../../dtos/doctor.dto.js';
 import doctorApplicationModel from '../../../models/doctorApplication.model.js';
-import { uploadToS3,generateS3Key,getPresignedUrl,validateFile,PDF_ONLY,ALLOWED_MIME_TYPES, IMAGE_ONLY } from '../../../utils/s3Upload.js';
+import { uploadToS3, generateS3Key, getPresignedUrl, validateFile, PDF_ONLY, ALLOWED_MIME_TYPES, IMAGE_ONLY } from '../../../utils/s3Upload.js';
 import { DoctorApplicationDocument } from '../../../types/doctor.js';
 
 

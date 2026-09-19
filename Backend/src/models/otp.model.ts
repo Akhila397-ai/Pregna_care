@@ -1,8 +1,7 @@
-import mongoose,{Schema, Document} from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import { otpData } from "../types/otp.js";
-import { isBooleanObject } from "node:util/types";
 
-export interface IOTPDocument extends otpData, Document {};
+export interface IOTPDocument extends otpData, Document {}
 
 
 const OTPSchema = new Schema<IOTPDocument>(

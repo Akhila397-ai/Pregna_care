@@ -3,7 +3,6 @@ import { container } from "../container/index.js";
 import { TYPES } from "../container/types.js";
 import { IAuthController } from "../controllers/auth/interface/IAuth.controller.js";
 import { ROUTES } from "../constants/routes.js";
-import { auth } from "google-auth-library";
 import { verifyResetJWT } from "../middleware/verifyResetJWT.middleware.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 

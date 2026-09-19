@@ -1,7 +1,5 @@
-import { Types } from "mongoose";
-import { doctorApplicationData, DoctorApplicationDocument } from "../types/doctor.js";
-import { DoctorApplicationDTO,DoctorDashboardDTO,DoctorStatusResponseDTO } from "../dtos/doctor.dto.js";
-import { DoctorApplicationWithUser } from "../types/doctor.js";
+import { DoctorApplicationDocument, DoctorApplicationWithUser } from "../types/doctor.js";
+import { DoctorApplicationDTO, DoctorDashboardDTO, DoctorStatusResponseDTO } from "../dtos/doctor.dto.js";
 
 
 type PresignedUrls = {

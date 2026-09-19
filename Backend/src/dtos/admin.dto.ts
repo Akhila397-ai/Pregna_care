@@ -1,103 +1,97 @@
 import { DoctorStatus } from "../types/doctor.js";
 
 export interface IUserMappedData {
-    _id:  string;
-    userId: string;
-    name: string;
-    email: string;
-    role: string;
-    isBlocked: boolean;
-    isDeleted:  boolean;
-    isVerified: boolean;
-    imageUrl?: string;
-    mobileNumber?: string;
-    createdAt: Date;
+  _id: string;
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+  isBlocked: boolean;
+  isDeleted: boolean;
+  isVerified: boolean;
+  imageUrl?: string;
+  mobileNumber?: string;
+  createdAt?: Date;
 }
 
 export interface GetMappedUsersResponse {
-    users: IUserMappedData[];
-    totalUsers: number;
-    totalPages: number;
+  users: IUserMappedData[];
+  totalUsers: number;
+  totalPages: number;
 }
 
-
-//adminAuth
+// adminAuth
 export interface AdminAuthDTO {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    isBlocked: boolean;
-    isVerified: boolean;
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  isBlocked: boolean;
+  isVerified: boolean;
 }
 
 export interface AdminAuthResponseDTO {
-    admin: AdminAuthDTO;
-    token: string
+  admin: AdminAuthDTO;
+  token: string;
 }
 
-//doctor managment
-
+// doctor management
 export interface IDoctorsMappedData {
-   _id:    string;
+  _id: string;
   userId: string;
 
-  // ← from User
-  name:       string;
-  email:      string;
-  phone?:     string;
-  imageUrl?:  string;
-  isBlocked:  boolean;
-  isDeleted:  boolean;
+  name: string;
+  email: string;
+  phone?: string;
+  imageUrl?: string;
+  isBlocked: boolean;
+  isDeleted: boolean;
   isVerified: boolean;
 
-  // ← from DoctorApplication
-  fullName:           string;
-  specialization:     string;
-  qualification:      string;
-  experience:         number;
+  fullName: string;
+  specialization: string;
+  qualification: string;
+  experience: number;
   registrationNumber: string;
-  consultationFee:    number;
-  clinicName:         string;
-  clinicAddress:      string;
+  consultationFee: number;
+  clinicName: string;
+  clinicAddress: string;
   availability: {
-    days:      string[];
+    days: string[];
     startTime: string;
-    endTime:   string;
+    endTime: string;
   };
 
-  // ← presigned URLs
-  profileImage?:               string;  
-  degreeCertificateUrl?:       string;
+  profileImage?: string;
+  degreeCertificateUrl?: string;
   registrationCertificateUrl?: string;
-  governmentIdUrl?:            string;
+  governmentIdUrl?: string;
 
-  hasDegreeCertificate:       boolean;
+  hasDegreeCertificate: boolean;
   hasRegistrationCertificate: boolean;
-  hasGovernmentId:            boolean;
+  hasGovernmentId: boolean;
 
-  status:               DoctorStatus;
+  status: DoctorStatus;
   verificationRemarks?: string;
-  verifiedBy?:          string;
-  verifiedAt?:          Date;
-  createdAt?:           Date;
-
-
+  verifiedBy?: string;
+  verifiedAt?: Date;
+  createdAt?: Date;
 }
 
 export interface GetMappedDoctorsResponse {
-    doctors: IDoctorsMappedData[];
-    totalDoctors: number;
-    totalPages: number;
+  doctors: IDoctorsMappedData[];
+  totalDoctors: number;
+  totalPages: number;
+  doctorPages?: number;
 }
 
 export interface VerifyDoctorDTO {
-    action: 'approve' | 'reject' | 'more_documents_required' | 'under_review';
-    remarks?: string;
+  action: "approve" | "reject" | "more_documents_required" | "under_review";
+  remarks?: string;
 }
 
 export interface DocumentPresignedUrlDTO {
-  url:       string;
-  expiresIn: number;  // seconds
-  key:       string;
+  url: string;
+  expiresIn: number; // seconds
+  key: string;
 }

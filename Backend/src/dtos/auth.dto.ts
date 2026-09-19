@@ -1,41 +1,35 @@
 import { UserAuthDTO } from "./user.dto.js";
-import { OTPPurpose } from "../types/otp.js";
 import { UserRole } from "../types/roles.js";
 
 export interface RegisterDTO {
-    name: string;
-    email: string;
-    password: string;
+  name: string;
+  email: string;
+  password: string;
 }
 
 export interface LoginDTO {
-    email:  string;
-    password: string;
-    expectedRole: UserRole;
+  email: string;
+  password: string;
+  expectedRole: UserRole;
 }
 
-
-//responsedto
-
 export interface AuthResponseDTO {
-    user: UserAuthDTO;
-    token: string;
-    
+  user: UserAuthDTO;
+  token: string;
+  refreshToken?: string;
 }
 
 export interface OTPResponseDTO {
-    message: string;
-    expiresIn: number;
+  message: string;
+  expiresIn: number;
 }
 
 export interface MessageResponseDTO {
-    message: string;
+  message: string;
 }
 
 export interface ResetTokenDTO {
-    token: string
+  token: string;
 }
 
-export type VerifyOtpResponseDTO =
-  | AuthResponseDTO
-  | ResetTokenDTO;
+export type VerifyOtpResponseDTO = AuthResponseDTO | ResetTokenDTO;

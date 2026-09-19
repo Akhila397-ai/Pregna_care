@@ -1,263 +1,229 @@
-import 'reflect-metadata';
-import jwt from "jsonwebtoken";
-import { injectable,inject } from 'inversify';
-import { TYPES } from '../../../container/types.js';
-import type { IUserRepository } from '../../../repositories/auth/interface/IUser.repository.js';
-import { IAUthService } from '../interface/IAuth.service.js';
-import { toUserAuthDTO } from '../../../mapper/user.mapper.js';
-import { hashPassword, comparePassword } from '../../../utils/hashPassword.js';
-import { generateOTP } from '../../../utils/generateOtp.js';
-import { generateAccessToken,generateRefreshToken, generateResetToken } from '../../../utils/jwt.js';
-import { HttpResponse } from '../../../constants/messages.constant.js';
-import { OTPPurpose } from '../../../types/otp.js';
-import { EmailService } from '../../email/implementation/email.service.js';
-import type { IEmailService } from '../../email/interface/IEmail.service.js';
-import  { AuthResponseDTO, MessageResponseDTO, OTPResponseDTO, VerifyOtpResponseDTO } from '../../../dtos/auth.dto.js';
-import { error } from 'node:console';
-import { access } from 'node:fs';
-import { ROLE_PORTAL_NAMES, UserRole } from '../../../types/roles.js';
-import { onboardingType } from '../../../types/user.js';
-import { UserAuthDTO } from '../../../dtos/user.dto.js';
-import { LoginDTO } from '../../../dtos/auth.dto.js';
+import "reflect-metadata";
+import { injectable, inject } from "inversify";
+import { TYPES } from "../../../container/types.js";
+import type { IUserRepository } from "../../../repositories/auth/interface/IUser.repository.js";
+import type { IOtpRepository } from "../../../repositories/otp/interface/IOtp.repository.js";
+import type { IEmailService } from "../../email/interface/IEmail.service.js";
+import { IAUthService } from "../interface/IAuth.service.js";
+import { toUserAuthDTO } from "../../../mapper/user.mapper.js";
+import { hashPassword, comparePassword } from "../../../utils/hashPassword.js";
+import { generateOTP } from "../../../utils/generateOtp.js";
+import { generateAccessToken, generateRefreshToken, generateResetToken } from "../../../utils/jwt.js";
+import { HttpResponse } from "../../../constants/messages.constant.js";
+import { OTPPurpose } from "../../../types/otp.js";
+import {
+  AuthResponseDTO,
+  MessageResponseDTO,
+  OTPResponseDTO,
+  VerifyOtpResponseDTO,
+  LoginDTO,
+} from "../../../dtos/auth.dto.js";
+import { UserAuthDTO } from "../../../dtos/user.dto.js";
+import { ROLE_PORTAL_NAMES, UserRole } from "../../../types/roles.js";
+import { onboardingType } from "../../../types/user.js";
+import { logger } from "../../../shared/logger/logger.js";
 
 @injectable()
 export class AuthService implements IAUthService {
-    constructor(
-        @inject(TYPES.UserRepository) private userRepository: IUserRepository,
-        @inject(TYPES.EmailService) private emailService: IEmailService
-    ) {}
+  constructor(
+    @inject(TYPES.UserRepository) private userRepository: IUserRepository,
+    @inject(TYPES.OtpRepository) private otpRepository: IOtpRepository,
+    @inject(TYPES.EmailService) private emailService: IEmailService
+  ) {}
 
-    async register(name: string, email: string, password: string): Promise<OTPResponseDTO> {
-        const exiting = await this.userRepository.findByEmail(email);
-        if(exiting) throw new Error(HttpResponse.EMAIL_ALREADY_EXISTS);
+  async register(name: string, email: string, password: string): Promise<OTPResponseDTO> {
+    const existing = await this.userRepository.findByEmail(email);
+    if (existing) throw new Error(HttpResponse.EMAIL_ALREADY_EXISTS);
 
-        const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(password);
 
-        const newUser = await this.userRepository.create({
-            name,
-            email,
-            password:hashedPassword,
-            isBlocked: false,
-            isVerified: false
-        })
+    const newUser = await this.userRepository.create({
+      name,
+      email,
+      password: hashedPassword,
+      isBlocked: false,
+      isVerified: false,
+    });
 
-        await this._sendOTP(newUser._id.toString(), email, 'signup');
+    await this._sendOTP(newUser._id.toString(), email, "signup");
+    return { message: HttpResponse.REGISTER_SUCCESS, expiresIn: 300 };
+  }
 
-        return {message: HttpResponse.REGISTER_SUCCESS, expiresIn: 300}
-        
-    }
-    async verifyOtp(email: string, otp: string, purpose: string): Promise<VerifyOtpResponseDTO> {
-
-        const user = await this.userRepository.findByEmail(email);
-        if(!user){
-            throw new Error(HttpResponse.USER_NOT_FOUND)
-        }
-             
-        await this._verifyOtp(
-            user._id.toString(),
-            purpose as OTPPurpose,
-            otp
-        );
-
-        if(purpose === 'signup'){
-            await this.userRepository.markVerified(user._id.toString())
-
-            const accessToken = generateAccessToken(
-                user._id.toString(),
-                user.role
-            )
-            return {
-                user: toUserAuthDTO(user),
-                token: accessToken,
-           };
-        }
-
-        if(purpose === 'forgot_password'){
-            const resetToken = generateResetToken(
-                user._id.toString()
-            );
-            console.log("RESET TOKEN:", resetToken);
-            return {
-                token: resetToken,
-            }
-        }
-        throw new Error("Invalid OTP purpose");
-
-}
-
-    async login(data: LoginDTO): Promise<AuthResponseDTO> {
-
-        const { email, password, expectedRole } = data;
-        const user = await this.userRepository.findByEmail(email);
-        if(!user){
-            throw new Error(HttpResponse.USER_NOT_FOUND)
-        }
-        if(user.isBlocked){
-            throw new Error(HttpResponse.USER_BLOCKED)
-        }
-        if(!user.isVerified){
-            throw new Error(HttpResponse.UNAUTHORIZED)
-        }
-
-        const isMatch = await comparePassword(password, user.password);
-        if(!isMatch){
-            throw new Error(HttpResponse.INVALID_PASSWORD)
-        }
-        console.log("DB user:", user._id.toString(), user.role);
-         
-        if(user.role !== expectedRole){
-            const portalMessage = this._getPortalErrorMessage(
-                user.role,
-                expectedRole
-            );
-            const error = new Error(portalMessage);
-            (error as any).statusCode = 403;
-            throw error;
-        }
-
-        const accessToken = generateAccessToken(user._id.toString(),user.role);
-        const payload = jwt.decode(accessToken);
-console.log("Generated token payload:", payload);
-        const refreshToken = generateRefreshToken(user._id.toString())
-
-        return {
-            user: toUserAuthDTO(user),
-            token: accessToken
-        }
-        
+  async verifyOtp(email: string, otp: string, purpose: string): Promise<VerifyOtpResponseDTO> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error(HttpResponse.USER_NOT_FOUND);
     }
 
-    private _getPortalErrorMessage(
-        actualRole:  UserRole,
-        expectedRole:  UserRole
-    ): string {
-        const correctPortal = ROLE_PORTAL_NAMES[actualRole]
+    await this._verifyOtp(user._id.toString(), purpose as OTPPurpose, otp);
 
-        if(expectedRole === 'admin'){
-             return `Access denied. Admin portal is for administrators only. Please use the ${correctPortal}.`;
-        }
-
-        if(expectedRole === 'doctor'){
-             return `Access denied. Doctor portal is for verified doctors only. Please use the ${correctPortal}.`;
-        }
-
-        if(expectedRole === 'user'){
-             return `Access denied. This portal is for patients only. Please use the ${correctPortal}.`;
-        }
-        return HttpResponse.FORBIDDEN;
+    if (purpose === "signup") {
+      await this.userRepository.markVerified(user._id.toString());
+      const accessToken = generateAccessToken(user._id.toString(), user.role);
+      return {
+        user: toUserAuthDTO(user),
+        token: accessToken,
+      };
     }
 
-     async forgotPassword(email: string): Promise<OTPResponseDTO> {
-        const user = await this.userRepository.findByEmail(email)
-        if(!user){
-            throw new Error(HttpResponse.USER_NOT_FOUND)
-        }
-
-        await this._sendOTP(user._id.toString(),email,'forgot_password')
-
-        return {
-            message: HttpResponse.FORGOT_PASSWORD_SENT,
-            expiresIn: 300
-        }
+    if (purpose === "forgot_password") {
+      const resetToken = generateResetToken(user._id.toString());
+      return {
+        token: resetToken,
+      };
     }
 
-    async resetPassword(userId: string,newPassword: string): Promise<MessageResponseDTO> {
+    throw new Error("Invalid OTP purpose");
+  }
 
-        
-
-        const hash = await hashPassword(newPassword);
-        await this.userRepository.updatePassword(userId,hash);
-
-        return{
-            message: HttpResponse.PASSWORD_RESET_SUCCESSFULL
-        }
+  async login(data: LoginDTO): Promise<AuthResponseDTO> {
+    const { email, password, expectedRole } = data;
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error(HttpResponse.USER_NOT_FOUND);
+    }
+    if (user.isBlocked) {
+      throw new Error(HttpResponse.USER_BLOCKED);
+    }
+    if (!user.isVerified) {
+      throw new Error(HttpResponse.UNAUTHORIZED);
     }
 
-    async resendOtp(email: string, purpose: string): Promise<OTPResponseDTO> {
-        const user = await this.userRepository.findByEmail(email);
-        if(!user){
-            throw new Error(HttpResponse.USER_NOT_FOUND)
-        }
-
-        await this._sendOTP(
-            user._id.toString(),
-            email,
-            purpose as OTPPurpose,
-        )
-        return {
-            message: HttpResponse.OTP_RESENT,
-            expiresIn: 300
-        }
+    const isMatch = await comparePassword(password, user.password);
+    if (!isMatch) {
+      throw new Error(HttpResponse.INVALID_PASSWORD);
     }
 
-    async refreshToken(userId: string) {
-    const user = await this.userRepository.findById(userId);
-    if (!user)           throw new Error(HttpResponse.USER_NOT_FOUND);
-    if (user.isBlocked)  throw new Error(HttpResponse.USER_BLOCKED);
-    if (user.isDeleted)  throw new Error(HttpResponse.USER_NOT_FOUND);
+    if (user.role !== expectedRole) {
+      const portalMessage = this._getPortalErrorMessage(user.role, expectedRole);
+      const error = new Error(portalMessage);
+      (error as any).statusCode = 403;
+      throw error;
+    }
 
     const accessToken = generateAccessToken(user._id.toString(), user.role);
-    return { user: toUserAuthDTO(user), token: accessToken };
+    const refreshToken = generateRefreshToken(user._id.toString());
+
+    return {
+      user: toUserAuthDTO(user),
+      token: accessToken,
+      refreshToken,
+    };
+  }
+
+  private _getPortalErrorMessage(actualRole: UserRole, expectedRole: UserRole): string {
+    const correctPortal = ROLE_PORTAL_NAMES[actualRole] || "appropriate login portal";
+
+    if (expectedRole === "admin") {
+      return `Access denied. Admin portal is for administrators only. Please use the ${correctPortal}.`;
+    }
+
+    if (expectedRole === "doctor") {
+      return `Access denied. Doctor portal is for verified doctors only. Please use the ${correctPortal}.`;
+    }
+
+    if (expectedRole === "user") {
+      return `Access denied. This portal is for patients only. Please use the ${correctPortal}.`;
+    }
+    return HttpResponse.FORBIDDEN;
+  }
+
+  async forgotPassword(email: string): Promise<OTPResponseDTO> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error(HttpResponse.USER_NOT_FOUND);
+    }
+
+    await this._sendOTP(user._id.toString(), email, "forgot_password");
+    return {
+      message: HttpResponse.FORGOT_PASSWORD_SENT,
+      expiresIn: 300,
+    };
+  }
+
+  async resetPassword(userId: string, newPassword: string): Promise<MessageResponseDTO> {
+    const hash = await hashPassword(newPassword);
+    await this.userRepository.updatePassword(userId, hash);
+    return {
+      message: HttpResponse.PASSWORD_RESET_SUCCESSFULL,
+    };
+  }
+
+  async resendOtp(email: string, purpose: string): Promise<OTPResponseDTO> {
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error(HttpResponse.USER_NOT_FOUND);
+    }
+
+    await this._sendOTP(user._id.toString(), email, purpose as OTPPurpose);
+    return {
+      message: HttpResponse.OTP_RESENT,
+      expiresIn: 300,
+    };
+  }
+
+  async refreshToken(userId: string): Promise<AuthResponseDTO> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new Error(HttpResponse.USER_NOT_FOUND);
+    if (user.isBlocked) throw new Error(HttpResponse.USER_BLOCKED);
+    if (user.isDeleted) throw new Error(HttpResponse.USER_NOT_FOUND);
+
+    const accessToken = generateAccessToken(user._id.toString(), user.role);
+    const refreshToken = generateRefreshToken(user._id.toString());
+    return { user: toUserAuthDTO(user), token: accessToken, refreshToken };
   }
 
   async setOnboarding(userId: string, onboardingType: onboardingType): Promise<MessageResponseDTO> {
-      const user = await this.userRepository.findById(userId);
-      if(!user) throw new Error(HttpResponse.USER_NOT_FOUND)
-        await this.userRepository.setOnboarding(userId, onboardingType);
-    return { message: 'onboarding updated successfully'}
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new Error(HttpResponse.USER_NOT_FOUND);
+    await this.userRepository.setOnboarding(userId, onboardingType);
+    return { message: "onboarding updated successfully" };
   }
 
+  async getMe(userId: string): Promise<UserAuthDTO> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new Error(HttpResponse.USER_NOT_FOUND);
+    if (user.isBlocked) throw new Error(HttpResponse.USER_BLOCKED);
+    if (user.isDeleted) throw new Error(HttpResponse.USER_NOT_FOUND);
+    return toUserAuthDTO(user);
+  }
 
+  private async _sendOTP(userId: string, email: string, purpose: OTPPurpose): Promise<void> {
+    await this.otpRepository.invalidateAllOTPs(userId, purpose);
 
+    const rawOtp = generateOTP();
+    const otpHash = await hashPassword(rawOtp);
 
-    private async _sendOTP(userId: string, email: string, purpose: OTPPurpose): Promise<void>{
-        await this.userRepository.invalidateAllOTPs(userId, purpose);
+    await this.otpRepository.createOtp({
+      userId,
+      otpHash,
+      purpose,
+    });
 
-        const rawOtp = generateOTP();
-        const otpHash = await hashPassword(rawOtp);
+    await this.emailService.sendOtp(email, rawOtp, purpose);
+  }
 
-        await this.userRepository.createOtp({
-            userId,
-            otpHash,
-            purpose
-        })
+  private async _verifyOtp(userId: string, purpose: OTPPurpose, submittedOtp: string): Promise<void> {
+    const otp = await this.otpRepository.findActiveOtp(userId, purpose);
 
-        await this.emailService.sendOtp(email, rawOtp, purpose);
+    if (!otp) throw new Error(HttpResponse.OTP_EXPIRED_OR_INVALID);
+
+    const updated = await this.otpRepository.incrementOTPAttempts(otp._id.toString());
+    if (!updated) {
+      throw new Error(HttpResponse.OTP_EXPIRED_OR_INVALID);
     }
 
-    private async _verifyOtp(userId: string, purpose: OTPPurpose, submittedOtp: string): Promise<void> {
-        const otp = await  this.userRepository.findActiveOtp(userId,purpose);
-
-        if(!otp) throw new Error(HttpResponse.OTP_EXPIRED_OR_INVALID);
-
-        const updated = await this.userRepository.incrementOTPAttempts(
-            otp._id.toString()
-        )
-        if(!updated){
-            throw new Error(HttpResponse.OTP_EXPIRED_OR_INVALID)
-        }
-
-        if(updated.attempts > 3){
-            await this.userRepository.markOtpAsused(otp._id.toString());
-            throw new Error(HttpResponse.OTP_MAX_ATTEMPTS)
-        }
-
-        const valid = comparePassword(submittedOtp, otp.otpHash)
-        if(!valid){
-            const left = 3 - updated.attempts;
-            throw new Error(`${HttpResponse.OTP_EXPIRED_OR_INVALID}, only ${left} attempts left..`)
-        }
-
-        await this.userRepository.markOtpAsused(otp._id.toString()); 
-
+    if (updated.attempts > 3) {
+      await this.otpRepository.markOtpAsUsed(otp._id.toString());
+      throw new Error(HttpResponse.OTP_MAX_ATTEMPTS);
     }
-    async getMe(userId: string): Promise<UserAuthDTO> {
-        const user = await this.userRepository.findById(userId);
-        if(!user) throw new Error(HttpResponse.USER_NOT_FOUND)
-        if(user.isBlocked) throw new Error(HttpResponse.USER_BLOCKED)
-        if(user.isDeleted) throw new Error(HttpResponse.USER_NOT_FOUND)
-            return toUserAuthDTO(user)
+
+    const valid = await comparePassword(submittedOtp, otp.otpHash);
+    if (!valid) {
+      const left = 3 - updated.attempts;
+      throw new Error(`${HttpResponse.OTP_EXPIRED_OR_INVALID}, only ${left} attempts left..`);
     }
+
+    await this.otpRepository.markOtpAsUsed(otp._id.toString());
+  }
 }
-
-
