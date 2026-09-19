@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { injectable, inject }        from 'inversify';
-import { Types }                     from 'mongoose';
-import { TYPES }                     from '../../../container/types.js';
+import { injectable, inject } from 'inversify';
+import { Types } from 'mongoose';
+import { TYPES } from '../../../container/types.js';
 import type { IDoctorRepository } from '../../../repositories/doctor/interface/IDoctor.repository.js';
 import type { IUserRepository } from '../../../repositories/auth/interface/IUser.repository.js';
 import type { IDoctorService } from '../interface/IDoctor.service.js';
@@ -15,22 +15,22 @@ import { DoctorApplicationDocument } from '../../../types/doctor.js';
 
 
 export interface UploadFiles {
-  profileImage?:   Express.Multer.File[];
-  degreeCertificate ?: Express.Multer.File[];
+  profileImage?: Express.Multer.File[];
+  degreeCertificate?: Express.Multer.File[];
   registrationCertificate?: Express.Multer.File[];
-  governmentId?:            Express.Multer.File[];
+  governmentId?: Express.Multer.File[];
 }
 @injectable()
 export class DoctorService implements IDoctorService {
   constructor(
     @inject(TYPES.DoctorRepository) private doctorRepository: IDoctorRepository,
-    @inject(TYPES.UserRepository)   private userRepository:   IUserRepository,
-  ) {}
+    @inject(TYPES.UserRepository) private userRepository: IUserRepository,
+  ) { }
 
   async apply(
-    userId:  string,
-    data:    DoctorApplyDTO,
-    files:   {
+    userId: string,
+    data: DoctorApplyDTO,
+    files: {
       [field: string]: Express.Multer.File[];
     }
   ) {
@@ -39,23 +39,23 @@ export class DoctorService implements IDoctorService {
 
     const existing = await this.doctorRepository.findApplicationByUserId(userId);
     if (existing) {
-  if (
-    existing.application.status === 'pending' ||
-    existing.application.status === 'under_review'
-  ) {
-    throw new Error('You already have a pending application.');
-  }
+      if (
+        existing.application.status === 'pending' ||
+        existing.application.status === 'under_review'
+      ) {
+        throw new Error('You already have a pending application.');
+      }
 
-  if (existing.application.status === 'approved') {
-    throw new Error('Your application is already approved.');
-  }
-}
+      if (existing.application.status === 'approved') {
+        throw new Error('Your application is already approved.');
+      }
+    }
 
     // ── Validate files ────────────────────────
     const profileImageFile = files.profileImage?.[0];
     const degreeFile = files.degreeCertificate?.[0];
-    const regFile    = files.registrationCertificate?.[0];
-    const govFile    = files.governmentId?.[0];
+    const regFile = files.registrationCertificate?.[0];
+    const govFile = files.governmentId?.[0];
 
     if (!degreeFile || !regFile || !govFile) {
       throw new Error('All three documents are required.');
@@ -105,8 +105,8 @@ export class DoctorService implements IDoctorService {
 
     // ── Upload to S3 / Storage ─────────────────
     const degreeKey = generateS3Key('doctor-docs/degrees', degreeFile.mimetype);
-    const regKey    = generateS3Key('doctor-docs/registrations', regFile.mimetype);
-    const govKey    = generateS3Key('doctor-docs/government-ids', govFile.mimetype);
+    const regKey = generateS3Key('doctor-docs/registrations', regFile.mimetype);
+    const govKey = generateS3Key('doctor-docs/government-ids', govFile.mimetype);
 
     uploadPromises.push(
       uploadToS3(degreeFile.buffer, degreeKey, degreeFile.mimetype),
@@ -120,21 +120,21 @@ export class DoctorService implements IDoctorService {
 
 
     const applicationData = {
-      userId:   new Types.ObjectId(userId),
-      fullName:           data.fullName,
-      specialization:     data.specialization,
-      qualification:      data.qualification,
-      experience:         Number(data.experience),
+      userId: new Types.ObjectId(userId),
+      fullName: data.fullName,
+      specialization: data.specialization,
+      qualification: data.qualification,
+      experience: Number(data.experience),
       registrationNumber: data.registrationNumber,
-      consultationFee:    Number(data.consultationFee),
-      clinicName:         data.clinicName,
-      clinicAddress:      data.clinicAddress,
-      availability:       data.availability,
-      profileImage:                   profileKey,   // ← S3 key
-      degreeCertificateUrl:           degreeKey,    // ← S3 key
-      registrationCertificateUrl:     regKey,       // ← S3 key
-      governmentIdUrl:                govKey,       // ← S3 key
-      status:    'pending'  as const,
+      consultationFee: Number(data.consultationFee),
+      clinicName: data.clinicName,
+      clinicAddress: data.clinicAddress,
+      availability: data.availability,
+      profileImage: profileKey,   // ← S3 key
+      degreeCertificateUrl: degreeKey,    // ← S3 key
+      registrationCertificateUrl: regKey,       // ← S3 key
+      governmentIdUrl: govKey,       // ← S3 key
+      status: 'pending' as const,
       isBlocked: false,
       isDeleted: false,
     }
@@ -143,16 +143,16 @@ export class DoctorService implements IDoctorService {
     let application: DoctorApplicationDocument;
 
     if (existing && existing.application.status === 'rejected' ||
-        existing && existing.application.status === 'more_documents_required') {
+      existing && existing.application.status === 'more_documents_required') {
       // resubmit
       await doctorApplicationModel.findByIdAndUpdate(
         existing.application._id,
         {
           $set: {
             ...applicationData,
-            verificationRemarks:        undefined,
-            verifiedBy:                 undefined,
-            verifiedAt:                 undefined,
+            verificationRemarks: undefined,
+            verifiedBy: undefined,
+            verifiedAt: undefined,
           },
         }
       );
@@ -164,7 +164,7 @@ export class DoctorService implements IDoctorService {
     }
 
     return {
-      message:     HttpResponse.DOCTOR_APPLICATION_SENT,
+      message: HttpResponse.DOCTOR_APPLICATION_SENT,
       application: toDoctorApplicationDTO(application),
     };
   }
@@ -173,17 +173,17 @@ export class DoctorService implements IDoctorService {
 
 
   async getMyStatus(userId: string) {
-   const result = await this.doctorRepository.findApplicationByUserId(userId);
+    const result = await this.doctorRepository.findApplicationByUserId(userId);
 
-   if(!result){
-    throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
-   }
+    if (!result) {
+      throw new Error(HttpResponse.DOCTOR_NOT_FOUND)
+    }
 
-   const presignedUrls = await this._resolvePresignedUrls(result.application)
-   return toDoctorStatusDTO(result,presignedUrls)
+    const presignedUrls = await this._resolvePresignedUrls(result.application)
+    return toDoctorStatusDTO(result, presignedUrls)
   }
-async getMyDashboard(userId: string): Promise<DoctorDashboardDTO> {
-     const result = await this.doctorRepository
+  async getMyDashboard(userId: string): Promise<DoctorDashboardDTO> {
+    const result = await this.doctorRepository
       .findApplicationByUserId(userId);
     if (!result) throw new Error(HttpResponse.DOCTOR_NOT_FOUND);
     if (result.application.status !== 'approved') {
@@ -194,7 +194,7 @@ async getMyDashboard(userId: string): Promise<DoctorDashboardDTO> {
     return toDoctorDashboardDTO(result, presignedUrls);
 
 
-}
+  }
 
   // async getMyProfile(userId: string) {
   //   const profile = await this.doctorRepository
@@ -202,12 +202,12 @@ async getMyDashboard(userId: string): Promise<DoctorDashboardDTO> {
   //   if (!profile) return null;
   //   return toDoctorProfileDTO(profile);
   // }
- private async _resolvePresignedUrls(
+  private async _resolvePresignedUrls(
     application: DoctorApplicationDocument
   ): Promise<{
-    degreeCertificateUrl?:       string;
+    degreeCertificateUrl?: string;
     registrationCertificateUrl?: string;
-    governmentIdUrl?:            string;
+    governmentIdUrl?: string;
   }> {
     const [degreeUrl, regUrl, govUrl] = await Promise.allSettled([
       application.degreeCertificateUrl

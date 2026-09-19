@@ -1,74 +1,68 @@
-import { data } from "react-router-dom";
-import axiosInstance from "../../../api/axiosInstance";
+import axiosInstance from '@/shared/api/axiosInstance';
 import {
-   RegisterRequest,
-   LoginRequest,
-   VerifyOTPRequest,
-   ForgotPasswordRequest,
-   ResendOTPRequest,
-   ResetPasswordREquest,
-   AuthResponse,
-   OTPResponse,
-   MessageResponse,
-   SetOnboardingRequest,
-   UserAuthResponse
-} from '../types/auth.types'
-import ForgotPasswordPage from "../pages/ForgotPassword";
+  RegisterRequest,
+  LoginRequest,
+  VerifyOTPRequest,
+  ForgotPasswordRequest,
+  ResendOTPRequest,
+  AuthResponse,
+  OTPResponse,
+  MessageResponse,
+  SetOnboardingRequest,
+  UserAuthResponse,
+} from '../types/auth.types';
 
 export const authApi = {
+  register: async (data: RegisterRequest): Promise<OTPResponse> => {
+    const res = await axiosInstance.post('/auth/register', data);
+    return res.data;
+  },
 
-    register: async (data: RegisterRequest): Promise<OTPResponse> => {
-        const res = await axiosInstance.post('/auth/register',data)
-        return res.data
-    },
+  verifyOTP: async (data: VerifyOTPRequest): Promise<AuthResponse> => {
+    const res = await axiosInstance.post('/auth/verify-otp', data);
+    return res.data;
+  },
 
-    verifyOTP: async (data: VerifyOTPRequest): Promise<AuthResponse> => {
-        const res = await axiosInstance.post('/auth/verify-otp',data)
-        return res.data
-    },
+  login: async (data: LoginRequest): Promise<AuthResponse> => {
+    const res = await axiosInstance.post('/auth/login', data);
+    return res.data;
+  },
 
-    login: async (data: LoginRequest): Promise<AuthResponse> => {
-        const res = await axiosInstance.post('/auth/login',data)
-        return res.data
-    },
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<OTPResponse> => {
+    const res = await axiosInstance.post('/auth/forgot-password', data);
+    return res.data;
+  },
 
-    forgotPassword: async (data: ForgotPasswordRequest): Promise<OTPResponse> => {
-        const res = await axiosInstance.post('/auth/forgot-password',data)
-        return res.data
-    },
-    
-
-    resetPassword: async (newPassword: string, resetToken: string): Promise<MessageResponse> => {
-        console.log("TOKEN SENT:", resetToken);
-        const res = await axiosInstance.post('/auth/reset-password',{
-            newPassword
-        },
-    {
+  resetPassword: async (newPassword: string, resetToken: string): Promise<MessageResponse> => {
+    const res = await axiosInstance.post(
+      '/auth/reset-password',
+      { newPassword },
+      {
         headers: {
-            Authorization: `Bearer ${resetToken}`
-        }
-    })
-        return res.data
-    },
+          Authorization: `Bearer ${resetToken}`,
+        },
+      }
+    );
+    return res.data;
+  },
 
-    resendOTP: async (data: ResendOTPRequest): Promise<OTPResponse> => {
-        const res = await axiosInstance.post('/auth/resend-otp',data)
-        return res.data
-    },
+  resendOTP: async (data: ResendOTPRequest): Promise<OTPResponse> => {
+    const res = await axiosInstance.post('/auth/resend-otp', data);
+    return res.data;
+  },
 
-    refreshToken: async (): Promise<AuthResponse> => {
-        const res = await axiosInstance.post('/auth/refresh-token');
-            return res.data
-        
-    },
-    setOnboarding: async( data: SetOnboardingRequest): Promise<MessageResponse> => {
-        const res = await axiosInstance.post('/auth/set-onboarding',data);
-        return res.data
-    },
-    getMe: async (): Promise<UserAuthResponse> => {
-        const res = await axiosInstance.get('/auth/me')
-        return res.data
-    }
+  refreshToken: async (): Promise<AuthResponse> => {
+    const res = await axiosInstance.post('/auth/refresh-token');
+    return res.data;
+  },
 
-    
-}
+  setOnboarding: async (data: SetOnboardingRequest): Promise<MessageResponse> => {
+    const res = await axiosInstance.post('/auth/set-onboarding', data);
+    return res.data;
+  },
+
+  getMe: async (): Promise<UserAuthResponse> => {
+    const res = await axiosInstance.get('/auth/me');
+    return res.data;
+  },
+};

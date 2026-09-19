@@ -1,9 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import {
-  useAppDispatch,
-  useAppSelector,
-} from '../../../store/hooks';
-
+import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import {
   doctorApplyThunk,
   getMyStatusThunk,
@@ -11,38 +7,31 @@ import {
   clearDoctorState,
   clearDoctorError,
 } from '../store/doctor.slice';
-
-import { DoctorApplyFormData, DoctorApplyRequest } from '../types/doctor.types';
+import { DoctorApplyFormData } from '../types/doctor.types';
 
 export const useDoctor = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const {
-    application,
-    dashboard,
-    status,
-    name,
-    loading,
-    error,
-  } = useAppSelector((state) => state.doctor);
+  const { application, dashboard, status, name, loading, error } = useAppSelector(
+    (state) => state.doctor
+  );
 
-  const { user,token } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
 
   // Apply as Doctor
   const apply = async (data: DoctorApplyFormData) => {
     const result = await dispatch(doctorApplyThunk(data));
 
     if (doctorApplyThunk.fulfilled.match(result)) {
-      navigate('/doctor/pending', { replace: true});
+      navigate('/doctor/pending', { replace: true });
     }
   };
 
   // Check Application Status
   const checkStatusAndRedirect = async () => {
-
-    if(!token) return;
-    if(user?.role === 'admin'){
+    if (!token) return;
+    if (user?.role === 'admin') {
       console.warn(`[useDoctor] checkStatusRedirect blocked - user is admin`);
       return;
     }
@@ -50,9 +39,9 @@ export const useDoctor = () => {
 
     if (!getMyStatusThunk.fulfilled.match(result)) return;
 
-    const { status } = result.payload;
+    const { status: appStatus } = result.payload;
 
-    switch (status) {
+    switch (appStatus) {
       case 'approved':
         navigate('/doctor/dashboard', { replace: true });
         break;
@@ -70,7 +59,7 @@ export const useDoctor = () => {
 
   // Doctor Dashboard
   const fetchDashboard = async () => {
-     if (!user || user.role === 'admin') return;
+    if (!user || user.role === 'admin') return;
     await dispatch(getMyDashboardThunk());
   };
 
@@ -81,13 +70,12 @@ export const useDoctor = () => {
   };
 
   // Logout
- const logout = () => {
-    sessionStorage.removeItem("accessToken");
-
+  const logout = () => {
+    sessionStorage.removeItem('accessToken');
     dispatch(clearDoctorState());
+    navigate('/doctor/login', { replace: true });
+  };
 
-    navigate("/doctor/login", {replace: true});
-};
   return {
     application,
     dashboard,

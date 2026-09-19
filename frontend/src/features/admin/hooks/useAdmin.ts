@@ -1,6 +1,4 @@
-import { useNavigate }    from 'react-router-dom';
-import { useAppDispatch,
-         useAppSelector } from '../../../store/hooks';
+import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import {
   getUsersThunk,
   blockUserThunk,
@@ -15,20 +13,23 @@ import {
   clearAdminError,
   verifyDoctorThunk,
   clearAdminData,
-} from '../../../store/slices/admin.slice';
+} from '@/app/store/slices/admin.slice';
 
 export const useAdmin = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
 
   const {
-     loading, error,
-    users, totalUsers, totalPages,
-    doctors, totalDoctors, doctorPages,
+    loading,
+    error,
+    users,
+    totalUsers,
+    totalPages,
+    doctors,
+    totalDoctors,
+    doctorPages,
   } = useAppSelector((state) => state.admin);
 
- 
- const {user} = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.auth);
 
   // ── User Management ───────────────────────────
   const getUsers = (page = 1, limit = 10) => {
@@ -57,15 +58,15 @@ export const useAdmin = () => {
     action: 'approve' | 'reject' | 'more_documents_required' | 'under_review',
     remarks?: string
   ) => {
-    dispatch(verifyDoctorThunk({ doctorId, action, remarks}))
-  }
+    dispatch(verifyDoctorThunk({ doctorId, action, remarks }));
+  };
 
   const approveDoctor = (doctorId: string) => {
     dispatch(approveDoctorThunk(doctorId));
   };
 
   const rejectDoctor = (doctorId: string, rejectionReason: string) => {
-    dispatch(rejectDoctorThunk({doctorId,rejectionReason}));
+    dispatch(rejectDoctorThunk({ doctorId, rejectionReason }));
   };
 
   const blockDoctor = (doctorId: string) => {
@@ -81,18 +82,26 @@ export const useAdmin = () => {
   };
 
   return {
-    //admin user info form auth state
     admin: user,
-    // state
-    loading, error,
-    users, totalUsers, totalPages,
-    doctors, totalDoctors, doctorPages,
+    loading,
+    error,
+    users,
+    totalUsers,
+    totalPages,
+    doctors,
+    totalDoctors,
+    doctorPages,
 
-    // users
-    getUsers, blockUser, unblockUser, deleteUser,
-    // doctors
-    getDoctors, approveDoctor, rejectDoctor,
-    blockDoctor, unblockDoctor, deleteDoctor,
+    getUsers,
+    blockUser,
+    unblockUser,
+    deleteUser,
+    getDoctors,
+    approveDoctor,
+    rejectDoctor,
+    blockDoctor,
+    unblockDoctor,
+    deleteDoctor,
     verifyDoctor,
     clearError: () => dispatch(clearAdminError()),
     clearData: () => dispatch(clearAdminData()),
