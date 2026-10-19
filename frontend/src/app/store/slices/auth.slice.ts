@@ -8,7 +8,6 @@ import {
   UserAuthResponse,
   SetOnboardingRequest,
 } from '@/features/auth/types/auth.types';
-import { AxiosError } from 'axios';
 
 interface AuthState {
   user: UserAuthResponse | null;
@@ -42,10 +41,12 @@ export const registerThunk = createAsyncThunk(
     try {
       const res = await authApi.register(data);
       return { ...res, email: data.email };
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ error?: string; message?: string }>;
+    } catch (error: any) {
       return rejectWithValue(
-        err.response?.data?.error || err.response?.data?.message || 'Registration failed'
+        error?.userFriendlyMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Registration failed. Please check your details.'
       );
     }
   }
@@ -56,9 +57,13 @@ export const verifyOTPThunk = createAsyncThunk(
   async (data: VerifyOTPRequest, { rejectWithValue }) => {
     try {
       return await authApi.verifyOTP(data);
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ error?: string; message?: string }>;
-      return rejectWithValue(err.response?.data?.error || 'OTP verification failed.');
+    } catch (error: any) {
+      return rejectWithValue(
+        error?.userFriendlyMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Verification failed. Please check the code.'
+      );
     }
   }
 );
@@ -68,9 +73,13 @@ export const loginThunk = createAsyncThunk(
   async (data: LoginRequest, { rejectWithValue }) => {
     try {
       return await authApi.login(data);
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ error?: string; message?: string }>;
-      return rejectWithValue(err.response?.data?.error || 'Login Failed');
+    } catch (error: any) {
+      return rejectWithValue(
+        error?.userFriendlyMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Email or password is incorrect.'
+      );
     }
   }
 );
@@ -81,9 +90,13 @@ export const forgotPasswordThunk = createAsyncThunk(
     try {
       const res = await authApi.forgotPassword(data);
       return { ...res, email: data.email };
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ error?: string; message?: string }>;
-      return rejectWithValue(err.response?.data?.error || 'Failed to send OTP.');
+    } catch (error: any) {
+      return rejectWithValue(
+        error?.userFriendlyMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Failed to send reset code. Please try again.'
+      );
     }
   }
 );
@@ -99,9 +112,13 @@ export const resetPasswordThunk = createAsyncThunk(
   ) => {
     try {
       return await authApi.resetPassword(data.newPassword, data.resetToken);
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ error?: string; message?: string }>;
-      return rejectWithValue(err.response?.data?.error || 'Password reset failed.');
+    } catch (error: any) {
+      return rejectWithValue(
+        error?.userFriendlyMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Password reset failed. Please try again.'
+      );
     }
   }
 );
@@ -111,9 +128,13 @@ export const resendOTPThunk = createAsyncThunk(
   async (data: { email: string; purpose: string }, { rejectWithValue }) => {
     try {
       return await authApi.resendOTP(data);
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ error?: string; message?: string }>;
-      return rejectWithValue(err.response?.data?.error || 'Failed to resend OTP.');
+    } catch (error: any) {
+      return rejectWithValue(
+        error?.userFriendlyMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Failed to resend verification code.'
+      );
     }
   }
 );
@@ -121,9 +142,13 @@ export const resendOTPThunk = createAsyncThunk(
 export const refreshTokenThunk = createAsyncThunk('auth/refreshToken', async (_, { rejectWithValue }) => {
   try {
     return await authApi.refreshToken();
-  } catch (error: unknown) {
-    const err = error as AxiosError<{ error?: string; message?: string }>;
-    return rejectWithValue(err.response?.data?.error || 'Failed to refresh token.');
+  } catch (error: any) {
+    return rejectWithValue(
+      error?.userFriendlyMessage ||
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      'Session expired. Please log in again.'
+    );
   }
 });
 
@@ -133,9 +158,13 @@ export const setOnboardingThunk = createAsyncThunk(
     try {
       await authApi.setOnboarding(data);
       return data.onboardingType;
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ error?: string; message?: string }>;
-      return rejectWithValue(err.response?.data?.error || 'Failed to set onboarding.');
+    } catch (error: any) {
+      return rejectWithValue(
+        error?.userFriendlyMessage ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        'Failed to update onboarding journey.'
+      );
     }
   }
 );
@@ -144,9 +173,13 @@ export const getMeThunk = createAsyncThunk('auth/getMe', async (_, { rejectWithV
   try {
     const result = await authApi.getMe();
     return result;
-  } catch (error: unknown) {
-    const err = error as AxiosError<{ error?: string; message?: string }>;
-    return rejectWithValue(err.response?.data?.error || 'Session expired.');
+  } catch (error: any) {
+    return rejectWithValue(
+      error?.userFriendlyMessage ||
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      'Session expired.'
+    );
   }
 });
 

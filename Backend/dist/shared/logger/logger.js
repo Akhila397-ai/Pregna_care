@@ -9,6 +9,7 @@ const SENSITIVE_KEYS = new Set([
     'authorization',
     'email_pass',
     'aws_secret_access_key',
+    'aws_access_key_id',
 ]);
 function sanitizeData(data) {
     if (data === null || data === undefined)
@@ -40,9 +41,10 @@ function sanitizeData(data) {
     return sanitized;
 }
 export class Logger {
-    formatPrefix(level) {
+    formatPrefix(level, contextId) {
         const timestamp = new Date().toISOString();
-        return `[${timestamp}] [${level.toUpperCase()}]`;
+        const ctx = contextId ? ` [${contextId}]` : '';
+        return `[${timestamp}] [${level.toUpperCase()}]${ctx}`;
     }
     debug(message, ...args) {
         if (process.env.NODE_ENV === 'development' || process.env.DEBUG === 'true') {
@@ -57,6 +59,14 @@ export class Logger {
     }
     error(message, ...args) {
         console.error(this.formatPrefix('error'), message, ...args.map(sanitizeData));
+    }
+    withContext(contextId) {
+        return {
+            debug: (msg, ...args) => console.debug(this.formatPrefix('debug', contextId), msg, ...args.map(sanitizeData)),
+            info: (msg, ...args) => console.info(this.formatPrefix('info', contextId), msg, ...args.map(sanitizeData)),
+            warn: (msg, ...args) => console.warn(this.formatPrefix('warn', contextId), msg, ...args.map(sanitizeData)),
+            error: (msg, ...args) => console.error(this.formatPrefix('error', contextId), msg, ...args.map(sanitizeData)),
+        };
     }
 }
 export const logger = new Logger();

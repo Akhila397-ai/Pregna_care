@@ -5,6 +5,9 @@ import { UserRepository } from "../repositories/auth/implementation/user.reposit
 import { OtpRepository } from "../repositories/otp/implementation/otp.repository.js";
 import { AdminRepository } from "../repositories/admin/implementation/admin.repository.js";
 import { DoctorRepository } from "../repositories/doctor/implementation/doctor.repository.js";
+import { AppointmentRepository } from "../repositories/appointment/implementation/appointment.repository.js";
+import { PrimaryDoctorRepository } from "../repositories/primaryDoctor/implementation/primaryDoctor.repository.js";
+import { DoctorReportRepository } from "../repositories/doctorReport/implementation/doctorReport.repository.js";
 import { EmailService } from "../services/email/implementation/email.service.js";
 import { AuthService } from "../services/auth/implementation/auth.service.js";
 import { AdminService } from "../services/admin/implementation/admin.service.js";
@@ -18,6 +21,9 @@ container.bind(TYPES.UserRepository).to(UserRepository);
 container.bind(TYPES.OtpRepository).to(OtpRepository);
 container.bind(TYPES.AdminRepository).to(AdminRepository);
 container.bind(TYPES.DoctorRepository).to(DoctorRepository);
+container.bind(TYPES.AppointmentRepository).to(AppointmentRepository);
+container.bind(TYPES.PrimaryDoctorRepository).to(PrimaryDoctorRepository);
+container.bind(TYPES.DoctorReportRepository).to(DoctorReportRepository);
 // Services
 container.bind(TYPES.EmailService).to(EmailService);
 container.bind(TYPES.AuthService).to(AuthService);

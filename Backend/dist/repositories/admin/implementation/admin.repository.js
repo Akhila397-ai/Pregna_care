@@ -91,18 +91,34 @@ let AdminRepository = class AdminRepository extends BaseRepository {
     }
     async verifyDoctor(id, status, adminId, remarks) {
         const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        const mappedStatus = status === "approve"
+            ? "approved"
+            : status === "reject"
+                ? "rejected"
+                : status;
+        const updateFields = {
+            status: mappedStatus,
+            verifiedBy: new Types.ObjectId(adminId),
+            verifiedAt: new Date(),
+            verificationRemarks: remarks ?? "",
+        };
+        if (mappedStatus === "approved") {
+            updateFields.approvedBy = new Types.ObjectId(adminId);
+            updateFields.approvedAt = new Date();
+        }
+        else if (mappedStatus === "rejected" && remarks) {
+            updateFields.rejectionReason = remarks;
+        }
         const app = await doctorApplicationModel
             .findOneAndUpdate({ $or: [{ _id: docObjectId }, { userId: docObjectId }] }, {
-            $set: {
-                status,
-                verifiedBy: new Types.ObjectId(adminId),
-                verifiedAt: new Date(),
-                verificationRemarks: remarks ?? "",
-            },
+            $set: updateFields,
         }, { new: true })
             .lean();
-        if (status === "approved" && app) {
+        if (mappedStatus === "approved" && app) {
             await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "doctor", isVerified: true } });
+        }
+        else if (mappedStatus === "rejected" && app) {
+            await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "user" } });
         }
     }
     async findDoctorById(id) {
@@ -147,12 +163,15 @@ let AdminRepository = class AdminRepository extends BaseRepository {
     }
     async rejectDoctor(id, rejectionReason) {
         const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
-        await doctorApplicationModel.findOneAndUpdate({ $or: [{ _id: docObjectId }, { userId: docObjectId }] }, {
+        const app = await doctorApplicationModel.findOneAndUpdate({ $or: [{ _id: docObjectId }, { userId: docObjectId }] }, {
             $set: {
                 status: "rejected",
                 rejectionReason,
             },
-        });
+        }, { new: true });
+        if (app) {
+            await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "user" } });
+        }
     }
     async blockDoctor(id) {
         const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;

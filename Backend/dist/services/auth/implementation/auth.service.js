@@ -18,20 +18,24 @@ import { hashPassword, comparePassword } from "../../../utils/hashPassword.js";
 import { generateOTP } from "../../../utils/generateOtp.js";
 import { generateAccessToken, generateRefreshToken, generateResetToken } from "../../../utils/jwt.js";
 import { HttpResponse } from "../../../constants/messages.constant.js";
+import { ConflictError, UnauthorizedError, ForbiddenError, NotFoundError, ValidationError, } from "../../../shared/errors/AppError.js";
 import { ROLE_PORTAL_NAMES } from "../../../types/roles.js";
+import { toEmergencyContactDTO } from "../../../mapper/user.mapper.js";
 let AuthService = class AuthService {
     userRepository;
     otpRepository;
     emailService;
-    constructor(userRepository, otpRepository, emailService) {
+    doctorRepository;
+    constructor(userRepository, otpRepository, emailService, doctorRepository) {
         this.userRepository = userRepository;
         this.otpRepository = otpRepository;
         this.emailService = emailService;
+        this.doctorRepository = doctorRepository;
     }
     async register(name, email, password) {
         const existing = await this.userRepository.findByEmail(email);
         if (existing)
-            throw new Error(HttpResponse.EMAIL_ALREADY_EXISTS);
+            throw new ConflictError(HttpResponse.EMAIL_ALREADY_EXISTS);
         const hashedPassword = await hashPassword(password);
         const newUser = await this.userRepository.create({
             name,
@@ -46,7 +50,7 @@ let AuthService = class AuthService {
     async verifyOtp(email, otp, purpose) {
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         }
         await this._verifyOtp(user._id.toString(), purpose, otp);
         if (purpose === "signup") {
@@ -63,29 +67,62 @@ let AuthService = class AuthService {
                 token: resetToken,
             };
         }
-        throw new Error("Invalid OTP purpose");
+        throw new ValidationError("Invalid verification purpose specified.");
     }
     async login(data) {
         const { email, password, expectedRole } = data;
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new UnauthorizedError(HttpResponse.INVALID_CREDENTIALS);
         }
         if (user.isBlocked) {
-            throw new Error(HttpResponse.USER_BLOCKED);
+            throw new ForbiddenError(HttpResponse.USER_BLOCKED);
         }
         if (!user.isVerified) {
-            throw new Error(HttpResponse.UNAUTHORIZED);
+            throw new UnauthorizedError(HttpResponse.VERIFY_YOUR_ACCOUNT);
         }
         const isMatch = await comparePassword(password, user.password);
         if (!isMatch) {
-            throw new Error(HttpResponse.INVALID_PASSWORD);
+            throw new UnauthorizedError(HttpResponse.INVALID_CREDENTIALS);
         }
-        if (user.role !== expectedRole) {
-            const portalMessage = this._getPortalErrorMessage(user.role, expectedRole);
-            const error = new Error(portalMessage);
-            error.statusCode = 403;
-            throw error;
+        // Role & Portal Access Validation
+        if (expectedRole === "doctor") {
+            const doctorAppWithUser = await this.doctorRepository.findApplicationByUserId(user._id.toString());
+            if (!doctorAppWithUser) {
+                const portalMessage = this._getPortalErrorMessage(user.role, expectedRole);
+                throw new ForbiddenError(portalMessage);
+            }
+            const appStatus = doctorAppWithUser.application.status;
+            if (appStatus === "approved") {
+                if (doctorAppWithUser.application.isBlocked) {
+                    throw new ForbiddenError(HttpResponse.USER_BLOCKED);
+                }
+                if (user.role !== "doctor") {
+                    await this.userRepository.updateRole(user._id.toString(), "doctor");
+                    user.role = "doctor";
+                }
+            }
+            else if (appStatus === "rejected") {
+                throw new ForbiddenError("Access denied. Your doctor application has been rejected.");
+            }
+            else {
+                // 'pending', 'under_review', 'more_documents_required'
+                throw new ForbiddenError("Access denied. Your doctor application is awaiting admin review.");
+            }
+        }
+        else {
+            // If user has an approved doctor application and tries to log in via patient login
+            if (expectedRole === "user" && user.role !== "doctor") {
+                const doctorAppWithUser = await this.doctorRepository.findApplicationByUserId(user._id.toString());
+                if (doctorAppWithUser?.application.status === "approved") {
+                    await this.userRepository.updateRole(user._id.toString(), "doctor");
+                    user.role = "doctor";
+                }
+            }
+            if (user.role !== expectedRole) {
+                const portalMessage = this._getPortalErrorMessage(user.role, expectedRole);
+                throw new ForbiddenError(portalMessage);
+            }
         }
         const accessToken = generateAccessToken(user._id.toString(), user.role);
         const refreshToken = generateRefreshToken(user._id.toString());
@@ -111,7 +148,7 @@ let AuthService = class AuthService {
     async forgotPassword(email) {
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         }
         await this._sendOTP(user._id.toString(), email, "forgot_password");
         return {
@@ -123,13 +160,13 @@ let AuthService = class AuthService {
         const hash = await hashPassword(newPassword);
         await this.userRepository.updatePassword(userId, hash);
         return {
-            message: HttpResponse.PASSWORD_RESET_SUCCESSFULL,
+            message: HttpResponse.PASSWORD_RESET_SUCCESSFUL,
         };
     }
     async resendOtp(email, purpose) {
         const user = await this.userRepository.findByEmail(email);
         if (!user) {
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         }
         await this._sendOTP(user._id.toString(), email, purpose);
         return {
@@ -140,11 +177,11 @@ let AuthService = class AuthService {
     async refreshToken(userId) {
         const user = await this.userRepository.findById(userId);
         if (!user)
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         if (user.isBlocked)
-            throw new Error(HttpResponse.USER_BLOCKED);
+            throw new ForbiddenError(HttpResponse.USER_BLOCKED);
         if (user.isDeleted)
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         const accessToken = generateAccessToken(user._id.toString(), user.role);
         const refreshToken = generateRefreshToken(user._id.toString());
         return { user: toUserAuthDTO(user), token: accessToken, refreshToken };
@@ -152,19 +189,263 @@ let AuthService = class AuthService {
     async setOnboarding(userId, onboardingType) {
         const user = await this.userRepository.findById(userId);
         if (!user)
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         await this.userRepository.setOnboarding(userId, onboardingType);
-        return { message: "onboarding updated successfully" };
+        return { message: "Onboarding journey updated successfully." };
     }
     async getMe(userId) {
         const user = await this.userRepository.findById(userId);
         if (!user)
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         if (user.isBlocked)
-            throw new Error(HttpResponse.USER_BLOCKED);
+            throw new ForbiddenError(HttpResponse.USER_BLOCKED);
         if (user.isDeleted)
-            throw new Error(HttpResponse.USER_NOT_FOUND);
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
         return toUserAuthDTO(user);
+    }
+    _parseDateOnly(dateInput) {
+        if (typeof dateInput === 'string') {
+            const trimmed = dateInput.trim();
+            const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(trimmed);
+            if (match) {
+                const y = parseInt(match[1], 10);
+                const m = parseInt(match[2], 10) - 1;
+                const d = parseInt(match[3], 10);
+                const utcTimestamp = Date.UTC(y, m, d);
+                if (!isNaN(utcTimestamp)) {
+                    return { utcTimestamp, date: new Date(utcTimestamp) };
+                }
+            }
+        }
+        const d = new Date(dateInput);
+        if (isNaN(d.getTime())) {
+            throw new ValidationError("Please enter a valid date.");
+        }
+        const utcTimestamp = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+        return { utcTimestamp, date: new Date(utcTimestamp) };
+    }
+    async setPregnancyLMP(userId, lmpDateStr) {
+        if (!lmpDateStr || !lmpDateStr.trim()) {
+            throw new ValidationError("Please enter your last menstrual period date.");
+        }
+        const { utcTimestamp, date: parsedDate } = this._parseDateOnly(lmpDateStr);
+        const now = new Date();
+        const currentUtc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+        if (utcTimestamp > currentUtc) {
+            throw new ValidationError("LMP cannot be a future date.");
+        }
+        const maxPastTime = 42 * 7 * 24 * 60 * 60 * 1000;
+        if (currentUtc - utcTimestamp > maxPastTime) {
+            throw new ValidationError("LMP date cannot be more than 42 weeks ago.");
+        }
+        const user = await this.userRepository.findById(userId);
+        if (!user)
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+        await this.userRepository.setPregnancyLMP(userId, parsedDate);
+        return this._calculatePregnancyDetails(parsedDate);
+    }
+    async getPregnancyDetails(userId) {
+        const user = await this.userRepository.findById(userId);
+        if (!user)
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+        if (!user.lmpDate)
+            return null;
+        return this._calculatePregnancyDetails(user.lmpDate);
+    }
+    async setCycleInfo(userId, periodStartDateStr, cycleLength = 28, periodLength = 5) {
+        if (!periodStartDateStr)
+            throw new ValidationError("Last period start date is required.");
+        const parsedDate = new Date(periodStartDateStr);
+        if (isNaN(parsedDate.getTime()))
+            throw new ValidationError("Invalid period date format.");
+        const now = new Date();
+        if (parsedDate > now)
+            throw new ValidationError("Period start date cannot be in the future.");
+        const maxPastTime = 90 * 24 * 60 * 60 * 1000;
+        if (now.getTime() - parsedDate.getTime() > maxPastTime) {
+            throw new ValidationError("Period start date cannot be more than 90 days ago.");
+        }
+        const validCycleLength = Math.max(20, Math.min(50, cycleLength || 28));
+        const validPeriodLength = Math.max(2, Math.min(12, periodLength || 5));
+        const user = await this.userRepository.findById(userId);
+        if (!user)
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+        await this.userRepository.setCycleInfo(userId, parsedDate, validCycleLength, validPeriodLength);
+        return this._calculateCycleDetails(parsedDate, validCycleLength, validPeriodLength);
+    }
+    async getCycleDetails(userId) {
+        const user = await this.userRepository.findById(userId);
+        if (!user)
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+        if (!user.periodStartDate)
+            return null;
+        return this._calculateCycleDetails(user.periodStartDate, user.cycleLength || 28, user.periodLength || 5);
+    }
+    async getEmergencyContacts(userId) {
+        const user = await this.userRepository.findById(userId);
+        if (!user)
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+        return (user.emergencyContacts || []).map(toEmergencyContactDTO);
+    }
+    async addEmergencyContact(userId, data) {
+        if (!data.name || !data.name.trim())
+            throw new ValidationError("Contact name is required.");
+        if (!data.phoneNumber || !data.phoneNumber.trim())
+            throw new ValidationError("Phone number is required.");
+        const validRelationships = [
+            'Parent',
+            'Husband / Spouse',
+            'Partner',
+            'Family Member',
+            'Friend',
+            'Other',
+        ];
+        if (!validRelationships.includes(data.relationship)) {
+            throw new ValidationError("Please select a valid relationship.");
+        }
+        const updatedUser = await this.userRepository.addEmergencyContact(userId, {
+            name: data.name.trim(),
+            phoneNumber: data.phoneNumber.trim(),
+            relationship: data.relationship,
+        });
+        if (!updatedUser)
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+        return (updatedUser.emergencyContacts || []).map(toEmergencyContactDTO);
+    }
+    async updateEmergencyContact(userId, contactId, data) {
+        if (!contactId)
+            throw new ValidationError("Contact ID is required.");
+        if (!data.name || !data.name.trim())
+            throw new ValidationError("Contact name is required.");
+        if (!data.phoneNumber || !data.phoneNumber.trim())
+            throw new ValidationError("Phone number is required.");
+        const validRelationships = [
+            'Parent',
+            'Husband / Spouse',
+            'Partner',
+            'Family Member',
+            'Friend',
+            'Other',
+        ];
+        if (!validRelationships.includes(data.relationship)) {
+            throw new ValidationError("Please select a valid relationship.");
+        }
+        const updatedUser = await this.userRepository.updateEmergencyContact(userId, contactId, {
+            name: data.name.trim(),
+            phoneNumber: data.phoneNumber.trim(),
+            relationship: data.relationship,
+        });
+        if (!updatedUser)
+            throw new NotFoundError("Contact not found or could not be updated.");
+        return (updatedUser.emergencyContacts || []).map(toEmergencyContactDTO);
+    }
+    async deleteEmergencyContact(userId, contactId) {
+        if (!contactId)
+            throw new ValidationError("Contact ID is required.");
+        const updatedUser = await this.userRepository.deleteEmergencyContact(userId, contactId);
+        if (!updatedUser)
+            throw new NotFoundError("Contact not found or could not be deleted.");
+        return (updatedUser.emergencyContacts || []).map(toEmergencyContactDTO);
+    }
+    _calculatePregnancyDetails(lmpDate) {
+        const { utcTimestamp: lmpUtcMidnight, date: lmp } = this._parseDateOnly(lmpDate);
+        const now = new Date();
+        const currentUtcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+        const diffTime = Math.max(0, currentUtcMidnight - lmpUtcMidnight);
+        const gestationalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const weeks = Math.floor(gestationalDays / 7);
+        const days = gestationalDays % 7;
+        const trimester = weeks < 13 ? 1 : weeks < 28 ? 2 : 3;
+        const estimatedDueDate = new Date(lmpUtcMidnight + 280 * 24 * 60 * 60 * 1000);
+        const daysRemaining = Math.max(0, 280 - gestationalDays);
+        const babySizes = {
+            1: 'Poppy seed',
+            2: 'Poppy seed',
+            3: 'Poppy seed',
+            4: 'Poppy seed',
+            5: 'Sesame seed',
+            6: 'Sweet pea',
+            7: 'Blueberry',
+            8: 'Raspberry',
+            9: 'Green olive',
+            10: 'Prune',
+            11: 'Lime',
+            12: 'Plum',
+            13: 'Lemon',
+            14: 'Peach',
+            15: 'Apple',
+            16: 'Avocado 🥑',
+            17: 'Pomegranate',
+            18: 'Bell pepper',
+            19: 'Mango',
+            20: 'Banana 🍌',
+            21: 'Carrot',
+            22: 'Papaya',
+            23: 'Grapefruit',
+            24: 'Corn',
+            25: 'Cauliflower',
+            26: 'Lettuce',
+            27: 'Cabbage',
+            28: 'Eggplant 🍆',
+            29: 'Acorn squash',
+            30: 'Cucumber',
+            31: 'Coconut 🥥',
+            32: 'Jicama',
+            33: 'Pineapple 🍍',
+            34: 'Cantaloupe',
+            35: 'Honeydew melon',
+            36: 'Romaine lettuce',
+            37: 'Swiss chard',
+            38: 'Winter melon',
+            39: 'Watermelon 🍉',
+            40: 'Pumpkin 🎃',
+        };
+        const clampedWeek = Math.max(1, Math.min(40, weeks || 1));
+        const babySize = babySizes[clampedWeek] || 'Avocado 🥑';
+        const progressPercent = Math.min(100, Math.round((weeks / 40) * 100));
+        return {
+            lmpDate: lmp,
+            gestationalAge: {
+                weeks,
+                days,
+            },
+            weeks,
+            days,
+            formattedAge: `${weeks} Weeks ${days} Days`,
+            trimester,
+            estimatedDueDate,
+            daysRemaining,
+            babySize,
+            progressPercent,
+        };
+    }
+    _calculateCycleDetails(periodStartDate, cycleLength = 28, periodLength = 5) {
+        const currentDate = new Date();
+        const start = new Date(periodStartDate);
+        const diffTime = Math.max(0, currentDate.getTime() - start.getTime());
+        const daysSincePeriod = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const currentCycleDay = (daysSincePeriod % cycleLength) + 1;
+        const ovulationDay = Math.max(1, cycleLength - 14);
+        const fertileWindowStart = Math.max(1, ovulationDay - 4);
+        const fertileWindowEnd = Math.min(cycleLength, ovulationDay + 1);
+        const isFertile = currentCycleDay >= fertileWindowStart && currentCycleDay <= fertileWindowEnd;
+        const daysUntilNextPeriod = cycleLength - currentCycleDay + 1;
+        const nextPeriodDate = new Date(currentDate.getTime() + daysUntilNextPeriod * 24 * 60 * 60 * 1000);
+        const currentCycleStartOffset = Math.floor(daysSincePeriod / cycleLength) * cycleLength;
+        const fertileStartDate = new Date(start.getTime() + (currentCycleStartOffset + fertileWindowStart - 1) * 24 * 60 * 60 * 1000);
+        const fertileEndDate = new Date(start.getTime() + (currentCycleStartOffset + fertileWindowEnd - 1) * 24 * 60 * 60 * 1000);
+        return {
+            periodStartDate: start,
+            cycleLength,
+            periodLength,
+            currentCycleDay,
+            ovulationDay,
+            isFertile,
+            daysUntilNextPeriod,
+            nextPeriodDate,
+            fertileStartDate,
+            fertileEndDate,
+        };
     }
     async _sendOTP(userId, email, purpose) {
         await this.otpRepository.invalidateAllOTPs(userId, purpose);
@@ -180,19 +461,19 @@ let AuthService = class AuthService {
     async _verifyOtp(userId, purpose, submittedOtp) {
         const otp = await this.otpRepository.findActiveOtp(userId, purpose);
         if (!otp)
-            throw new Error(HttpResponse.OTP_EXPIRED_OR_INVALID);
+            throw new ValidationError(HttpResponse.OTP_EXPIRED_OR_INVALID);
         const updated = await this.otpRepository.incrementOTPAttempts(otp._id.toString());
         if (!updated) {
-            throw new Error(HttpResponse.OTP_EXPIRED_OR_INVALID);
+            throw new ValidationError(HttpResponse.OTP_EXPIRED_OR_INVALID);
         }
         if (updated.attempts > 3) {
             await this.otpRepository.markOtpAsUsed(otp._id.toString());
-            throw new Error(HttpResponse.OTP_MAX_ATTEMPTS);
+            throw new ValidationError(HttpResponse.OTP_MAX_ATTEMPTS);
         }
         const valid = await comparePassword(submittedOtp, otp.otpHash);
         if (!valid) {
             const left = 3 - updated.attempts;
-            throw new Error(`${HttpResponse.OTP_EXPIRED_OR_INVALID}, only ${left} attempts left..`);
+            throw new ValidationError(`Invalid verification code. ${left} attempt${left === 1 ? '' : 's'} remaining.`);
         }
         await this.otpRepository.markOtpAsUsed(otp._id.toString());
     }
@@ -202,7 +483,8 @@ AuthService = __decorate([
     __param(0, inject(TYPES.UserRepository)),
     __param(1, inject(TYPES.OtpRepository)),
     __param(2, inject(TYPES.EmailService)),
-    __metadata("design:paramtypes", [Object, Object, Object])
+    __param(3, inject(TYPES.DoctorRepository)),
+    __metadata("design:paramtypes", [Object, Object, Object, Object])
 ], AuthService);
 export { AuthService };
 //# sourceMappingURL=auth.service.js.map

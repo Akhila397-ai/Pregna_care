@@ -146,9 +146,9 @@ export const useAuth = () => {
     const result = await dispatch(setOnboardingThunk({ onboardingType: type }));
     if (setOnboardingThunk.fulfilled.match(result)) {
       if (type === 'pregnant') {
-        navigate('/onboarding/pregnant');
+        navigate('/dashboard/pregnancy');
       } else if (type === 'trying') {
-        navigate('/onboarding/trying');
+        navigate('/dashboard/menstruation');
       } else if (type === 'doctor') {
         navigate('/doctor/apply');
       } else if (type === 'exploring') {

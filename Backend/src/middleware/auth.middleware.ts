@@ -21,7 +21,11 @@ export const authenticate = (
     const token = extractToken(req);
 
     if (!token) {
-      res.status(HttpStatus.UNAUTHORIZED).json({ error: HttpResponse.UNAUTHORIZED });
+      res.status(HttpStatus.UNAUTHORIZED).json({
+        success: false,
+        message: HttpResponse.UNAUTHORIZED,
+        error: HttpResponse.UNAUTHORIZED,
+      });
       return;
     }
 
@@ -29,19 +33,38 @@ export const authenticate = (
     req.user = decoded;
     next();
   } catch {
-    res.status(HttpStatus.UNAUTHORIZED).json({ error: HttpResponse.UNAUTHORIZED });
+    res.status(HttpStatus.UNAUTHORIZED).json({
+      success: false,
+      message: HttpResponse.UNAUTHORIZED,
+      error: HttpResponse.UNAUTHORIZED,
+    });
   }
 };
 
 export const authorizeRoles = (...roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !req.user.role) {
-      res.status(HttpStatus.UNAUTHORIZED).json({ error: HttpResponse.UNAUTHORIZED });
+      res.status(HttpStatus.UNAUTHORIZED).json({
+        success: false,
+        message: HttpResponse.UNAUTHORIZED,
+        error: HttpResponse.UNAUTHORIZED,
+      });
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      res.status(HttpStatus.FORBIDDEN).json({ error: HttpResponse.FORBIDDEN });
+      let message: string = HttpResponse.FORBIDDEN;
+      if (roles.length === 1 && roles[0] === "doctor") {
+        message = "This area is available only to verified doctors.";
+      } else if (roles.length === 1 && roles[0] === "admin") {
+        message = "You don't have permission to access this area.";
+      }
+
+      res.status(HttpStatus.FORBIDDEN).json({
+        success: false,
+        message,
+        error: message,
+      });
       return;
     }
 

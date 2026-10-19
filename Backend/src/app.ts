@@ -8,10 +8,13 @@ import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
+import { requestIdMiddleware } from "./middleware/requestId.middleware.js";
 import { env } from "./config/env.js";
 import { logger } from "./shared/logger/logger.js";
 
 const app = express();
+
+app.use(requestIdMiddleware);
 
 app.use(
   cors({
@@ -21,7 +24,8 @@ app.use(
 );
 
 app.use((req, _res, next) => {
-  logger.debug(`[HTTP] ${req.method} ${req.originalUrl}`);
+  const scopedLogger = req.id ? logger.withContext(req.id) : logger;
+  scopedLogger.debug(`[HTTP] ${req.method} ${req.originalUrl}`);
   next();
 });
 

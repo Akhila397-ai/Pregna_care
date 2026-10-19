@@ -8,12 +8,43 @@ import { HttpStatus } from "../../../constants/status.constant.js";
 import { HttpResponse } from "../../../constants/messages.constant.js";
 import { REFRESH_COOKIE_OPTIONS } from "../../../constants/cookie.constant.js";
 import { logger } from "../../../shared/logger/logger.js";
+import { AppError } from "../../../shared/errors/AppError.js";
 
 @injectable()
 export class AuthController implements IAuthController {
   constructor(
     @inject(TYPES.AuthService) private authService: IAUthService
   ) {}
+
+  private handleError(error: unknown, req: Request, res: Response, fallbackMessage: string): void {
+    const requestId = req.id || 'N/A';
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+        error: error.message,
+        errors: error.errors,
+        requestId,
+      });
+      return;
+    }
+    if (error instanceof Error) {
+      const statusCode = (error as any).statusCode || HttpStatus.BAD_REQUEST;
+      res.status(statusCode).json({
+        success: false,
+        message: error.message,
+        error: error.message,
+        requestId,
+      });
+      return;
+    }
+    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: fallbackMessage || HttpResponse.SERVER_ERROR,
+      error: fallbackMessage || HttpResponse.SERVER_ERROR,
+      requestId,
+    });
+  }
 
   register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -22,11 +53,7 @@ export class AuthController implements IAuthController {
       res.status(HttpStatus.CREATED).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.register error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Registration failed. Please try again." });
-      }
+      this.handleError(error, req, res, "Registration failed. Please try again.");
     }
   };
 
@@ -37,11 +64,7 @@ export class AuthController implements IAuthController {
       res.status(HttpStatus.OK).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.verifyOtp error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "OTP verification failed" });
-      }
+      this.handleError(error, req, res, "Verification failed. Please try again.");
     }
   };
 
@@ -60,12 +83,7 @@ export class AuthController implements IAuthController {
       });
     } catch (error: unknown) {
       logger.error("AuthController.login error:", error);
-      const statusCode = (error as any)?.statusCode || HttpStatus.BAD_REQUEST;
-      if (error instanceof Error) {
-        res.status(statusCode).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Login failed" });
-      }
+      this.handleError(error, req, res, "Login failed. Please check your credentials.");
     }
   };
 
@@ -76,11 +94,7 @@ export class AuthController implements IAuthController {
       res.status(HttpStatus.OK).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.forgotPassword error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Unable to process request" });
-      }
+      this.handleError(error, req, res, "Unable to process password reset request.");
     }
   };
 
@@ -90,7 +104,10 @@ export class AuthController implements IAuthController {
       const userId = req.user?.userId;
       if (!userId) {
         res.status(HttpStatus.FORBIDDEN).json({
+          success: false,
           message: HttpResponse.FORBIDDEN,
+          error: HttpResponse.FORBIDDEN,
+          requestId: req.id || 'N/A',
         });
         return;
       }
@@ -99,11 +116,7 @@ export class AuthController implements IAuthController {
       res.status(HttpStatus.OK).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.resetPassword error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Password reset failed" });
-      }
+      this.handleError(error, req, res, "Password reset failed. Please try again.");
     }
   };
 
@@ -114,11 +127,7 @@ export class AuthController implements IAuthController {
       res.status(HttpStatus.OK).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.resendOtp error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Failed to resend OTP" });
-      }
+      this.handleError(error, req, res, "Failed to resend verification code.");
     }
   };
 
@@ -137,11 +146,7 @@ export class AuthController implements IAuthController {
       });
     } catch (error: unknown) {
       logger.error("AuthController.refreshToken error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Unable to refresh token" });
-      }
+      this.handleError(error, req, res, "Unable to refresh session.");
     }
   };
 
@@ -153,11 +158,7 @@ export class AuthController implements IAuthController {
       res.status(HttpStatus.OK).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.setOnboarding error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Onboarding update failed" });
-      }
+      this.handleError(error, req, res, "Onboarding journey update failed.");
     }
   };
 
@@ -168,11 +169,123 @@ export class AuthController implements IAuthController {
       res.status(HttpStatus.OK).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.getMe error:", error);
-      if (error instanceof Error) {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: error.message });
-      } else {
-        res.status(HttpStatus.BAD_REQUEST).json({ message: "Failed to retrieve user" });
-      }
+      this.handleError(error, req, res, "Failed to retrieve user information.");
+    }
+  };
+
+  setPregnancyLMP = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const { lmpDate } = req.body;
+      const result = await this.authService.setPregnancyLMP(userId, lmpDate);
+      res.status(HttpStatus.OK).json(result);
+    } catch (error: unknown) {
+      logger.error("AuthController.setPregnancyLMP error:", error);
+      this.handleError(error, req, res, "Failed to update pregnancy LMP.");
+    }
+  };
+
+  getPregnancyDetails = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const result = await this.authService.getPregnancyDetails(userId);
+      res.status(HttpStatus.OK).json(result);
+    } catch (error: unknown) {
+      logger.error("AuthController.getPregnancyDetails error:", error);
+      this.handleError(error, req, res, "Failed to fetch pregnancy details.");
+    }
+  };
+
+  setCycleInfo = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const { periodStartDate, cycleLength, periodLength } = req.body;
+      const result = await this.authService.setCycleInfo(
+        userId,
+        periodStartDate,
+        cycleLength,
+        periodLength
+      );
+      res.status(HttpStatus.OK).json(result);
+    } catch (error: unknown) {
+      logger.error("AuthController.setCycleInfo error:", error);
+      this.handleError(error, req, res, "Failed to update cycle information.");
+    }
+  };
+
+  getCycleDetails = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const result = await this.authService.getCycleDetails(userId);
+      res.status(HttpStatus.OK).json(result);
+    } catch (error: unknown) {
+      logger.error("AuthController.getCycleDetails error:", error);
+      this.handleError(error, req, res, "Failed to fetch cycle details.");
+    }
+  };
+
+  getEmergencyContacts = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const result = await this.authService.getEmergencyContacts(userId);
+      res.status(HttpStatus.OK).json({ emergencyContacts: result });
+    } catch (error: unknown) {
+      logger.error("AuthController.getEmergencyContacts error:", error);
+      this.handleError(error, req, res, "Failed to retrieve emergency contacts.");
+    }
+  };
+
+  addEmergencyContact = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const { name, phoneNumber, relationship } = req.body;
+      const result = await this.authService.addEmergencyContact(userId, {
+        name,
+        phoneNumber,
+        relationship,
+      });
+      res.status(HttpStatus.OK).json({
+        message: "Emergency contact added successfully.",
+        emergencyContacts: result,
+      });
+    } catch (error: unknown) {
+      logger.error("AuthController.addEmergencyContact error:", error);
+      this.handleError(error, req, res, "Failed to add emergency contact.");
+    }
+  };
+
+  updateEmergencyContact = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const contactId = req.params.contactId as string;
+      const { name, phoneNumber, relationship } = req.body;
+      const result = await this.authService.updateEmergencyContact(userId, contactId, {
+        name,
+        phoneNumber,
+        relationship,
+      });
+      res.status(HttpStatus.OK).json({
+        message: "Emergency contact updated successfully.",
+        emergencyContacts: result,
+      });
+    } catch (error: unknown) {
+      logger.error("AuthController.updateEmergencyContact error:", error);
+      this.handleError(error, req, res, "Failed to update emergency contact.");
+    }
+  };
+
+  deleteEmergencyContact = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const contactId = req.params.contactId as string;
+      const result = await this.authService.deleteEmergencyContact(userId, contactId);
+      res.status(HttpStatus.OK).json({
+        message: "Emergency contact removed successfully.",
+        emergencyContacts: result,
+      });
+    } catch (error: unknown) {
+      logger.error("AuthController.deleteEmergencyContact error:", error);
+      this.handleError(error, req, res, "Failed to remove emergency contact.");
     }
   };
 }

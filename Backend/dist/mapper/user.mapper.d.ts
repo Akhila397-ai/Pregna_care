@@ -1,6 +1,9 @@
-import { UserAuthDTO, UserProfileDTO } from "../dtos/user.dto.js";
+import { EmergencyContactDTO, UserAuthDTO, UserProfileDTO } from "../dtos/user.dto.js";
 import { Types } from "mongoose";
-import { userData } from "../types/user.js";
+import { IEmergencyContact, userData } from "../types/user.js";
+export declare const toEmergencyContactDTO: (contact: IEmergencyContact & {
+    _id?: any;
+}) => EmergencyContactDTO;
 export declare const toUserAuthDTO: (user: userData & {
     _id: Types.ObjectId;
 }) => UserAuthDTO;

@@ -17,6 +17,7 @@ import DoctorPendingPage from '@/features/doctor/pages/DoctorPendingPage';
 import DoctorRejectedPage from '@/features/doctor/pages/DoctorRejectedPage';
 import DoctorDashboardPage from '@/features/doctor/pages/DoctorDashboard';
 import DoctorManagementPage from '@/features/admin/pages/DoctorManagementPage';
+import PatientDashboardPage from '@/features/patient/pages/PatientDashboardPage';
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const { token, user, initialized } = useAppSelector((s) => s.auth);
@@ -120,6 +121,80 @@ const AppRoutes = () => (
       element={
         <RequireRole roles={['user']}>
           <OnboardingSelectionPage />
+        </RequireRole>
+      }
+    />
+
+    {/* Patient Dashboard Routes */}
+    <Route
+      path="/dashboard"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/plan"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/menstruation"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/pregnancy"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/learn"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/explore"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/doctors"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/appointments"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
+        </RequireRole>
+      }
+    />
+    <Route
+      path="/dashboard/profile"
+      element={
+        <RequireRole roles={['user']}>
+          <PatientDashboardPage />
         </RequireRole>
       }
     />

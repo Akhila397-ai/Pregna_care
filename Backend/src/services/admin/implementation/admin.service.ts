@@ -77,6 +77,8 @@ export class AdminService implements IAdminService {
 
     const messageMap: Record<string, string> = {
       approved: HttpResponse.DOCTOR_APPROVED,
+      approve: HttpResponse.DOCTOR_APPROVED,
+      rejected: HttpResponse.DOCTOR_REJECTED,
       reject: HttpResponse.DOCTOR_REJECTED,
       more_documents_required: "Requested more documents from doctor",
       under_review: "Application moved to under review",

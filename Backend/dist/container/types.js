@@ -4,6 +4,9 @@ export const TYPES = {
     OtpRepository: Symbol.for("OtpRepository"),
     AdminRepository: Symbol.for("AdminRepository"),
     DoctorRepository: Symbol.for("DoctorRepository"),
+    AppointmentRepository: Symbol.for("AppointmentRepository"),
+    PrimaryDoctorRepository: Symbol.for("PrimaryDoctorRepository"),
+    DoctorReportRepository: Symbol.for("DoctorReportRepository"),
     // Services
     AuthService: Symbol.for("AuthService"),
     AdminService: Symbol.for("AdminService"),

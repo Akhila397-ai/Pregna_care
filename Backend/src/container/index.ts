@@ -11,6 +11,12 @@ import { IAdminRepository } from "../repositories/admin/interface/IAdmin.reposit
 import { AdminRepository } from "../repositories/admin/implementation/admin.repository.js";
 import { IDoctorRepository } from "../repositories/doctor/interface/IDoctor.repository.js";
 import { DoctorRepository } from "../repositories/doctor/implementation/doctor.repository.js";
+import { IAppointmentRepository } from "../repositories/appointment/interface/IAppointment.repository.js";
+import { AppointmentRepository } from "../repositories/appointment/implementation/appointment.repository.js";
+import { IPrimaryDoctorRepository } from "../repositories/primaryDoctor/interface/IPrimaryDoctor.repository.js";
+import { PrimaryDoctorRepository } from "../repositories/primaryDoctor/implementation/primaryDoctor.repository.js";
+import { IDoctorReportRepository } from "../repositories/doctorReport/interface/IDoctorReport.repository.js";
+import { DoctorReportRepository } from "../repositories/doctorReport/implementation/doctorReport.repository.js";
 
 // Services
 import { IEmailService } from "../services/email/interface/IEmail.service.js";
@@ -37,6 +43,9 @@ container.bind<IUserRepository>(TYPES.UserRepository).to(UserRepository);
 container.bind<IOtpRepository>(TYPES.OtpRepository).to(OtpRepository);
 container.bind<IAdminRepository>(TYPES.AdminRepository).to(AdminRepository);
 container.bind<IDoctorRepository>(TYPES.DoctorRepository).to(DoctorRepository);
+container.bind<IAppointmentRepository>(TYPES.AppointmentRepository).to(AppointmentRepository);
+container.bind<IPrimaryDoctorRepository>(TYPES.PrimaryDoctorRepository).to(PrimaryDoctorRepository);
+container.bind<IDoctorReportRepository>(TYPES.DoctorReportRepository).to(DoctorReportRepository);
 
 // Services
 container.bind<IEmailService>(TYPES.EmailService).to(EmailService);

@@ -1,7 +1,7 @@
 import { injectable } from "inversify";
 import { Types } from "mongoose";
 import { IUserRepository } from "../interface/IUser.repository.js";
-import { onboardingType, userData } from "../../../types/user.js";
+import { EmergencyContactRelationship, onboardingType, userData } from "../../../types/user.js";
 import userModel from "../../../models/User.model.js";
 import { BaseRepository } from "../../base/base.repository.js";
 
@@ -38,5 +38,94 @@ export class UserRepository extends BaseRepository<userData> implements IUserRep
         isOnboarded: true,
       },
     });
+  }
+
+  async setPregnancyLMP(id: string, lmpDate: Date): Promise<void> {
+    const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+    await this.model.findByIdAndUpdate(objectId, {
+      $set: {
+        lmpDate,
+        onboardingType: 'pregnant',
+        isOnboarded: true,
+      },
+    });
+  }
+
+  async setCycleInfo(
+    id: string,
+    periodStartDate: Date,
+    cycleLength = 28,
+    periodLength = 5
+  ): Promise<void> {
+    const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+    await this.model.findByIdAndUpdate(objectId, {
+      $set: {
+        periodStartDate,
+        cycleLength,
+        periodLength,
+        onboardingType: 'trying',
+        isOnboarded: true,
+      },
+    });
+  }
+
+  async addEmergencyContact(
+    userId: string,
+    contact: { name: string; phoneNumber: string; relationship: EmergencyContactRelationship }
+  ): Promise<(userData & { _id: Types.ObjectId }) | null> {
+    const objectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+    return await this.model.findByIdAndUpdate(
+      objectId,
+      {
+        $push: {
+          emergencyContacts: {
+            name: contact.name,
+            phoneNumber: contact.phoneNumber,
+            relationship: contact.relationship,
+            createdAt: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+  }
+
+  async updateEmergencyContact(
+    userId: string,
+    contactId: string,
+    contact: { name: string; phoneNumber: string; relationship: EmergencyContactRelationship }
+  ): Promise<(userData & { _id: Types.ObjectId }) | null> {
+    const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+    const contactObjectId = Types.ObjectId.isValid(contactId) ? new Types.ObjectId(contactId) : contactId;
+
+    return await this.model.findOneAndUpdate(
+      { _id: userObjectId, "emergencyContacts._id": contactObjectId },
+      {
+        $set: {
+          "emergencyContacts.$.name": contact.name,
+          "emergencyContacts.$.phoneNumber": contact.phoneNumber,
+          "emergencyContacts.$.relationship": contact.relationship,
+        },
+      },
+      { new: true }
+    );
+  }
+
+  async deleteEmergencyContact(
+    userId: string,
+    contactId: string
+  ): Promise<(userData & { _id: Types.ObjectId }) | null> {
+    const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+    const contactObjectId = Types.ObjectId.isValid(contactId) ? new Types.ObjectId(contactId) : contactId;
+
+    return await this.model.findByIdAndUpdate(
+      userObjectId,
+      {
+        $pull: {
+          emergencyContacts: { _id: contactObjectId },
+        },
+      },
+      { new: true }
+    );
   }
 }

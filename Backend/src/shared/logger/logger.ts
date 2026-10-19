@@ -11,6 +11,7 @@ const SENSITIVE_KEYS = new Set([
   'authorization',
   'email_pass',
   'aws_secret_access_key',
+  'aws_access_key_id',
 ]);
 
 function sanitizeData(data: any): any {
@@ -41,9 +42,10 @@ function sanitizeData(data: any): any {
 }
 
 export class Logger {
-  private formatPrefix(level: LogLevel): string {
+  private formatPrefix(level: LogLevel, contextId?: string): string {
     const timestamp = new Date().toISOString();
-    return `[${timestamp}] [${level.toUpperCase()}]`;
+    const ctx = contextId ? ` [${contextId}]` : '';
+    return `[${timestamp}] [${level.toUpperCase()}]${ctx}`;
   }
 
   debug(message: string, ...args: any[]): void {
@@ -62,6 +64,19 @@ export class Logger {
 
   error(message: string, ...args: any[]): void {
     console.error(this.formatPrefix('error'), message, ...args.map(sanitizeData));
+  }
+
+  withContext(contextId: string) {
+    return {
+      debug: (msg: string, ...args: any[]) =>
+        console.debug(this.formatPrefix('debug', contextId), msg, ...args.map(sanitizeData)),
+      info: (msg: string, ...args: any[]) =>
+        console.info(this.formatPrefix('info', contextId), msg, ...args.map(sanitizeData)),
+      warn: (msg: string, ...args: any[]) =>
+        console.warn(this.formatPrefix('warn', contextId), msg, ...args.map(sanitizeData)),
+      error: (msg: string, ...args: any[]) =>
+        console.error(this.formatPrefix('error', contextId), msg, ...args.map(sanitizeData)),
+    };
   }
 }
 

@@ -1,88 +1,127 @@
+import { z } from 'zod';
 
 export interface DoctorApplyErrors {
-    fullName?:  string;
-    email?: string;
-    password?: string;
-    phone?: string;
-    specialization?: string;
-    qualification?: string;
-    experience?:         string;
-    registrationNumber?: string;
-    consultationFee?:    string;
-    clinicName?:         string;
-    clinicAddress?:      string;
-    profileImage?:       string;
-    documents?:          string;
-    availabilityDays?:   string;
-    startTime?:          string;
-    endTime?:            string;
+  fullName?: string;
+  specialization?: string;
+  qualification?: string;
+  experience?: string;
+  registrationNumber?: string;
+  consultationFee?: string;
+  clinicName?: string;
+  clinicAddress?: string;
+  profileImage?: string;
+  degreeCertificate?: string;
+  registrationCertificate?: string;
+  governmentId?: string;
+  days?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
-export const validateDoctorApply = (
-    data: Record<string, any>
-): DoctorApplyErrors => {
+export const doctorStep1Schema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, 'Please enter your full name.')
+    .min(2, 'Full name must contain at least 2 characters.')
+    .max(100, 'Full name cannot exceed 100 characters.'),
+  specialization: z
+    .string()
+    .trim()
+    .min(1, 'Please select your medical specialization.'),
+  qualification: z
+    .string()
+    .trim()
+    .min(1, 'Please enter your qualification (e.g. MBBS, MD).'),
+  experience: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
+    z
+      .number()
+      .min(0, 'Years of experience cannot be negative.')
+  ),
+  registrationNumber: z
+    .string()
+    .trim()
+    .min(1, 'Please enter your medical registration number.'),
+  consultationFee: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? undefined : Number(val)),
+    z
+      .number()
+      .min(0, 'Consultation fee cannot be negative.')
+  ),
+});
 
-    const errors: DoctorApplyErrors = {};
+export const doctorStep2Schema = z.object({
+  clinicName: z
+    .string()
+    .trim()
+    .min(1, 'Please enter your clinic or hospital name.')
+    .min(2, 'Clinic/Hospital name must contain at least 2 characters.'),
+  clinicAddress: z
+    .string()
+    .trim()
+    .min(1, 'Please enter your clinic address.')
+    .min(2, 'Clinic address must contain at least 2 characters.'),
+});
 
-  if (!data.fullName?.trim())
-    errors.fullName = 'Full name is required.';
+export const doctorStep3Schema = z.object({
+  profileImage: z
+    .any()
+    .refine((val) => Boolean(val), { message: 'Profile photo is required.' }),
+  degreeCertificate: z
+    .any()
+    .refine((val) => Boolean(val), { message: 'Medical degree certificate is required.' }),
+  registrationCertificate: z
+    .any()
+    .refine((val) => Boolean(val), { message: 'Registration certificate is required.' }),
+  governmentId: z
+    .any()
+    .refine((val) => Boolean(val), { message: 'Government ID is required.' }),
+  availability: z.object({
+    days: z
+      .array(z.string())
+      .min(1, 'Please select at least one available day.'),
+    startTime: z
+      .string()
+      .min(1, 'Please select your start time.'),
+    endTime: z
+      .string()
+      .min(1, 'Please select your end time.'),
+  }),
+});
 
-  if (!data.email?.trim())
-    errors.email = 'Email is required.';
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
-    errors.email = 'Please enter a valid email.';
-  if (!data.password)
-    errors.password = 'Password is required.';
-  else if (data.password.length < 8)
-    errors.password = 'Password must be at least 8 characters.';
+export const validateDoctorStep = (
+  step: number,
+  data: Record<string, any>
+): Record<string, string> => {
+  let result;
+  if (step === 1) {
+    result = doctorStep1Schema.safeParse(data);
+  } else if (step === 2) {
+    result = doctorStep2Schema.safeParse(data);
+  } else if (step === 3) {
+    result = doctorStep3Schema.safeParse(data);
+  } else {
+    return {};
+  }
 
-  if (!data.phone?.trim())
-    errors.phone = 'Phone number is required.';
+  if (result.success) return {};
 
-  if (!data.specialization?.trim())
-    errors.specialization = 'Specialization is required.';
-
-  if (!data.qualification?.trim())
-    errors.qualification = 'Qualification is required.';
-  
-   if (!data.experience && data.experience !== 0)
-    errors.experience = 'Experience is required.';
-  else if (data.experience < 0)
-    errors.experience = 'Experience cannot be negative.';
-
-  if (!data.registrationNumber?.trim())
-    errors.registrationNumber = 'Medical registration number is required.';
-
-  if (!data.consultationFee && data.consultationFee !== 0)
-    errors.consultationFee = 'Consultation fee is required.';
-  else if (data.consultationFee < 0)
-    errors.consultationFee = 'Fee cannot be negative.';
-
-   if (!data.clinicName?.trim())
-    errors.clinicName = 'Clinic/Hospital name is required.';
-
-  if (!data.clinicAddress?.trim())
-    errors.clinicAddress = 'Clinic address is required.';
-
-  if (!data.profileImage?.trim())
-    errors.profileImage = 'Profile image is required.';
-
-  if (!data.documents || data.documents.length === 0)
-    errors.documents = 'Please upload at least one document.';
-
-   if (!data.availability?.days || data.availability.days.length === 0)
-    errors.availabilityDays = 'Please select at least one available day.';
-
-  if (!data.availability?.startTime)
-    errors.startTime = 'Start time is required.';
-
-  if (!data.availability?.endTime)
-    errors.endTime = 'End time is required.';
-
+  const errors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (key === 'availability' && issue.path[1]) {
+      const subKey = issue.path[1];
+      if (typeof subKey === 'string' && !errors[subKey]) {
+        errors[subKey] = issue.message;
+      }
+    } else if (typeof key === 'string' && !errors[key]) {
+      errors[key] = issue.message;
+    }
+  }
   return errors;
-
-}
+};
 
 export const hasErrors = (errors: object): boolean => {
-    return Object.keys(errors).length> 0
-}
+  return Object.keys(errors).length > 0;
+};

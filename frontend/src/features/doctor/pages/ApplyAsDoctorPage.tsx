@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDoctor } from '../hooks/useDoctor';
 import { useAppSelector } from '@/app/store/hooks';
 import { DoctorApplyFormData } from '../types/doctor.types';
+import { validateDoctorStep } from '../utils/validation';
 import { ThemeToggle } from '@/shared/components/ThemeToggle';
 
 const SPECIALIZATIONS = [
@@ -199,23 +200,13 @@ const ApplyAsDoctorPage = () => {
   };
 
   const handleSubmit = async () => {
-    const errs: Record<string, string> = {};
-    if (!form.profileImage) {
-      errs.profileImage = 'Profile image is required.';
-    }
-    if (!form.degreeCertificate) errs.degreeCertificate = 'Degree certificate is required.';
-    if (!form.registrationCertificate)
-      errs.registrationCertificate = 'Registration certificate is required.';
-    if (!form.governmentId) errs.governmentId = 'Government ID is required.';
-    if (!form.availability.days.length) errs.days = 'Select at least one available day.';
-    if (!form.availability.startTime) errs.startTime = 'Start time is required.';
-    if (!form.availability.endTime) errs.endTime = 'End time is required.';
-
+    const errs = validateDoctorStep(3, form);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
     }
 
+    setErrors({});
     await apply(form);
   };
 
@@ -325,6 +316,7 @@ const ApplyAsDoctorPage = () => {
                 <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                   Specialization
                 </label>
+                {errors.specialization && <p className="text-rose-500 text-xs mb-1">{errors.specialization}</p>}
                 <select
                   value={form.specialization}
                   onChange={(e) => update('specialization', e.target.value)}
@@ -343,6 +335,7 @@ const ApplyAsDoctorPage = () => {
                 <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                   Qualification
                 </label>
+                {errors.qualification && <p className="text-rose-500 text-xs mb-1">{errors.qualification}</p>}
                 <input
                   type="text"
                   placeholder="MBBS, MD, etc."
@@ -357,6 +350,7 @@ const ApplyAsDoctorPage = () => {
                   <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                     Years of Experience
                   </label>
+                  {errors.experience && <p className="text-rose-500 text-xs mb-1">{errors.experience}</p>}
                   <input
                     type="number"
                     min={0}
@@ -369,6 +363,7 @@ const ApplyAsDoctorPage = () => {
                   <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                     Consultation Fee ($)
                   </label>
+                  {errors.consultationFee && <p className="text-rose-500 text-xs mb-1">{errors.consultationFee}</p>}
                   <input
                     type="number"
                     min={0}
@@ -383,6 +378,7 @@ const ApplyAsDoctorPage = () => {
                 <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                   Medical Registration Number
                 </label>
+                {errors.registrationNumber && <p className="text-rose-500 text-xs mb-1">{errors.registrationNumber}</p>}
                 <input
                   type="text"
                   placeholder="MED-123456"
@@ -395,13 +391,9 @@ const ApplyAsDoctorPage = () => {
               <button
                 type="button"
                 onClick={() => {
-                  const e: Record<string, string> = {};
-                  if (!form.fullName.trim()) e.fullName = 'Required.';
-                  if (!form.specialization) e.specialization = 'Required.';
-                  if (!form.qualification.trim()) e.qualification = 'Required.';
-                  if (!form.registrationNumber.trim()) e.registrationNumber = 'Required.';
-                  if (Object.keys(e).length > 0) {
-                    setErrors(e);
+                  const stepErrors = validateDoctorStep(1, form);
+                  if (Object.keys(stepErrors).length > 0) {
+                    setErrors(stepErrors);
                     return;
                   }
                   setErrors({});
@@ -423,6 +415,7 @@ const ApplyAsDoctorPage = () => {
                 <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                   Clinic / Hospital Name
                 </label>
+                {errors.clinicName && <p className="text-rose-500 text-xs mb-1">{errors.clinicName}</p>}
                 <input
                   type="text"
                   placeholder="City Maternity Hospital"
@@ -436,6 +429,7 @@ const ApplyAsDoctorPage = () => {
                 <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                   Clinic Address
                 </label>
+                {errors.clinicAddress && <p className="text-rose-500 text-xs mb-1">{errors.clinicAddress}</p>}
                 <input
                   type="text"
                   placeholder="123 Main St, City, State"
@@ -456,11 +450,9 @@ const ApplyAsDoctorPage = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const e: Record<string, string> = {};
-                    if (!form.clinicName.trim()) e.clinicName = 'Required.';
-                    if (!form.clinicAddress.trim()) e.clinicAddress = 'Required.';
-                    if (Object.keys(e).length > 0) {
-                      setErrors(e);
+                    const stepErrors = validateDoctorStep(2, form);
+                    if (Object.keys(stepErrors).length > 0) {
+                      setErrors(stepErrors);
                       return;
                     }
                     setErrors({});

@@ -10,6 +10,16 @@ export declare const ROUTES: {
         readonly REFRESH_TOKEN: "/refresh-token";
         readonly ME: "/me";
         readonly SET_ONBOARDING: "/set-onboarding";
+        readonly PREGNANCY_LMP: "/pregnancy/lmp";
+        readonly PREGNANCY_DETAILS: "/pregnancy/details";
+        readonly CYCLE_SETUP: "/cycle/setup";
+        readonly CYCLE_DETAILS: "/cycle/details";
+        readonly EMERGENCY_CONTACTS: "/emergency-contacts";
+        readonly EMERGENCY_CONTACT_DETAIL: "/emergency-contacts/:contactId";
+        readonly PRIMARY_DOCTOR: "/primary-doctor";
+        readonly REQUEST_PRIMARY_DOCTOR: "/primary-doctor/request";
+        readonly CANCEL_PRIMARY_DOCTOR_REQUEST: "/primary-doctor/cancel";
+        readonly REMOVE_PRIMARY_DOCTOR: "/primary-doctor/remove";
     };
     readonly ADMIN: {
         readonly BASE: "/api/admin";
@@ -25,6 +35,8 @@ export declare const ROUTES: {
         readonly BLOCK_DOCTOR: "/doctors/:doctorId/block";
         readonly UNBLOCK_DOCTOR: "/doctors/:doctorId/unblock";
         readonly DELETE_DOCTOR: "/doctors/:doctorId";
+        readonly DOCTOR_REPORTS: "/doctor-reports";
+        readonly RESOLVE_DOCTOR_REPORT: "/doctor-reports/:reportId/resolve";
     };
     readonly DOCTOR: {
         readonly BASE: "/api/doctor";
@@ -33,6 +45,15 @@ export declare const ROUTES: {
         readonly MY_PROFILE: "/my-profile";
         readonly MY_STATUS: "/my-status";
         readonly MY_DASHBOARD: "/my-dashboard";
+        readonly VERIFIED_DOCTORS: "/verified";
+        readonly BOOK_APPOINTMENT: "/appointments/book";
+        readonly PATIENT_APPOINTMENTS: "/appointments/patient";
+        readonly DOCTOR_APPOINTMENTS: "/appointments/doctor";
+        readonly COMPLETE_APPOINTMENT: "/appointments/:appointmentId/complete";
+        readonly CANCEL_APPOINTMENT: "/appointments/:appointmentId/cancel";
+        readonly PRIMARY_REQUESTS: "/primary-requests";
+        readonly RESPOND_PRIMARY_REQUEST: "/primary-requests/:requestId/respond";
+        readonly SUBMIT_REPORT: "/reports";
     };
 };
 //# sourceMappingURL=routes.d.ts.map

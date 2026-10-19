@@ -4,6 +4,7 @@ export interface IDoctorRepository extends IBaseRepository<doctorApplicationData
     createApplication(data: doctorApplicationData): Promise<DoctorApplicationDocument>;
     findApplicationByUserId(userId: string): Promise<DoctorApplicationWithUser | null>;
     findApplicationById(id: string): Promise<DoctorApplicationDocument | null>;
+    findVerifiedDoctors(): Promise<DoctorApplicationWithUser[]>;
     updateApplicationStatus(id: string, status: "approved" | "rejected" | "pending", adminId?: string, rejectionReason?: string): Promise<void>;
     updateApplication(id: string, data: Partial<doctorApplicationData>): Promise<void>;
 }

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import {
@@ -20,16 +21,19 @@ export const useDoctor = () => {
   const { user, token } = useAppSelector((state) => state.auth);
 
   // Apply as Doctor
-  const apply = async (data: DoctorApplyFormData) => {
-    const result = await dispatch(doctorApplyThunk(data));
+  const apply = useCallback(
+    async (data: DoctorApplyFormData) => {
+      const result = await dispatch(doctorApplyThunk(data));
 
-    if (doctorApplyThunk.fulfilled.match(result)) {
-      navigate('/doctor/pending', { replace: true });
-    }
-  };
+      if (doctorApplyThunk.fulfilled.match(result)) {
+        navigate('/doctor/pending', { replace: true });
+      }
+    },
+    [dispatch, navigate]
+  );
 
   // Check Application Status
-  const checkStatusAndRedirect = async () => {
+  const checkStatusAndRedirect = useCallback(async () => {
     if (!token) return;
     if (user?.role === 'admin') {
       console.warn(`[useDoctor] checkStatusRedirect blocked - user is admin`);
@@ -55,26 +59,30 @@ export const useDoctor = () => {
         navigate('/doctor/pending');
         break;
     }
-  };
+  }, [dispatch, navigate, token, user?.role]);
 
   // Doctor Dashboard
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     if (!user || user.role === 'admin') return;
     await dispatch(getMyDashboardThunk());
-  };
+  }, [dispatch, user?.role, Boolean(user)]);
 
   // Fetch Status
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     if (!user || user.role === 'admin') return;
     await dispatch(getMyStatusThunk());
-  };
+  }, [dispatch, user?.role, Boolean(user)]);
 
   // Logout
-  const logout = () => {
+  const logout = useCallback(() => {
     sessionStorage.removeItem('accessToken');
     dispatch(clearDoctorState());
     navigate('/doctor/login', { replace: true });
-  };
+  }, [dispatch, navigate]);
+
+  const clearError = useCallback(() => {
+    dispatch(clearDoctorError());
+  }, [dispatch]);
 
   return {
     application,
@@ -90,7 +98,6 @@ export const useDoctor = () => {
     fetchDashboard,
     fetchStatus,
     logout,
-
-    clearError: () => dispatch(clearDoctorError()),
+    clearError,
   };
 };

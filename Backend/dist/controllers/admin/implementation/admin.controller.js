@@ -14,11 +14,42 @@ import "reflect-metadata";
 import { injectable, inject } from "inversify";
 import { TYPES } from "../../../container/types.js";
 import { HttpStatus } from "../../../constants/status.constant.js";
+import { HttpResponse } from "../../../constants/messages.constant.js";
 import { logger } from "../../../shared/logger/logger.js";
+import { AppError, ValidationError } from "../../../shared/errors/AppError.js";
 let AdminController = class AdminController {
     adminService;
     constructor(adminService) {
         this.adminService = adminService;
+    }
+    handleError(error, req, res, fallbackMessage) {
+        const requestId = req.id || 'N/A';
+        if (error instanceof AppError) {
+            res.status(error.statusCode).json({
+                success: false,
+                message: error.message,
+                error: error.message,
+                errors: error.errors,
+                requestId,
+            });
+            return;
+        }
+        if (error instanceof Error) {
+            const statusCode = error.statusCode || HttpStatus.BAD_REQUEST;
+            res.status(statusCode).json({
+                success: false,
+                message: error.message,
+                error: error.message,
+                requestId,
+            });
+            return;
+        }
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: fallbackMessage || HttpResponse.SERVER_ERROR,
+            error: fallbackMessage || HttpResponse.SERVER_ERROR,
+            requestId,
+        });
     }
     getAllUsers = async (req, res) => {
         try {
@@ -29,12 +60,7 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.getAllUsers error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to fetch users" });
-            }
+            this.handleError(error, req, res, "Failed to fetch user list.");
         }
     };
     blockUser = async (req, res) => {
@@ -45,12 +71,7 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.blockUser error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to block user" });
-            }
+            this.handleError(error, req, res, "Failed to block user.");
         }
     };
     unblockUser = async (req, res) => {
@@ -61,12 +82,7 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.unblockUser error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to unblock user" });
-            }
+            this.handleError(error, req, res, "Failed to unblock user.");
         }
     };
     deleteUser = async (req, res) => {
@@ -77,15 +93,9 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.deleteUser error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to delete user" });
-            }
+            this.handleError(error, req, res, "Failed to remove user.");
         }
     };
-    // Doctor Management
     getAllDoctors = async (req, res) => {
         try {
             const page = parseInt(req.query.page, 10) || 1;
@@ -95,40 +105,26 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.getAllDoctors error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to fetch doctors" });
-            }
+            this.handleError(error, req, res, "Failed to fetch doctors list.");
         }
     };
     verifyDoctor = async (req, res) => {
         try {
             const doctorId = req.params.doctorId || req.params.id;
             if (!doctorId) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: "Invalid doctorId" });
-                return;
+                throw new ValidationError("Doctor ID is required.");
             }
             const adminId = req.user.userId;
             const dto = req.body;
             if (!["approve", "reject", "more_documents_required", "under_review"].includes(dto.action)) {
-                res.status(HttpStatus.BAD_REQUEST).json({
-                    error: "Invalid Action",
-                });
-                return;
+                throw new ValidationError("Invalid doctor verification action.");
             }
             const result = await this.adminService.verifyDoctor(doctorId, adminId, dto);
             res.status(HttpStatus.OK).json(result);
         }
         catch (error) {
             logger.error("AdminController.verifyDoctor error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to verify doctor" });
-            }
+            this.handleError(error, req, res, "Failed to verify doctor application.");
         }
     };
     approveDoctor = async (req, res) => {
@@ -140,30 +136,21 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.approveDoctor error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to approve doctor" });
-            }
+            this.handleError(error, req, res, "Failed to approve doctor.");
         }
     };
     rejectDoctor = async (req, res) => {
         try {
             const doctorId = req.params.doctorId || req.params.id;
             const adminId = req.user.userId;
-            const { rejectionReason } = req.body;
-            const result = await this.adminService.rejectDoctor(doctorId, adminId, rejectionReason);
+            const { rejectionReason, reason } = req.body;
+            const finalReason = rejectionReason || reason;
+            const result = await this.adminService.rejectDoctor(doctorId, adminId, finalReason);
             res.status(HttpStatus.OK).json(result);
         }
         catch (error) {
             logger.error("AdminController.rejectDoctor error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to reject doctor" });
-            }
+            this.handleError(error, req, res, "Failed to reject doctor.");
         }
     };
     blockDoctor = async (req, res) => {
@@ -174,12 +161,7 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.blockDoctor error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to block doctor" });
-            }
+            this.handleError(error, req, res, "Failed to block doctor.");
         }
     };
     unblockDoctor = async (req, res) => {
@@ -190,12 +172,7 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.unblockDoctor error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to unblock doctor" });
-            }
+            this.handleError(error, req, res, "Failed to unblock doctor.");
         }
     };
     deleteDoctor = async (req, res) => {
@@ -206,12 +183,7 @@ let AdminController = class AdminController {
         }
         catch (error) {
             logger.error("AdminController.deleteDoctor error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to delete doctor" });
-            }
+            this.handleError(error, req, res, "Failed to remove doctor.");
         }
     };
     getDoctorDocumentUrl = async (req, res) => {
@@ -224,22 +196,14 @@ let AdminController = class AdminController {
                 "governmentId",
             ];
             if (!validTypes.includes(documentType)) {
-                res.status(HttpStatus.BAD_REQUEST).json({
-                    error: `Invalid document type. Must be one of: ${validTypes.join(", ")}`,
-                });
-                return;
+                throw new ValidationError(`Invalid document type requested.`);
             }
             const result = await this.adminService.getDoctorDocumentUrl(doctorId, documentType);
             res.status(HttpStatus.OK).json(result);
         }
         catch (error) {
             logger.error("AdminController.getDoctorDocumentUrl error:", error);
-            if (error instanceof Error) {
-                res.status(HttpStatus.BAD_REQUEST).json({ error: error.message });
-            }
-            else {
-                res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ error: "Failed to generate document URL" });
-            }
+            this.handleError(error, req, res, "Failed to retrieve document URL.");
         }
     };
 };

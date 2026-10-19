@@ -51,6 +51,48 @@ let DoctorRepository = class DoctorRepository extends BaseRepository {
     async findApplicationById(id) {
         return (await doctorApplicationModel.findOne({ _id: id }).lean());
     }
+    async findVerifiedDoctors() {
+        const applications = (await doctorApplicationModel
+            .find({
+            status: "approved",
+            isBlocked: false,
+            isDeleted: false,
+        })
+            .sort({ createdAt: -1 })
+            .lean());
+        if (!applications.length)
+            return [];
+        const userIds = applications.map((app) => app.userId);
+        const users = await UserModel.find({
+            _id: { $in: userIds },
+            role: "doctor",
+            isVerified: true,
+            isBlocked: false,
+            isDeleted: false,
+        }).lean();
+        const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+        return applications
+            .map((app) => {
+            const user = userMap.get(app.userId.toString());
+            if (!user)
+                return null;
+            return {
+                application: app,
+                user: {
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    fullName: user.fullName,
+                    phone: user.phone,
+                    imageUrl: user.imageUrl,
+                    isBlocked: user.isBlocked,
+                    isVerified: user.isVerified,
+                    isDeleted: user.isDeleted,
+                },
+            };
+        })
+            .filter((item) => item !== null);
+    }
     async updateApplicationStatus(id, status, adminId, rejectionReason) {
         const update = { status };
         if (status === "approved" && adminId) {
@@ -60,7 +102,13 @@ let DoctorRepository = class DoctorRepository extends BaseRepository {
         if (status === "rejected" && rejectionReason) {
             update.rejectionReason = rejectionReason;
         }
-        await doctorApplicationModel.findByIdAndUpdate(id, { $set: update });
+        const app = await doctorApplicationModel.findByIdAndUpdate(id, { $set: update }, { new: true });
+        if (status === "approved" && app) {
+            await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "doctor", isVerified: true } });
+        }
+        else if (status === "rejected" && app) {
+            await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "user" } });
+        }
     }
     async updateApplication(id, data) {
         await doctorApplicationModel.findByIdAndUpdate(id, { $set: data });

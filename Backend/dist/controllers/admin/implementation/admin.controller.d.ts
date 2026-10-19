@@ -5,6 +5,7 @@ import { IAdminController } from "../interface/IAdmin.controller.js";
 export declare class AdminController implements IAdminController {
     private adminService;
     constructor(adminService: IAdminService);
+    private handleError;
     getAllUsers: (req: Request, res: Response) => Promise<void>;
     blockUser: (req: Request, res: Response) => Promise<void>;
     unblockUser: (req: Request, res: Response) => Promise<void>;

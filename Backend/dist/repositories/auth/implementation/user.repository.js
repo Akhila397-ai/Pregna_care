@@ -39,6 +39,61 @@ let UserRepository = class UserRepository extends BaseRepository {
             },
         });
     }
+    async setPregnancyLMP(id, lmpDate) {
+        const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        await this.model.findByIdAndUpdate(objectId, {
+            $set: {
+                lmpDate,
+                onboardingType: 'pregnant',
+                isOnboarded: true,
+            },
+        });
+    }
+    async setCycleInfo(id, periodStartDate, cycleLength = 28, periodLength = 5) {
+        const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        await this.model.findByIdAndUpdate(objectId, {
+            $set: {
+                periodStartDate,
+                cycleLength,
+                periodLength,
+                onboardingType: 'trying',
+                isOnboarded: true,
+            },
+        });
+    }
+    async addEmergencyContact(userId, contact) {
+        const objectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+        return await this.model.findByIdAndUpdate(objectId, {
+            $push: {
+                emergencyContacts: {
+                    name: contact.name,
+                    phoneNumber: contact.phoneNumber,
+                    relationship: contact.relationship,
+                    createdAt: new Date(),
+                },
+            },
+        }, { new: true });
+    }
+    async updateEmergencyContact(userId, contactId, contact) {
+        const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+        const contactObjectId = Types.ObjectId.isValid(contactId) ? new Types.ObjectId(contactId) : contactId;
+        return await this.model.findOneAndUpdate({ _id: userObjectId, "emergencyContacts._id": contactObjectId }, {
+            $set: {
+                "emergencyContacts.$.name": contact.name,
+                "emergencyContacts.$.phoneNumber": contact.phoneNumber,
+                "emergencyContacts.$.relationship": contact.relationship,
+            },
+        }, { new: true });
+    }
+    async deleteEmergencyContact(userId, contactId) {
+        const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+        const contactObjectId = Types.ObjectId.isValid(contactId) ? new Types.ObjectId(contactId) : contactId;
+        return await this.model.findByIdAndUpdate(userObjectId, {
+            $pull: {
+                emergencyContacts: { _id: contactObjectId },
+            },
+        }, { new: true });
+    }
 };
 UserRepository = __decorate([
     injectable(),

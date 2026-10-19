@@ -3,6 +3,9 @@ export declare const TYPES: {
     OtpRepository: symbol;
     AdminRepository: symbol;
     DoctorRepository: symbol;
+    AppointmentRepository: symbol;
+    PrimaryDoctorRepository: symbol;
+    DoctorReportRepository: symbol;
     AuthService: symbol;
     AdminService: symbol;
     DoctorService: symbol;

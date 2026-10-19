@@ -11,6 +11,16 @@ export const ROUTES = {
     REFRESH_TOKEN:      '/refresh-token',
     ME:                 '/me',
     SET_ONBOARDING:     '/set-onboarding',
+    PREGNANCY_LMP:      '/pregnancy/lmp',
+    PREGNANCY_DETAILS:  '/pregnancy/details',
+    CYCLE_SETUP:        '/cycle/setup',
+    CYCLE_DETAILS:      '/cycle/details',
+    EMERGENCY_CONTACTS: '/emergency-contacts',
+    EMERGENCY_CONTACT_DETAIL: '/emergency-contacts/:contactId',
+    PRIMARY_DOCTOR:     '/primary-doctor',
+    REQUEST_PRIMARY_DOCTOR: '/primary-doctor/request',
+    CANCEL_PRIMARY_DOCTOR_REQUEST: '/primary-doctor/cancel',
+    REMOVE_PRIMARY_DOCTOR: '/primary-doctor/remove',
   },
 
   ADMIN: {
@@ -31,16 +41,32 @@ export const ROUTES = {
     BLOCK_DOCTOR:       '/doctors/:doctorId/block',
     UNBLOCK_DOCTOR:     '/doctors/:doctorId/unblock',
     DELETE_DOCTOR:      '/doctors/:doctorId',
-    
+    DOCTOR_REPORTS:     '/doctor-reports',
+    RESOLVE_DOCTOR_REPORT: '/doctor-reports/:reportId/resolve',
   },
 
   DOCTOR: {
     BASE:               '/api/doctor',
     APPLY:              '/apply',
-    MY_APPLICATION:  '/my-application',  // GET  — check application status
-    MY_PROFILE:      '/my-profile', 
-    MY_STATUS: '/my-status',
-    MY_DASHBOARD:'/my-dashboard'
+    MY_APPLICATION:     '/my-application',  // GET  — check application status
+    MY_PROFILE:         '/my-profile', 
+    MY_STATUS:          '/my-status',
+    MY_DASHBOARD:       '/my-dashboard',
+    VERIFIED_DOCTORS:   '/verified',
+    
+    // ── Appointments ───────────────────────────
+    BOOK_APPOINTMENT:   '/appointments/book',
+    PATIENT_APPOINTMENTS: '/appointments/patient',
+    DOCTOR_APPOINTMENTS:  '/appointments/doctor',
+    COMPLETE_APPOINTMENT: '/appointments/:appointmentId/complete',
+    CANCEL_APPOINTMENT:   '/appointments/:appointmentId/cancel',
+
+    // ── Primary Doctor Requests (Doctor Side) ──
+    PRIMARY_REQUESTS:   '/primary-requests',
+    RESPOND_PRIMARY_REQUEST: '/primary-requests/:requestId/respond',
+
+    // ── Issue Reporting ────────────────────────
+    SUBMIT_REPORT:      '/reports',
   },
 
 } as const;

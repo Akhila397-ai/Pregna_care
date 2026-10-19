@@ -105,23 +105,41 @@ export class AdminRepository extends BaseRepository<userData> implements IAdminR
 
   async verifyDoctor(id: string, status: DoctorStatus, adminId: string, remarks?: string): Promise<void> {
     const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+    const mappedStatus: DoctorStatus =
+      (status as string) === "approve"
+        ? "approved"
+        : (status as string) === "reject"
+        ? "rejected"
+        : status;
+
+    const updateFields: any = {
+      status: mappedStatus,
+      verifiedBy: new Types.ObjectId(adminId),
+      verifiedAt: new Date(),
+      verificationRemarks: remarks ?? "",
+    };
+
+    if (mappedStatus === "approved") {
+      updateFields.approvedBy = new Types.ObjectId(adminId);
+      updateFields.approvedAt = new Date();
+    } else if (mappedStatus === "rejected" && remarks) {
+      updateFields.rejectionReason = remarks;
+    }
+
     const app = await doctorApplicationModel
       .findOneAndUpdate(
         { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
         {
-          $set: {
-            status,
-            verifiedBy: new Types.ObjectId(adminId),
-            verifiedAt: new Date(),
-            verificationRemarks: remarks ?? "",
-          },
+          $set: updateFields,
         },
         { new: true }
       )
       .lean();
 
-    if (status === "approved" && app) {
+    if (mappedStatus === "approved" && app) {
       await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "doctor", isVerified: true } });
+    } else if (mappedStatus === "rejected" && app) {
+      await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "user" } });
     }
   }
 
@@ -175,15 +193,19 @@ export class AdminRepository extends BaseRepository<userData> implements IAdminR
 
   async rejectDoctor(id: string, rejectionReason: string): Promise<void> {
     const docObjectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
-    await doctorApplicationModel.findOneAndUpdate(
+    const app = await doctorApplicationModel.findOneAndUpdate(
       { $or: [{ _id: docObjectId }, { userId: docObjectId }] },
       {
         $set: {
           status: "rejected",
           rejectionReason,
         },
-      }
+      },
+      { new: true }
     );
+    if (app) {
+      await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "user" } });
+    }
   }
 
   async blockDoctor(id: string): Promise<void> {
