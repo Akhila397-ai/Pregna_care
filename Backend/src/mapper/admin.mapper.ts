@@ -1,25 +1,7 @@
 import { Types } from "mongoose";
 import { userData } from "../types/user.js";
-import { IUserMappedData,IDoctorsMappedData,AdminAuthDTO} from "../dtos/admin.dto.js";
-import { doctorApplicationData, DoctorApplicationDocument,DoctorApplicationWithUser } from "../types/doctor.js";
-
-
-
-type PresignedUrls = {
-    profileImage ?: string;
-    degreeCertificateUrl?:  string;
-    registrationCertificateUrl?: string;
-    governmentIdUrl?: string;
-}
-
-type PopulatedDoctorApplication = doctorApplicationData & {
-    _id: Types.ObjectId;
-    createdAt?: Date,
-    userId: userData & {
-        _id: Types.ObjectId;
-    },
-    specialization?: string;
-}
+import { IUserMappedData, IDoctorsMappedData, AdminAuthDTO } from "../dtos/admin.dto.js";
+import { DoctorApplicationWithUser } from "../types/doctor.js";
 export const toAdminAuthDTO = (
     user: userData & {_id: Types.ObjectId}
 ): AdminAuthDTO => ({

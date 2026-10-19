@@ -1,0 +1,59 @@
+export declare const ROUTES: {
+    readonly AUTH: {
+        readonly BASE: "/api/auth";
+        readonly SIGNUP: "/register";
+        readonly LOGIN: "/login";
+        readonly VERIFY_OTP: "/verify-otp";
+        readonly RESEND_OTP: "/resend-otp";
+        readonly FORGOT_PASSWORD: "/forgot-password";
+        readonly RESET_PASSWORD: "/reset-password";
+        readonly REFRESH_TOKEN: "/refresh-token";
+        readonly ME: "/me";
+        readonly SET_ONBOARDING: "/set-onboarding";
+        readonly PREGNANCY_LMP: "/pregnancy/lmp";
+        readonly PREGNANCY_DETAILS: "/pregnancy/details";
+        readonly CYCLE_SETUP: "/cycle/setup";
+        readonly CYCLE_DETAILS: "/cycle/details";
+        readonly EMERGENCY_CONTACTS: "/emergency-contacts";
+        readonly EMERGENCY_CONTACT_DETAIL: "/emergency-contacts/:contactId";
+        readonly PRIMARY_DOCTOR: "/primary-doctor";
+        readonly REQUEST_PRIMARY_DOCTOR: "/primary-doctor/request";
+        readonly CANCEL_PRIMARY_DOCTOR_REQUEST: "/primary-doctor/cancel";
+        readonly REMOVE_PRIMARY_DOCTOR: "/primary-doctor/remove";
+    };
+    readonly ADMIN: {
+        readonly BASE: "/api/admin";
+        readonly USERS: "/users";
+        readonly BLOCK_USER: "/users/:userId/block";
+        readonly UNBLOCK_USER: "/users/:userId/unblock";
+        readonly DELETE_USER: "/users/:userId";
+        readonly DOCTORS: "/doctors";
+        readonly GETDOCTORDOCUMENT: "/doctors/:doctorId/document/:documentType";
+        readonly VERIFY_DOCTOR: "/doctors/:doctorId/verify";
+        readonly APPROVE_DOCTOR: "/doctors/:doctorId/approve";
+        readonly REJECT_DOCTOR: "/doctors/:doctorId/reject";
+        readonly BLOCK_DOCTOR: "/doctors/:doctorId/block";
+        readonly UNBLOCK_DOCTOR: "/doctors/:doctorId/unblock";
+        readonly DELETE_DOCTOR: "/doctors/:doctorId";
+        readonly DOCTOR_REPORTS: "/doctor-reports";
+        readonly RESOLVE_DOCTOR_REPORT: "/doctor-reports/:reportId/resolve";
+    };
+    readonly DOCTOR: {
+        readonly BASE: "/api/doctor";
+        readonly APPLY: "/apply";
+        readonly MY_APPLICATION: "/my-application";
+        readonly MY_PROFILE: "/my-profile";
+        readonly MY_STATUS: "/my-status";
+        readonly MY_DASHBOARD: "/my-dashboard";
+        readonly VERIFIED_DOCTORS: "/verified";
+        readonly BOOK_APPOINTMENT: "/appointments/book";
+        readonly PATIENT_APPOINTMENTS: "/appointments/patient";
+        readonly DOCTOR_APPOINTMENTS: "/appointments/doctor";
+        readonly COMPLETE_APPOINTMENT: "/appointments/:appointmentId/complete";
+        readonly CANCEL_APPOINTMENT: "/appointments/:appointmentId/cancel";
+        readonly PRIMARY_REQUESTS: "/primary-requests";
+        readonly RESPOND_PRIMARY_REQUEST: "/primary-requests/:requestId/respond";
+        readonly SUBMIT_REPORT: "/reports";
+    };
+};
+//# sourceMappingURL=routes.d.ts.map

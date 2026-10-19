@@ -1,0 +1,40 @@
+import "reflect-metadata";
+import type { IUserRepository } from "../../../repositories/auth/interface/IUser.repository.js";
+import type { IOtpRepository } from "../../../repositories/otp/interface/IOtp.repository.js";
+import type { IDoctorRepository } from "../../../repositories/doctor/interface/IDoctor.repository.js";
+import type { IEmailService } from "../../email/interface/IEmail.service.js";
+import { IAUthService } from "../interface/IAuth.service.js";
+import { AuthResponseDTO, MessageResponseDTO, OTPResponseDTO, VerifyOtpResponseDTO, LoginDTO } from "../../../dtos/auth.dto.js";
+import { UserAuthDTO, PregnancyDetailsDTO, CycleDetailsDTO, EmergencyContactDTO, AddEmergencyContactDTO, UpdateEmergencyContactDTO } from "../../../dtos/user.dto.js";
+import { onboardingType } from "../../../types/user.js";
+export declare class AuthService implements IAUthService {
+    private userRepository;
+    private otpRepository;
+    private emailService;
+    private doctorRepository;
+    constructor(userRepository: IUserRepository, otpRepository: IOtpRepository, emailService: IEmailService, doctorRepository: IDoctorRepository);
+    register(name: string, email: string, password: string): Promise<OTPResponseDTO>;
+    verifyOtp(email: string, otp: string, purpose: string): Promise<VerifyOtpResponseDTO>;
+    login(data: LoginDTO): Promise<AuthResponseDTO>;
+    private _getPortalErrorMessage;
+    forgotPassword(email: string): Promise<OTPResponseDTO>;
+    resetPassword(userId: string, newPassword: string): Promise<MessageResponseDTO>;
+    resendOtp(email: string, purpose: string): Promise<OTPResponseDTO>;
+    refreshToken(userId: string): Promise<AuthResponseDTO>;
+    setOnboarding(userId: string, onboardingType: onboardingType): Promise<MessageResponseDTO>;
+    getMe(userId: string): Promise<UserAuthDTO>;
+    private _parseDateOnly;
+    setPregnancyLMP(userId: string, lmpDateStr: string): Promise<PregnancyDetailsDTO>;
+    getPregnancyDetails(userId: string): Promise<PregnancyDetailsDTO | null>;
+    setCycleInfo(userId: string, periodStartDateStr: string, cycleLength?: number, periodLength?: number): Promise<CycleDetailsDTO>;
+    getCycleDetails(userId: string): Promise<CycleDetailsDTO | null>;
+    getEmergencyContacts(userId: string): Promise<EmergencyContactDTO[]>;
+    addEmergencyContact(userId: string, data: AddEmergencyContactDTO): Promise<EmergencyContactDTO[]>;
+    updateEmergencyContact(userId: string, contactId: string, data: UpdateEmergencyContactDTO): Promise<EmergencyContactDTO[]>;
+    deleteEmergencyContact(userId: string, contactId: string): Promise<EmergencyContactDTO[]>;
+    private _calculatePregnancyDetails;
+    private _calculateCycleDetails;
+    private _sendOTP;
+    private _verifyOtp;
+}
+//# sourceMappingURL=auth.service.d.ts.map

@@ -1,22 +1,35 @@
+import { z } from 'zod';
+
 export interface AdminLoginErrors {
-  email?:    string;
+  email?: string;
   password?: string;
 }
 
+export const adminLoginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required.')
+    .email('Please enter a valid email.'),
+  password: z
+    .string()
+    .min(1, 'Password is required.'),
+});
+
 export const validateAdminLogin = (
-  email:    string,
+  email: string,
   password: string
 ): AdminLoginErrors => {
+  const result = adminLoginSchema.safeParse({ email, password });
+  if (result.success) return {};
+
   const errors: AdminLoginErrors = {};
-
-  if (!email.trim())
-    errors.email = 'Email is required.';
-  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-    errors.email = 'Please enter a valid email.';
-
-  if (!password)
-    errors.password = 'Password is required.';
-
+  for (const issue of result.error.issues) {
+    const field = issue.path[0] as keyof AdminLoginErrors;
+    if (field && !errors[field]) {
+      errors[field] = issue.message;
+    }
+  }
   return errors;
 };
 

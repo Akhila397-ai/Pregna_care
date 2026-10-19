@@ -1,45 +1,49 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { doctorApi } from '../api/doctor.api';
-import { DoctorApplyRequest,DoctorApplicationResponse,DoctorStatusResponse,DoctorDashboardResponse,DoctorStatus} from '../types/doctor.types';
-import { RootState } from '../../../store';
+import {
+  DoctorApplyFormData,
+  DoctorApplicationResponse,
+  DoctorDashboardResponse,
+  DoctorStatus,
+} from '../types/doctor.types';
+import { RootState } from '@/app/store';
+import { AxiosError } from 'axios';
+
 interface DoctorState {
   application: DoctorApplicationResponse | null;
-  dashboard:   DoctorDashboardResponse   | null;
-  status:      DoctorStatus | null;
-  name:        string | null;
-  loading:     boolean;
-  error:       string | null;
+  dashboard: DoctorDashboardResponse | null;
+  status: DoctorStatus | null;
+  name: string | null;
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: DoctorState = {
   application: null,
-  dashboard:   null,
-  status:      null,
-  name:        null,
-  loading:     false,
-  error:       null,
+  dashboard: null,
+  status: null,
+  name: null,
+  loading: false,
+  error: null,
 };
 
 // ── Thunks ────────────────────────────────────
 
 export const doctorApplyThunk = createAsyncThunk(
   'doctor/apply',
-  async (data: DoctorApplyRequest, { rejectWithValue }) => {
+  async (data: DoctorApplyFormData, { rejectWithValue }) => {
     try {
       return await doctorApi.apply(data);
-    } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.error || 'Application failed.'
-      );
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: string }>;
+      return rejectWithValue(err.response?.data?.error || 'Application failed.');
     }
   }
 );
 
 export const getMyStatusThunk = createAsyncThunk(
-  'doctor/getMyStatus', 
-  async (_, { rejectWithValue }) => {
-     console.log('[getMyStatusThunk] CALLED — stack trace:')
-       console.trace()
+  'doctor/getMyStatus',
+  async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
       const user = state.auth.user;
@@ -48,15 +52,13 @@ export const getMyStatusThunk = createAsyncThunk(
       }
 
       if (user.role === 'admin') {
-        console.warn('[getMyStatusThunk] Blocked — admin is logged in');
         return rejectWithValue('Admin cannot check doctor status.');
       }
 
       return await doctorApi.getMyStatus();
-    } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.error || 'Failed to fetch status.'
-      );
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: string }>;
+      return rejectWithValue(err.response?.data?.error || 'Failed to fetch status.');
     }
   }
 );
@@ -66,10 +68,9 @@ export const getMyDashboardThunk = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       return await doctorApi.getMyDashboard();
-    } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.error || 'Failed to fetch dashboard.'
-      );
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ error?: string }>;
+      return rejectWithValue(err.response?.data?.error || 'Failed to fetch dashboard.');
     }
   }
 );
@@ -81,64 +82,63 @@ const doctorSlice = createSlice({
   reducers: {
     clearDoctorState: (state) => {
       state.application = null;
-      state.dashboard   = null;
-      state.status      = null;
-      state.name        = null;
-      state.error       = null;
+      state.dashboard = null;
+      state.status = null;
+      state.name = null;
+      state.error = null;
     },
     clearDoctorError: (state) => {
       state.error = null;
     },
   },
   extraReducers: (builder) => {
-
     // ── Apply ──────────────────────────────────
     builder
       .addCase(doctorApplyThunk.pending, (state) => {
         state.loading = true;
-        state.error   = null;
+        state.error = null;
       })
       .addCase(doctorApplyThunk.fulfilled, (state, action) => {
-        state.loading     = false;
+        state.loading = false;
         state.application = action.payload.application;
-        state.status      = 'pending';
+        state.status = 'pending';
       })
       .addCase(doctorApplyThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error   = action.payload as string;
+        state.error = action.payload as string;
       });
 
     // ── Get Status ─────────────────────────────
     builder
       .addCase(getMyStatusThunk.pending, (state) => {
         state.loading = true;
-        state.error   = null;
+        state.error = null;
       })
       .addCase(getMyStatusThunk.fulfilled, (state, action) => {
-        state.loading     = false;
-        state.status      = action.payload.status;
+        state.loading = false;
+        state.status = action.payload.status;
         state.application = action.payload.application;
-        state.name        = action.payload.name;
+        state.name = action.payload.name;
       })
       .addCase(getMyStatusThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error   = action.payload as string;
+        state.error = action.payload as string;
       });
 
     // ── Get Dashboard ──────────────────────────
     builder
       .addCase(getMyDashboardThunk.pending, (state) => {
         state.loading = true;
-        state.error   = null;
+        state.error = null;
       })
       .addCase(getMyDashboardThunk.fulfilled, (state, action) => {
-        state.loading   = false;
+        state.loading = false;
         state.dashboard = action.payload;
-        state.name      = action.payload.name;
+        state.name = action.payload.name;
       })
       .addCase(getMyDashboardThunk.rejected, (state, action) => {
         state.loading = false;
-        state.error   = action.payload as string;
+        state.error = action.payload as string;
       });
   },
 });

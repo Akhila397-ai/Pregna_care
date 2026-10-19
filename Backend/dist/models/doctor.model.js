@@ -1,0 +1,66 @@
+import mongoose, { Schema } from "mongoose";
+const AvailabilitySchema = new Schema({
+    days: {
+        type: [String],
+        required: true
+    },
+    startTime: {
+        type: String,
+        required: true
+    },
+    endTime: {
+        type: String,
+        required: true
+    }
+}, { _id: false });
+const DoctorProfileSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        unique: true
+    },
+    specialization: {
+        type: String,
+        required: true
+    },
+    qualification: {
+        type: String,
+        required: true
+    },
+    experience: {
+        type: Number,
+        required: true
+    },
+    registrationNumber: {
+        type: String,
+        required: true
+    },
+    consultationFee: {
+        type: Number,
+        required: true
+    },
+    clinicName: {
+        type: String,
+        required: true
+    },
+    clinicAddress: {
+        type: String,
+        required: true
+    },
+    profileImage: {
+        type: String,
+        required: true
+    },
+    documents: {
+        type: [String],
+        required: true
+    },
+    availability: {
+        type: AvailabilitySchema,
+        required: true
+    },
+}, { timestamps: true });
+export default mongoose.models.DoctorProfile ||
+    mongoose.model('DoctorProfile', DoctorProfileSchema);
+//# sourceMappingURL=doctor.model.js.map

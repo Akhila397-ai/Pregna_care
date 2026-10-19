@@ -1,7 +1,8 @@
 import { useState }    from 'react';
 import { useAuth }     from '../hooks/useAuth';
 import { Link }        from 'react-router-dom';
-import { validateRegister, RegisterErrors,hasErrors } from '../utils/validation';
+import { validateRegister, RegisterErrors, hasErrors } from '../utils/validation';
+import { ThemeToggle } from '@/shared/components/ThemeToggle';
 
 type FieldState = {
   name:     string;
@@ -33,31 +34,34 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col lg:flex-row font-sans bg-[#f5f7f0]">
+    <div className="h-screen overflow-hidden flex flex-col lg:flex-row font-sans bg-[var(--bg-primary)]">
 
       {/* ── Left Panel ─────────────────────────────── */}
-      <div className="flex flex-col px-8 py-6 lg:px-16 lg:py-10 w-full lg:w-1/2 xl:w-5/12 h-full overflow-y-auto">
+      <div className="flex flex-col px-8 py-6 lg:px-16 lg:py-10 w-full lg:w-1/2 xl:w-5/12 h-full overflow-y-auto bg-[var(--bg-surface)] transition-colors duration-200">
 
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-10">
-          <div className="w-10 h-10 rounded-2xl bg-[#d4f5e2] flex items-center justify-center shadow-sm">
-            <div className="w-6 h-6 rounded-md bg-[#2ecc71] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor">
-                <path d="M19 11h-6V5a1 1 0 00-2 0v6H5a1 1 0 000 2h6v6a1 1 0 002 0v-6h6a1 1 0 000-2z"/>
-              </svg>
+        {/* Logo & Theme Toggle */}
+        <div className="flex items-center justify-between mb-10">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shadow-sm">
+              <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor">
+                  <path d="M19 11h-6V5a1 1 0 00-2 0v6H5a1 1 0 000 2h6v6a1 1 0 002 0v-6h6a1 1 0 000-2z"/>
+                </svg>
+              </div>
             </div>
+            <span className="text-[var(--text-primary)] font-bold text-xl tracking-tight">
+              PregnaCare
+            </span>
           </div>
-          <span className="text-[#1a2e1a] font-bold text-xl tracking-tight">
-            PregnaCare
-          </span>
+          <ThemeToggle />
         </div>
 
         {/* Heading */}
         <div className="mb-8">
-          <h1 className="text-4xl lg:text-5xl font-extrabold text-[#1a2e1a] leading-tight mb-3">
+          <h1 className="text-4xl lg:text-5xl font-extrabold text-[var(--text-primary)] leading-tight mb-3">
             Begin Your<br />Journey
           </h1>
-          <p className="text-[#5a7a5a] text-base leading-relaxed max-w-xs">
+          <p className="text-[var(--text-secondary)] text-base leading-relaxed max-w-xs">
             Join our community for expert maternity care and support every step of the way.
           </p>
         </div>
@@ -67,16 +71,16 @@ const RegisterPage = () => {
 
           {/* Error */}
           {error && (
-            <p className="text-red-500 text-sm">{error}</p>
+            <p className="text-rose-500 text-sm">{error}</p>
           )}
 
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
+            <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
               Full Name
             </label>
             {errors.name && (
-                <p className='text-red-500 text-xs mb-1'>{errors.name}</p>
+                <p className='text-rose-500 text-xs mb-1'>{errors.name}</p>
             )}
             <input
               type="text"
@@ -85,22 +89,22 @@ const RegisterPage = () => {
               onChange={handle('name')}
               onFocus={() => setFocused('name')}
               onBlur={() => setFocused(null)}
-              className={`w-full px-4 py-3 rounded-xl border-2 bg-white text-[#1a2e1a]
-                placeholder-[#b0c8b0] outline-none transition-all duration-200 text-sm ${
+              className={`w-full px-4 py-3 rounded-xl border bg-[var(--bg-card)] text-[var(--text-primary)]
+                placeholder:text-[var(--text-muted)] outline-none transition-all duration-200 text-sm ${
                 focused === 'name'
-                  ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                  : 'border-[#dde8dd]'
+                  ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                  : 'border-[var(--border-primary)]'
               }`}
             />
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
+            <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
               Email Address
             </label>
             {errors.email && (
-                <p className='text-red-500 text-xs mb-1'>{errors.email}</p>
+                <p className='text-rose-500 text-xs mb-1'>{errors.email}</p>
             )}
             <div className="relative">
               <input
@@ -110,15 +114,15 @@ const RegisterPage = () => {
                 onChange={handle('email')}
                 onFocus={() => setFocused('email')}
                 onBlur={() => setFocused(null)}
-                className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white text-[#1a2e1a]
-                  placeholder-[#b0c8b0] outline-none transition-all duration-200 text-sm ${
+                className={`w-full px-4 py-3 pr-10 rounded-xl border bg-[var(--bg-card)] text-[var(--text-primary)]
+                  placeholder:text-[var(--text-muted)] outline-none transition-all duration-200 text-sm ${
                   focused === 'email'
-                    ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                    : 'border-[#dde8dd]'
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                    : 'border-[var(--border-primary)]'
                 }`}
               />
               <svg
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8fba8f]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
               >
                 <path strokeLinecap="round" strokeLinejoin="round"
@@ -130,13 +134,11 @@ const RegisterPage = () => {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
+            <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
               Password
             </label>
             {errors.password && (
-                <p className='text-red-500 text-xs mb-1'>{errors.password
-                
-                }</p>
+                <p className='text-rose-500 text-xs mb-1'>{errors.password}</p>
             )}
             <div className="relative">
               <input
@@ -146,17 +148,17 @@ const RegisterPage = () => {
                 onChange={handle('password')}
                 onFocus={() => setFocused('password')}
                 onBlur={() => setFocused(null)}
-                className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white text-[#1a2e1a]
-                  placeholder-[#b0c8b0] outline-none transition-all duration-200 text-sm ${
+                className={`w-full px-4 py-3 pr-10 rounded-xl border bg-[var(--bg-card)] text-[var(--text-primary)]
+                  placeholder:text-[var(--text-muted)] outline-none transition-all duration-200 text-sm ${
                   focused === 'password'
-                    ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                    : 'border-[#dde8dd]'
+                    ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                    : 'border-[var(--border-primary)]'
                 }`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8fba8f] hover:text-[#2ecc71] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-emerald-500 transition-colors"
               >
                 {showPassword ? (
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -174,16 +176,16 @@ const RegisterPage = () => {
                 )}
               </button>
             </div>
-            <p className="text-xs text-[#8fba8f] mt-1.5">
+            <p className="text-xs text-[var(--text-muted)] mt-1.5">
               Must be at least 8 characters
             </p>
           </div>
 
           {/* Divider */}
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-[#dde8dd]" />
-            <span className="text-xs text-[#8fba8f] font-medium">or</span>
-            <div className="flex-1 h-px bg-[#dde8dd]" />
+            <div className="flex-1 h-px bg-[var(--border-primary)]" />
+            <span className="text-xs text-[var(--text-muted)] font-medium">or</span>
+            <div className="flex-1 h-px bg-[var(--border-primary)]" />
           </div>
 
           {/* Submit Button */}
@@ -191,42 +193,42 @@ const RegisterPage = () => {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-[#2ecc71] hover:bg-[#27b860]
+            className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700
               active:scale-[0.98] text-white font-bold text-base
-              shadow-lg shadow-green-200 transition-all duration-200
+              shadow-lg shadow-emerald-500/20 transition-all duration-200
               disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </button>
 
           {/* Terms */}
-          <p className="text-center text-xs text-[#8fba8f]">
+          <p className="text-center text-xs text-[var(--text-muted)]">
             By creating an account, you agree to our{' '}
-            <a href="#" className="underline hover:text-[#2ecc71] transition-colors">
+            <a href="#" className="underline hover:text-emerald-600 transition-colors">
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href="#" className="underline hover:text-[#2ecc71] transition-colors">
+            <a href="#" className="underline hover:text-emerald-600 transition-colors">
               Privacy Policy
             </a>
           </p>
 
           {/* Login link */}
-          <p className="text-center text-sm text-[#5a7a5a]">
+          <p className="text-center text-sm text-[var(--text-secondary)]">
             Already have an account?{' '}
-            <Link to="/login" className="text-[#2ecc71] font-semibold hover:underline">
+            <Link to="/login" className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
               Log in
             </Link>
           </p>
         </div>
 
-        <p className="text-xs text-[#a0b8a0] mt-10">
-          © 2024 PregnaCare. All rights reserved.
+        <p className="text-xs text-[var(--text-muted)] mt-10">
+          © 2026 PregnaCare. All rights reserved.
         </p>
       </div>
 
       {/* ── Right Panel ────────────────────────────── */}
-      <div className="relative hidden lg:flex h-full w-full lg:w-1/2 xl:w-7/12 overflow-hidden rounded-tl-3xl rounded-bl-3xl">
+      <div className="relative hidden lg:flex h-full w-full lg:w-1/2 xl:w-7/12 overflow-hidden rounded-tl-3xl rounded-bl-3xl border-l border-[var(--border-primary)]">
 
         {/* Background Image */}
         <div
@@ -247,7 +249,7 @@ const RegisterPage = () => {
             {[...Array(5)].map((_, i) => (
               <svg
                 key={i}
-                className={`w-5 h-5 ${i < 4 ? 'text-[#2ecc71]' : 'text-[#2ecc71]/60'}`}
+                className={`w-5 h-5 ${i < 4 ? 'text-emerald-400' : 'text-emerald-400/60'}`}
                 fill="currentColor" viewBox="0 0 20 20"
               >
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -263,7 +265,7 @@ const RegisterPage = () => {
 
           {/* Author */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#2ecc71]/40 border-2 border-[#2ecc71] flex items-center justify-center text-white font-bold text-sm">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/40 border-2 border-emerald-400 flex items-center justify-center text-white font-bold text-sm">
               SJ
             </div>
             <div>
@@ -286,7 +288,7 @@ const RegisterPage = () => {
         <div className="absolute bottom-4 left-5 right-5 text-white">
           <div className="flex gap-1 mb-1">
             {[...Array(5)].map((_, i) => (
-              <svg key={i} className="w-3.5 h-3.5 text-[#2ecc71]" fill="currentColor" viewBox="0 0 20 20">
+              <svg key={i} className="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
               </svg>
             ))}

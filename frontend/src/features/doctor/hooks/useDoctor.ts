@@ -1,9 +1,6 @@
+import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  useAppDispatch,
-  useAppSelector,
-} from '../../../store/hooks';
-
+import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
 import {
   doctorApplyThunk,
   getMyStatusThunk,
@@ -11,38 +8,34 @@ import {
   clearDoctorState,
   clearDoctorError,
 } from '../store/doctor.slice';
-
-import { DoctorApplyFormData, DoctorApplyRequest } from '../types/doctor.types';
+import { DoctorApplyFormData } from '../types/doctor.types';
 
 export const useDoctor = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const {
-    application,
-    dashboard,
-    status,
-    name,
-    loading,
-    error,
-  } = useAppSelector((state) => state.doctor);
+  const { application, dashboard, status, name, loading, error } = useAppSelector(
+    (state) => state.doctor
+  );
 
-  const { user,token } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
 
   // Apply as Doctor
-  const apply = async (data: DoctorApplyFormData) => {
-    const result = await dispatch(doctorApplyThunk(data));
+  const apply = useCallback(
+    async (data: DoctorApplyFormData) => {
+      const result = await dispatch(doctorApplyThunk(data));
 
-    if (doctorApplyThunk.fulfilled.match(result)) {
-      navigate('/doctor/pending', { replace: true});
-    }
-  };
+      if (doctorApplyThunk.fulfilled.match(result)) {
+        navigate('/doctor/pending', { replace: true });
+      }
+    },
+    [dispatch, navigate]
+  );
 
   // Check Application Status
-  const checkStatusAndRedirect = async () => {
-
-    if(!token) return;
-    if(user?.role === 'admin'){
+  const checkStatusAndRedirect = useCallback(async () => {
+    if (!token) return;
+    if (user?.role === 'admin') {
       console.warn(`[useDoctor] checkStatusRedirect blocked - user is admin`);
       return;
     }
@@ -50,9 +43,9 @@ export const useDoctor = () => {
 
     if (!getMyStatusThunk.fulfilled.match(result)) return;
 
-    const { status } = result.payload;
+    const { status: appStatus } = result.payload;
 
-    switch (status) {
+    switch (appStatus) {
       case 'approved':
         navigate('/doctor/dashboard', { replace: true });
         break;
@@ -66,28 +59,31 @@ export const useDoctor = () => {
         navigate('/doctor/pending');
         break;
     }
-  };
+  }, [dispatch, navigate, token, user?.role]);
 
   // Doctor Dashboard
-  const fetchDashboard = async () => {
-     if (!user || user.role === 'admin') return;
+  const fetchDashboard = useCallback(async () => {
+    if (!user || user.role === 'admin') return;
     await dispatch(getMyDashboardThunk());
-  };
+  }, [dispatch, user?.role, Boolean(user)]);
 
   // Fetch Status
-  const fetchStatus = async () => {
+  const fetchStatus = useCallback(async () => {
     if (!user || user.role === 'admin') return;
     await dispatch(getMyStatusThunk());
-  };
+  }, [dispatch, user?.role, Boolean(user)]);
 
   // Logout
- const logout = () => {
-    sessionStorage.removeItem("accessToken");
-
+  const logout = useCallback(() => {
+    sessionStorage.removeItem('accessToken');
     dispatch(clearDoctorState());
+    navigate('/doctor/login', { replace: true });
+  }, [dispatch, navigate]);
 
-    navigate("/doctor/login", {replace: true});
-};
+  const clearError = useCallback(() => {
+    dispatch(clearDoctorError());
+  }, [dispatch]);
+
   return {
     application,
     dashboard,
@@ -102,7 +98,6 @@ export const useDoctor = () => {
     fetchDashboard,
     fetchStatus,
     logout,
-
-    clearError: () => dispatch(clearDoctorError()),
+    clearError,
   };
 };

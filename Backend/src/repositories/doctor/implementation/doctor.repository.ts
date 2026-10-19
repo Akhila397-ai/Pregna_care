@@ -1,41 +1,87 @@
 import { injectable } from "inversify";
 import { Types } from "mongoose";
-import { IDoctorRepository } from "../interface/iDoctor.repository.js";
-import { doctorApplicationData,DoctorApplicationDocument, DoctorApplicationWithUser} from "../../../types/doctor.js";
+import { IDoctorRepository } from "../interface/IDoctor.repository.js";
+import { doctorApplicationData, DoctorApplicationDocument, DoctorApplicationWithUser } from "../../../types/doctor.js";
 import doctorApplicationModel from "../../../models/doctorApplication.model.js";
-import DoctorProfileModel from '../../../models/doctor.model.js'
-import { ApplicationStatusUpdate } from "../../../types/doctor.js";
 import UserModel from "../../../models/User.model.js";
+import { BaseRepository } from "../../base/base.repository.js";
 
 @injectable()
-export class DoctorRepository implements IDoctorRepository {
-
+export class DoctorRepository extends BaseRepository<doctorApplicationData> implements IDoctorRepository {
+  constructor() {
+    super(doctorApplicationModel);
+  }
 
   async createApplication(data: doctorApplicationData): Promise<DoctorApplicationDocument> {
-      const doc = await doctorApplicationModel.create(data)
-      return doc.toObject() as DoctorApplicationDocument;
+    const doc = await doctorApplicationModel.create(data);
+    return doc.toObject() as DoctorApplicationDocument;
   }
-  
-  async findApplicationByUserId(
-  userId: string
-): Promise<DoctorApplicationWithUser | null> {
+
+  async findApplicationByUserId(userId: string): Promise<DoctorApplicationWithUser | null> {
     const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
-    const application = await doctorApplicationModel
-        .findOne({
-            $or: [{ userId: userObjectId }, { _id: userObjectId }],
-            isDeleted: false
-        })
-        .lean() as DoctorApplicationDocument | null;
+    const application = (await doctorApplicationModel
+      .findOne({
+        $or: [{ userId: userObjectId }, { _id: userObjectId }],
+        isDeleted: false,
+      })
+      .lean()) as DoctorApplicationDocument | null;
 
     if (!application) return null;
 
     const user = await UserModel.findOne({ _id: application.userId, isDeleted: false }).lean();
-
     if (!user) return null;
 
     return {
-        application,
-        user: {
+      application,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        fullName: user.fullName,
+        phone: user.phone,
+        imageUrl: user.imageUrl,
+        isBlocked: user.isBlocked,
+        isVerified: user.isVerified,
+        isDeleted: user.isDeleted,
+      },
+    };
+  }
+
+  async findApplicationById(id: string): Promise<DoctorApplicationDocument | null> {
+    return (await doctorApplicationModel.findOne({ _id: id }).lean()) as DoctorApplicationDocument | null;
+  }
+
+  async findVerifiedDoctors(): Promise<DoctorApplicationWithUser[]> {
+    const applications = (await doctorApplicationModel
+      .find({
+        status: "approved",
+        isBlocked: false,
+        isDeleted: false,
+      })
+      .sort({ createdAt: -1 })
+      .lean()) as DoctorApplicationDocument[];
+
+    if (!applications.length) return [];
+
+    const userIds = applications.map((app) => app.userId);
+    const users = await UserModel.find({
+      _id: { $in: userIds },
+      role: "doctor",
+      isVerified: true,
+      isBlocked: false,
+      isDeleted: false,
+    }).lean();
+
+    const userMap = new Map(users.map((u) => [u._id.toString(), u]));
+
+    return applications
+      .map((app): DoctorApplicationWithUser | null => {
+        const user = userMap.get(app.userId.toString());
+        if (!user) return null;
+
+        return {
+          application: app,
+          user: {
             _id: user._id,
             name: user.name,
             email: user.email,
@@ -45,57 +91,36 @@ export class DoctorRepository implements IDoctorRepository {
             isBlocked: user.isBlocked,
             isVerified: user.isVerified,
             isDeleted: user.isDeleted,
-        },
-    };
-}
-
-  async findApplicationById(id: string): Promise<DoctorApplicationDocument | null> {
-      const doc = await doctorApplicationModel
-      .findOne({_id:id})
-      .lean()
-
-      return doc as DoctorApplicationDocument | null
+          },
+        };
+      })
+      .filter((item): item is DoctorApplicationWithUser => item !== null);
   }
 
-  async updateApplicationStatus(id: string, status: "approved" | "rejected" | 'pending', adminId?: string, rejectionReason?: string): Promise<void> {
+  async updateApplicationStatus(
+    id: string,
+    status: "approved" | "rejected" | "pending",
+    adminId?: string,
+    rejectionReason?: string
+  ): Promise<void> {
+    const update: Partial<doctorApplicationData> = { status };
 
-      const update : Partial<doctorApplicationData> = { status};
-
-      if(status === 'approved' && adminId){
-        update.approvedBy = new Types.ObjectId(adminId)
-        update.approvedAt = new Date()
-      }
-       if (status === 'rejected' && rejectionReason) {
+    if (status === "approved" && adminId) {
+      update.approvedBy = new Types.ObjectId(adminId);
+      update.approvedAt = new Date();
+    }
+    if (status === "rejected" && rejectionReason) {
       update.rejectionReason = rejectionReason;
     }
-    await doctorApplicationModel.findByIdAndUpdate(
-      id,
-      {$set: update}
-    )
-
+    const app = await doctorApplicationModel.findByIdAndUpdate(id, { $set: update }, { new: true });
+    if (status === "approved" && app) {
+      await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "doctor", isVerified: true } });
+    } else if (status === "rejected" && app) {
+      await UserModel.findByIdAndUpdate(app.userId, { $set: { role: "user" } });
+    }
   }
 
   async updateApplication(id: string, data: Partial<doctorApplicationData>): Promise<void> {
-      await doctorApplicationModel.findByIdAndUpdate(
-        id,
-        {$set: data}
-      )
+    await doctorApplicationModel.findByIdAndUpdate(id, { $set: data });
   }
-
-  
-
-   //dcotorprofilr
-
-  //  async createProfile(data: DoctorApplicationDocument): Promise<DoctorApplicationDocument & { _id: Types.ObjectId; } > {
-  //      return await DoctorProfileModel.create(data)
-  //  }
-
-  //  async findProfileByUserId(userId: string): Promise<(DoctorApplicationDocument & { _id: Types.ObjectId; }) | null> {
-  //      return await DoctorProfileModel.findOne({userId: new Types.ObjectId(userId)})
-  //      .lean()
-  //  }
-
-  //  async findProfileById(id: string): Promise<(DoctorApplicationDocument & { _id: Types.ObjectId; }) | null> {
-  //      return await DoctorProfileModel.findById(id).lean()
-  //  }
 }

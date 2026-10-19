@@ -1,5 +1,4 @@
-import { NumericLiteral } from "typescript";
-import { DoctorStatus } from "../../doctor/types/doctor.types";
+import { DoctorStatus } from '../../doctor/types/doctor.types';
 
 export interface AdminLoginRequest {
     email: string;

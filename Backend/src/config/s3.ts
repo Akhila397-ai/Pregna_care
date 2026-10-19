@@ -1,15 +1,34 @@
 import { S3Client } from "@aws-sdk/client-s3";
-console.log('AWS_REGION:', process.env.AWS_REGION);
-console.log('AWS_ACCESS_KEY_ID:', process.env.AWS_ACCESS_KEY_ID?.slice(0,4));
+import { env } from "./env.js";
 
-export const s3Client = new S3Client({
-    region:   process.env.AWS_REGION!,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        
-    }
-    
-})
+export const isS3Configured = (): boolean => {
+  return Boolean(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY && env.AWS_S3_BUCKET);
+};
 
-export const S3_BUCKET = process.env.AWS_S3_BUCKET!;
+let cachedClient: S3Client | null = null;
+
+export const getS3Client = (): S3Client => {
+  if (cachedClient) return cachedClient;
+
+  const region = env.AWS_REGION;
+  const accessKeyId = env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = env.AWS_SECRET_ACCESS_KEY;
+
+  cachedClient = new S3Client({
+    region,
+    ...(accessKeyId && secretAccessKey
+      ? {
+          credentials: {
+            accessKeyId,
+            secretAccessKey,
+          },
+        }
+      : {}),
+  });
+
+  return cachedClient;
+};
+
+export const getS3Bucket = (): string => {
+  return env.AWS_S3_BUCKET || "";
+};

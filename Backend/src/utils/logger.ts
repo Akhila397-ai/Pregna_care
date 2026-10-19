@@ -1,9 +1,1 @@
-export class Logger {
-    static info(message: string):void {
-        console.log(`[INFO] ${message}`)
-    }
-    static error(message: string): void {
-        console.error(`[ERROR] ${message}`)
-    }
-}
-
+export { Logger, logger } from "../shared/logger/logger.js";

@@ -1,37 +1,34 @@
-import axiosInstance from "../../../api/axiosInstance";
-import { DocumentPresignedUrl, DocumentType, GetMappedDoctorsResponse, getMappedUsersResponse } from "../types/admin.types";
+import axiosInstance from '@/shared/api/axiosInstance';
+import {
+  DocumentPresignedUrl,
+  DocumentType,
+  GetMappedDoctorsResponse,
+  getMappedUsersResponse,
+} from '../types/admin.types';
 
 export const adminApi = {
+  getAllUsers: async (page: number, limit: number): Promise<getMappedUsersResponse> => {
+    const res = await axiosInstance.get(`/admin/users?page=${page}&limit=${limit}`);
+    return res.data;
+  },
 
-    getAllUsers: async(
-        page: number,
-        limit: number
-    ): Promise<getMappedUsersResponse> => {
-        const res = await axiosInstance.get(`/admin/users?page=${page}&limit=${limit}`)
-        return res.data
-    },
-    blockUser: async(userId: string): Promise<{ message: String}> =>  {
-        const res = await axiosInstance.patch(`/admin/users/${userId}/block`)
-        return res.data
-    },
+  blockUser: async (userId: string): Promise<{ message: string }> => {
+    const res = await axiosInstance.patch(`/admin/users/${userId}/block`);
+    return res.data;
+  },
 
-    unblockUser: async(userId: string): Promise<{message: string}> => {
-        const res = await axiosInstance.patch(`/admin/users/${userId}/unblock`);
-        return res.data
-    },
+  unblockUser: async (userId: string): Promise<{ message: string }> => {
+    const res = await axiosInstance.patch(`/admin/users/${userId}/unblock`);
+    return res.data;
+  },
 
-    deleteUser: async(userId: string): Promise<{message: string}> => {
-        const  res = await axiosInstance.delete(`/admin/users/${userId}`)
-        return res.data
-    },
+  deleteUser: async (userId: string): Promise<{ message: string }> => {
+    const res = await axiosInstance.delete(`/admin/users/${userId}`);
+    return res.data;
+  },
 
-    getAllDoctors: async (
-    page  = 1,
-    limit = 10
-  ): Promise<GetMappedDoctorsResponse> => {
-    const res = await axiosInstance.get(
-      `/admin/doctors?page=${page}&limit=${limit}`
-    );
+  getAllDoctors: async (page = 1, limit = 10): Promise<GetMappedDoctorsResponse> => {
+    const res = await axiosInstance.get(`/admin/doctors?page=${page}&limit=${limit}`);
     return res.data;
   },
 
@@ -40,30 +37,34 @@ export const adminApi = {
     return res.data;
   },
 
-rejectDoctor: async (doctorId: string,rejectionReason: string): Promise<{ message: string }> => {
-  const res = await axiosInstance.patch(
-    `/admin/doctors/${doctorId}/reject`,
-    { rejectionReason }
-  );
+  rejectDoctor: async (doctorId: string, rejectionReason: string): Promise<{ message: string }> => {
+    const res = await axiosInstance.patch(`/admin/doctors/${doctorId}/reject`, {
+      rejectionReason,
+    });
+    return res.data;
+  },
 
-  return res.data;
-},
-getDocumentUrl: async (
-  doctorId: string,
-  documentType: DocumentType
-): Promise<DocumentPresignedUrl> => {
-  const res = await axiosInstance.get(
-    `/admin/doctors/${doctorId}/document/${documentType}`
-  );
-  return res.data;;
-},
+  getDocumentUrl: async (
+    doctorId: string,
+    documentType: DocumentType
+  ): Promise<DocumentPresignedUrl> => {
+    const res = await axiosInstance.get(`/admin/doctors/${doctorId}/document/${documentType}`);
+    return res.data;
+  },
 
-verifyDoctor: async (doctorId: string,action: string,remarks?: string): Promise<{message: string}> => {
-const res = await axiosInstance.patch(`/admin/doctors/${doctorId}/verify`,{action,remarks})
-return res.data;
-},
+  verifyDoctor: async (
+    doctorId: string,
+    action: string,
+    remarks?: string
+  ): Promise<{ message: string }> => {
+    const res = await axiosInstance.patch(`/admin/doctors/${doctorId}/verify`, {
+      action,
+      remarks,
+    });
+    return res.data;
+  },
 
-   blockDoctor: async (doctorId: string): Promise<{ message: string }> => {
+  blockDoctor: async (doctorId: string): Promise<{ message: string }> => {
     const res = await axiosInstance.patch(`/admin/doctors/${doctorId}/block`);
     return res.data;
   },
@@ -73,10 +74,8 @@ return res.data;
     return res.data;
   },
 
-   deleteDoctor: async (doctorId: string): Promise<{ message: string }> => {
+  deleteDoctor: async (doctorId: string): Promise<{ message: string }> => {
     const res = await axiosInstance.delete(`/admin/doctors/${doctorId}`);
     return res.data;
   },
-
-
-}
+};

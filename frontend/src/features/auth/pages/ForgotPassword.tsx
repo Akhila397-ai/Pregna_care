@@ -1,5 +1,5 @@
 import { useState }  from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth }   from '../hooks/useAuth';
 import {
   validateForgotPassword,
@@ -10,6 +10,7 @@ import {
   OTPErrors,
   ResetPasswordErrors,
 } from '../utils/validation';
+import { ThemeToggle } from '@/shared/components/ThemeToggle';
 
 type Step = 'email' | 'otp' | 'reset' | 'success';
 
@@ -40,8 +41,8 @@ function PasswordStrength({ password }: { password: string }) {
   ].filter(Boolean).length;
 
   const labels     = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const colors     = ['', 'bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-[#2ecc71]'];
-  const textColors = ['', 'text-red-400', 'text-yellow-500', 'text-blue-400', 'text-[#2ecc71]'];
+  const colors     = ['', 'bg-rose-400', 'bg-amber-400', 'bg-sky-400', 'bg-emerald-500'];
+  const textColors = ['', 'text-rose-500', 'text-amber-500', 'text-sky-500', 'text-emerald-500'];
 
   return (
     <div className="mt-2">
@@ -50,7 +51,7 @@ function PasswordStrength({ password }: { password: string }) {
           <div
             key={i}
             className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-              i <= score ? colors[score] : 'bg-[#dde8dd]'
+              i <= score ? colors[score] : 'bg-[var(--border-primary)]'
             }`}
           />
         ))}
@@ -134,10 +135,10 @@ const ForgotPasswordPage = () => {
   };
 
   const handleResetPassword = async () => {
-    const errs = validateResetPassword(otp.join(''), password, confirmPassword);
+    const errs = validateResetPassword(password, confirmPassword);
     if (hasErrors(errs)) { setResetErrors(errs); return; }
     setResetErrors({});
-    await resetPassword(otp.join(''), password);
+    await resetPassword(password);
     setStep('success');
   };
 
@@ -161,21 +162,24 @@ const ForgotPasswordPage = () => {
   };
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col lg:flex-row font-sans bg-[#f5f7f0]">
+    <div className="h-screen overflow-hidden flex flex-col lg:flex-row font-sans bg-[var(--bg-primary)]">
 
       {/* ── Left Panel ─────────────────────────────── */}
-      <div className="flex flex-col px-8 py-6 lg:px-16 lg:py-10 w-full lg:w-1/2 xl:w-5/12 h-full overflow-y-auto">
+      <div className="flex flex-col px-8 py-6 lg:px-16 lg:py-10 w-full lg:w-1/2 xl:w-5/12 h-full overflow-y-auto bg-[var(--bg-surface)] transition-colors duration-200">
 
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-10">
-          <div className="w-10 h-10 rounded-2xl bg-[#d4f5e2] flex items-center justify-center shadow-sm">
-            <div className="w-6 h-6 rounded-md bg-[#2ecc71] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor">
-                <path d="M19 11h-6V5a1 1 0 00-2 0v6H5a1 1 0 000 2h6v6a1 1 0 002 0v-6h6a1 1 0 000-2z"/>
-              </svg>
+        {/* Logo & Theme Toggle */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center shadow-sm">
+              <div className="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor">
+                  <path d="M19 11h-6V5a1 1 0 00-2 0v6H5a1 1 0 000 2h6v6a1 1 0 002 0v-6h6a1 1 0 000-2z"/>
+                </svg>
+              </div>
             </div>
+            <span className="text-[var(--text-primary)] font-bold text-xl tracking-tight">PregnaCare</span>
           </div>
-          <span className="text-[#1a2e1a] font-bold text-xl tracking-tight">PregnaCare</span>
+          <ThemeToggle />
         </div>
 
         {/* Back Button */}
@@ -186,7 +190,7 @@ const ForgotPasswordPage = () => {
                 ? navigate('/login')
                 : setStep(steps[currentIdx - 1] as Step)
             }
-            className="flex items-center gap-1.5 text-sm text-[#5a7a5a] hover:text-[#2ecc71] transition-colors mb-6 w-fit"
+            className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-emerald-500 transition-colors mb-6 w-fit"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
@@ -201,7 +205,7 @@ const ForgotPasswordPage = () => {
             <div
               key={s}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i <= currentIdx ? 'bg-[#2ecc71] w-8' : 'bg-[#dde8dd] w-4'
+                i <= currentIdx ? 'bg-emerald-500 w-8' : 'bg-[var(--border-primary)] w-4'
               }`}
             />
           ))}
@@ -209,10 +213,10 @@ const ForgotPasswordPage = () => {
 
         {/* Heading */}
         <div className="mb-8">
-          <h1 className="text-4xl lg:text-5xl font-extrabold text-[#1a2e1a] leading-tight mb-3 whitespace-pre-line">
+          <h1 className="text-4xl lg:text-5xl font-extrabold text-[var(--text-primary)] leading-tight mb-3 whitespace-pre-line">
             {heading}
           </h1>
-          <p className="text-[#5a7a5a] text-base leading-relaxed max-w-xs">{sub}</p>
+          <p className="text-[var(--text-secondary)] text-base leading-relaxed max-w-xs">{sub}</p>
         </div>
 
         {/* ── STEP: EMAIL ──────────────────────────── */}
@@ -220,16 +224,16 @@ const ForgotPasswordPage = () => {
           <div className="space-y-5 flex-1">
 
             {/* API error */}
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-rose-500 text-sm">{error}</p>}
 
             <div>
-              <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                 Email Address
               </label>
 
               {/* ← per field error above input */}
               {emailErrors.email && (
-                <p className="text-red-500 text-xs mb-1">{emailErrors.email}</p>
+                <p className="text-rose-500 text-xs mb-1">{emailErrors.email}</p>
               )}
 
               <div className="relative">
@@ -244,18 +248,18 @@ const ForgotPasswordPage = () => {
                   onFocus={() => setFocused('email')}
                   onBlur={() => setFocused(null)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
-                  className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white
-                    text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
+                  className={`w-full px-4 py-3 pr-10 rounded-xl border bg-[var(--bg-card)]
+                    text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none
                     transition-all duration-200 text-sm ${
                     emailErrors.email
-                      ? 'border-red-400'
+                      ? 'border-rose-400'
                       : focused === 'email'
-                      ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                      : 'border-[#dde8dd]'
+                      ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                      : 'border-[var(--border-primary)]'
                   }`}
                 />
                 <svg
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8fba8f]"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]"
                   fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round"
@@ -269,19 +273,19 @@ const ForgotPasswordPage = () => {
               type="button"
               onClick={handleSendOtp}
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-[#2ecc71] hover:bg-[#27b860]
+              className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700
                 active:scale-[0.98] text-white font-bold text-base
-                shadow-lg shadow-green-200 transition-all duration-200
+                shadow-lg shadow-emerald-500/20 transition-all duration-200
                 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? 'Sending...' : 'Send Verification Code'}
             </button>
 
-            <p className="text-center text-sm text-[#5a7a5a]">
+            <p className="text-center text-sm text-[var(--text-secondary)]">
               Remembered it?{' '}
-              <a href="/login" className="text-[#2ecc71] font-semibold hover:underline">
+              <Link to="/login" className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
                 Log in
-              </a>
+              </Link>
             </p>
           </div>
         )}
@@ -291,16 +295,16 @@ const ForgotPasswordPage = () => {
           <div className="space-y-6 flex-1">
 
             {/* API error */}
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-rose-500 text-sm">{error}</p>}
 
             <div>
-              <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                 Enter 6-digit code
               </label>
 
               {/* ← per field error above OTP inputs */}
               {otpErrors.otp && (
-                <p className="text-red-500 text-xs mb-3">{otpErrors.otp}</p>
+                <p className="text-rose-500 text-xs mb-3">{otpErrors.otp}</p>
               )}
 
               <div className="flex gap-2 sm:gap-3">
@@ -317,15 +321,15 @@ const ForgotPasswordPage = () => {
                     onFocus={() => setFocused(`otp-${idx}`)}
                     onBlur={() => setFocused(null)}
                     style={{ width: '2.75rem', height: '3.25rem' }}
-                    className={`text-center text-lg font-bold rounded-xl border-2
-                      bg-white text-[#1a2e1a] outline-none transition-all duration-200 ${
+                    className={`text-center text-lg font-bold rounded-xl border
+                      bg-[var(--bg-card)] text-[var(--text-primary)] outline-none transition-all duration-200 ${
                       otpErrors.otp
-                        ? 'border-red-400 bg-red-50'
+                        ? 'border-rose-400 bg-rose-50/20'
                         : focused === `otp-${idx}`
-                        ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
+                        ? 'border-emerald-500 ring-2 ring-emerald-500/20'
                         : digit
-                        ? 'border-[#2ecc71] bg-[#f0fdf4]'
-                        : 'border-[#dde8dd]'
+                        ? 'border-emerald-500 bg-emerald-50/20'
+                        : 'border-[var(--border-primary)]'
                     }`}
                   />
                 ))}
@@ -336,20 +340,20 @@ const ForgotPasswordPage = () => {
               type="button"
               onClick={handleVerifyOtp}
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-[#2ecc71] hover:bg-[#27b860]
+              className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700
                 active:scale-[0.98] text-white font-bold text-base
-                shadow-lg shadow-green-200 transition-all duration-200
+                shadow-lg shadow-emerald-500/20 transition-all duration-200
                 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? 'Verifying...' : 'Verify Code'}
             </button>
 
-            <p className="text-center text-sm text-[#5a7a5a]">
+            <p className="text-center text-sm text-[var(--text-secondary)]">
               Didn't receive the code?{' '}
               <button
                 type="button"
                 onClick={handleSendOtp}
-                className="text-[#2ecc71] font-semibold hover:underline"
+                className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
               >
                 Resend
               </button>
@@ -362,17 +366,17 @@ const ForgotPasswordPage = () => {
           <div className="space-y-5 flex-1">
 
             {/* API error */}
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-rose-500 text-sm">{error}</p>}
 
             {/* New Password */}
             <div>
-              <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                 New Password
               </label>
 
               {/* ← per field error above input */}
               {resetErrors.password && (
-                <p className="text-red-500 text-xs mb-1">{resetErrors.password}</p>
+                <p className="text-rose-500 text-xs mb-1">{resetErrors.password}</p>
               )}
 
               <div className="relative">
@@ -386,20 +390,20 @@ const ForgotPasswordPage = () => {
                   }}
                   onFocus={() => setFocused('password')}
                   onBlur={() => setFocused(null)}
-                  className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white
-                    text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
+                  className={`w-full px-4 py-3 pr-10 rounded-xl border bg-[var(--bg-card)]
+                    text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none
                     transition-all duration-200 text-sm ${
                     resetErrors.password
-                      ? 'border-red-400'
+                      ? 'border-rose-400'
                       : focused === 'password'
-                      ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                      : 'border-[#dde8dd]'
+                      ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                      : 'border-[var(--border-primary)]'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8fba8f] hover:text-[#2ecc71] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-emerald-500 transition-colors"
                 >
                   <EyeIcon open={showPassword} />
                 </button>
@@ -409,13 +413,13 @@ const ForgotPasswordPage = () => {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-semibold text-[#2d4a2d] mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--text-secondary)] mb-1.5">
                 Confirm Password
               </label>
 
               {/* ← per field error above input */}
               {resetErrors.confirmPassword && (
-                <p className="text-red-500 text-xs mb-1">{resetErrors.confirmPassword}</p>
+                <p className="text-rose-500 text-xs mb-1">{resetErrors.confirmPassword}</p>
               )}
 
               <div className="relative">
@@ -429,33 +433,38 @@ const ForgotPasswordPage = () => {
                   }}
                   onFocus={() => setFocused('confirm')}
                   onBlur={() => setFocused(null)}
-                  className={`w-full px-4 py-3 pr-10 rounded-xl border-2 bg-white
-                    text-[#1a2e1a] placeholder-[#b0c8b0] outline-none
+                  className={`w-full px-4 py-3 pr-10 rounded-xl border bg-[var(--bg-card)]
+                    text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none
                     transition-all duration-200 text-sm ${
                     resetErrors.confirmPassword
-                      ? 'border-red-400'
+                      ? 'border-rose-400'
                       : focused === 'confirm'
-                      ? 'border-[#2ecc71] shadow-[0_0_0_3px_rgba(46,204,113,0.15)]'
-                      : 'border-[#dde8dd]'
+                      ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+                      : 'border-[var(--border-primary)]'
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8fba8f] hover:text-[#2ecc71] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-emerald-500 transition-colors"
                 >
                   <EyeIcon open={showConfirm} />
                 </button>
               </div>
+              {confirmPassword && confirmPassword !== password && (
+                <p className="text-rose-500 text-xs mt-1">
+                  Passwords do not match
+                </p>
+              )}
             </div>
 
             <button
               type="button"
               onClick={handleResetPassword}
               disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-[#2ecc71] hover:bg-[#27b860]
+              className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700
                 active:scale-[0.98] text-white font-bold text-base
-                shadow-lg shadow-green-200 transition-all duration-200
+                shadow-lg shadow-emerald-500/20 transition-all duration-200
                 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? 'Resetting...' : 'Reset Password'}
@@ -466,32 +475,32 @@ const ForgotPasswordPage = () => {
         {/* ── STEP: SUCCESS ────────────────────────── */}
         {step === 'success' && (
           <div className="flex-1 flex flex-col items-start gap-6">
-            <div className="w-20 h-20 rounded-full bg-[#d4f5e2] flex items-center justify-center shadow-md">
-              <svg className="w-10 h-10 text-[#2ecc71]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <div className="w-20 h-20 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 flex items-center justify-center shadow-md">
+              <svg className="w-10 h-10 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
               </svg>
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-[#2d4a2d]">Password updated for</p>
-              <p className="text-base font-bold text-[#1a2e1a]">{email}</p>
+              <p className="text-sm font-semibold text-[var(--text-secondary)]">Password updated for</p>
+              <p className="text-base font-bold text-[var(--text-primary)]">{email}</p>
             </div>
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="w-full py-3.5 rounded-xl bg-[#2ecc71] hover:bg-[#27b860]
+              className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700
                 active:scale-[0.98] text-white font-bold text-base
-                shadow-lg shadow-green-200 transition-all duration-200"
+                shadow-lg shadow-emerald-500/20 transition-all duration-200"
             >
               Back to Login
             </button>
           </div>
         )}
 
-        <p className="text-xs text-[#a0b8a0] mt-10">© 2024 PregnaCare. All rights reserved.</p>
+        <p className="text-xs text-[var(--text-muted)] mt-10">© 2026 PregnaCare. All rights reserved.</p>
       </div>
 
       {/* ── Right Panel ────────────────────────────── */}
-      <div className="relative hidden lg:flex h-full w-full lg:w-1/2 xl:w-7/12 overflow-hidden rounded-tl-3xl rounded-bl-3xl">
+      <div className="relative hidden lg:flex h-full w-full lg:w-1/2 xl:w-7/12 overflow-hidden rounded-tl-3xl rounded-bl-3xl border-l border-[var(--border-primary)]">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url('https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=1200&q=80')` }}
@@ -500,7 +509,7 @@ const ForgotPasswordPage = () => {
         <div className="absolute bottom-12 left-10 right-10 text-white">
           <div className="flex gap-1 mb-4">
             {[...Array(5)].map((_, i) => (
-              <svg key={i} className="w-5 h-5 text-[#2ecc71]" fill="currentColor" viewBox="0 0 20 20">
+              <svg key={i} className="w-5 h-5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
               </svg>
             ))}
@@ -510,7 +519,7 @@ const ForgotPasswordPage = () => {
             It feels like having a caring friend by your side."
           </blockquote>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#2ecc71]/40 border-2 border-[#2ecc71] flex items-center justify-center text-white font-bold text-sm">SJ</div>
+            <div className="w-10 h-10 rounded-full bg-emerald-500/40 border-2 border-emerald-400 flex items-center justify-center text-white font-bold text-sm">SJ</div>
             <div>
               <p className="font-semibold text-white text-sm">Sarah Jenkins</p>
               <p className="text-white/60 text-xs">New Mother</p>
@@ -529,7 +538,7 @@ const ForgotPasswordPage = () => {
         <div className="absolute bottom-4 left-5 right-5 text-white">
           <div className="flex gap-1 mb-1">
             {[...Array(5)].map((_, i) => (
-              <svg key={i} className="w-3.5 h-3.5 text-[#2ecc71]" fill="currentColor" viewBox="0 0 20 20">
+              <svg key={i} className="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
               </svg>
             ))}
