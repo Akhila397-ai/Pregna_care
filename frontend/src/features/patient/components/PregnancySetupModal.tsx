@@ -3,6 +3,12 @@ import { authApi } from '@/features/auth/api/auth.api';
 import { PregnancyDetailsResponse } from '@/features/auth/types/auth.types';
 import { validatePregnancyLmp, hasErrors } from '../utils/validation';
 
+
+const isRecord = (
+  value: unknown
+): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
 interface PregnancySetupModalProps {
   isOpen: boolean;
   initialLmp?: string;
@@ -42,13 +48,25 @@ export const PregnancySetupModal: React.FC<PregnancySetupModalProps> = ({
       const response = await authApi.setPregnancyLMP({ lmpDate });
       onSuccess(response);
       onClose();
-    } catch (err: any) {
-      const errorMessage =
-        err?.userFriendlyMessage ||
-        err?.response?.data?.message ||
-        "We couldn't save your pregnancy information. Please try again.";
-      setError(errorMessage);
-    } finally {
+    } catch (err: unknown) {
+  const error = isRecord(err) ? err : {};
+  const response = isRecord(error.response) ? error.response : {};
+  const responseData = isRecord(response.data) ? response.data : {};
+
+  const friendlyMessage = error.userFriendlyMessage;
+  const apiMessage = responseData.message;
+
+  const errorMessage =
+    (typeof friendlyMessage === 'string' && friendlyMessage.trim()
+      ? friendlyMessage
+      : undefined) ??
+    (typeof apiMessage === 'string' && apiMessage.trim()
+      ? apiMessage
+      : undefined) ??
+    "We couldn't save your pregnancy information. Please try again.";
+
+  setError(errorMessage);
+} finally {
       setLoading(false);
     }
   };

@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import { IPrimaryDoctorRelationshipDocument, RelationshipEvent } from "../../../models/primaryDoctorRelationship.model.js";
 
 export interface IPrimaryDoctorRepository {

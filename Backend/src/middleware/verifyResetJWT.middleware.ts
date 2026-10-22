@@ -27,7 +27,7 @@ export const verifyResetJWT = (
     }
 
     const token = authHeader.split(" ")[1];
-    const decodedRaw = jwt.decode(token);
+   
    
 
     const resetSecret = process.env.JWT_RESET_SECRET || process.env.JWT_SECRET;

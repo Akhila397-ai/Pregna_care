@@ -1,4 +1,3 @@
-import { UserRole } from "./roles.ts";
 import { JWTPayload } from "./roles.ts";
 
 declare global {

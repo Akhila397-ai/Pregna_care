@@ -12,8 +12,8 @@ import { generateOTP } from "../../../utils/generateOtp.js";
 import { generateAccessToken, generateRefreshToken, generateResetToken } from "../../../utils/jwt.js";
 import { HttpResponse } from "../../../constants/messages.constant.js";
 import { OTPPurpose } from "../../../types/otp.js";
+import { OTP_EXPIRY_MS } from "../../../constants/otp.constant.js";
 import {
-  AppError,
   ConflictError,
   UnauthorizedError,
   ForbiddenError,
@@ -38,6 +38,7 @@ import {
 import { ROLE_PORTAL_NAMES, UserRole } from "../../../types/roles.js";
 import { EmergencyContactRelationship, onboardingType } from "../../../types/user.js";
 import { toEmergencyContactDTO } from "../../../mapper/user.mapper.js";
+
 
 @injectable()
 export class AuthService implements IAUthService {
@@ -538,11 +539,17 @@ export class AuthService implements IAUthService {
     const otp = await this.otpRepository.findActiveOtp(userId, purpose);
 
     if (!otp) throw new ValidationError(HttpResponse.OTP_EXPIRED_OR_INVALID);
+    if(Date.now() - otp.createdAt.getTime() >= OTP_EXPIRY_MS){
+      throw new ValidationError(HttpResponse.OTP_EXPIRED_OR_INVALID)
+    }
 
     const updated = await this.otpRepository.incrementOTPAttempts(otp._id.toString());
     if (!updated) {
       throw new ValidationError(HttpResponse.OTP_EXPIRED_OR_INVALID);
     }
+     if (Date.now() - updated.createdAt.getTime() >= OTP_EXPIRY_MS) {
+    throw new ValidationError(HttpResponse.OTP_EXPIRED_OR_INVALID);
+  }
 
     if (updated.attempts > 3) {
       await this.otpRepository.markOtpAsUsed(otp._id.toString());

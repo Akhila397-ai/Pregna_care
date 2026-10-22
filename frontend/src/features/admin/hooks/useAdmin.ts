@@ -14,6 +14,7 @@ import {
   verifyDoctorThunk,
   clearAdminData,
 } from '@/app/store/slices/admin.slice';
+import { useCallback } from 'react';
 
 export const useAdmin = () => {
   const dispatch = useAppDispatch();
@@ -32,10 +33,12 @@ export const useAdmin = () => {
   const { user } = useAppSelector((state) => state.auth);
 
   // ── User Management ───────────────────────────
-  const getUsers = (page = 1, limit = 10) => {
-    dispatch(getUsersThunk({ page, limit }));
-  };
-
+  const getUsers = useCallback(
+    (page = 1, limit = 10)=> {
+      dispatch(getUsersThunk({page,limit}))
+    },
+    [dispatch]
+  );
   const blockUser = (userId: string) => {
     dispatch(blockUserThunk(userId));
   };
@@ -49,9 +52,12 @@ export const useAdmin = () => {
   };
 
   // ── Doctor Management ─────────────────────────
-  const getDoctors = (page = 1, limit = 10) => {
-    dispatch(getDoctorsThunk({ page, limit }));
-  };
+  const getDoctors = useCallback(
+    (page=1, limit = 10) => {
+      dispatch(getDoctorsThunk({page,limit}))
+    },
+    [dispatch]
+  );
 
   const verifyDoctor = (
     doctorId: string,

@@ -19,6 +19,8 @@ export const useDoctor = () => {
   );
 
   const { user, token } = useAppSelector((state) => state.auth);
+  const hasUser = Boolean(user)
+  const userRole = user?.role
 
   // Apply as Doctor
   const apply = useCallback(
@@ -63,15 +65,15 @@ export const useDoctor = () => {
 
   // Doctor Dashboard
   const fetchDashboard = useCallback(async () => {
-    if (!user || user.role === 'admin') return;
+   if(!hasUser || userRole === 'admin') return
     await dispatch(getMyDashboardThunk());
-  }, [dispatch, user?.role, Boolean(user)]);
+  }, [dispatch, hasUser, userRole]);
 
   // Fetch Status
   const fetchStatus = useCallback(async () => {
-    if (!user || user.role === 'admin') return;
+    if(!hasUser || userRole === 'admin') return;
     await dispatch(getMyStatusThunk());
-  }, [dispatch, user?.role, Boolean(user)]);
+  }, [dispatch, userRole, hasUser]);
 
   // Logout
   const logout = useCallback(() => {

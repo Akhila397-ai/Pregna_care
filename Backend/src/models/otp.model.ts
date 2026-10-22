@@ -1,8 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { otpData } from "../types/otp.js";
-
 export interface IOTPDocument extends otpData, Document {}
-
+import { OTP_EXPIRY_SECONDS } from "../constants/otp.constant.js";
 
 const OTPSchema = new Schema<IOTPDocument>(
     {
@@ -30,7 +29,9 @@ const OTPSchema = new Schema<IOTPDocument>(
         },
         createdAt: {
             type: Date,
-            default: Date.now, expires: 300
+            default: Date.now,
+            expires: OTP_EXPIRY_SECONDS,
+        
         }
     }
 );

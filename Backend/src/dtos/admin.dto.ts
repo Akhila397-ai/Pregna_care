@@ -12,6 +12,7 @@ export interface IUserMappedData {
   imageUrl?: string;
   mobileNumber?: string;
   createdAt?: Date;
+
 }
 
 export interface GetMappedUsersResponse {

@@ -26,7 +26,7 @@ const DoctorPendingPage = () => {
       return;
     }
     checkStatusAndRedirect();
-  }, [user]);
+  }, [user?.role,navigate,checkStatusAndRedirect]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center font-sans px-6 transition-colors duration-200 relative">
@@ -123,4 +123,4 @@ const DoctorPendingPage = () => {
   );
 };
 
-export default DoctorPendingPage;
+export default DoctorPendingPage;

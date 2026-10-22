@@ -17,7 +17,7 @@ const AdminDashboardPage = () => {
   useEffect(() => {
     getUsers(1, 10);
     getDoctors(1, 10);
-  }, []);
+  }, [getUsers, getDoctors]);
 
   const pendingDoctors = doctors.filter((d) => d.status === 'pending').length;
   const approvedDoctors = doctors.filter((d) => d.status === 'approved').length;

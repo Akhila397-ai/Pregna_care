@@ -23,26 +23,18 @@ let EmailService = class EmailService {
             return null;
         }
         if (!this.transporter) {
-            if (host) {
-                this.transporter = nodemailer.createTransport({
-                    host,
-                    port: port || 587,
-                    secure,
-                    auth: {
-                        user,
-                        pass,
-                    },
-                });
-            }
-            else {
-                this.transporter = nodemailer.createTransport({
-                    service: "gmail",
-                    auth: {
-                        user,
-                        pass,
-                    },
-                });
-            }
+            this.transporter = nodemailer.createTransport({
+                host: host || "smtp.gmail.com",
+                port: port || 587,
+                secure,
+                connectionTimeout: 10_000,
+                greetingTimeout: 10_000,
+                socketTimeout: 20_000,
+                auth: {
+                    user,
+                    pass,
+                },
+            });
         }
         return this.transporter;
     }

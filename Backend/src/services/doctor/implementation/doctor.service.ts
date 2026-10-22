@@ -32,7 +32,6 @@ import {
   SubmitDoctorReportDTO,
   DoctorReportDTO,
 } from '../../../dtos/doctor.dto.js';
-import doctorApplicationModel from '../../../models/doctorApplication.model.js';
 import UserModel from '../../../models/User.model.js';
 import {
   uploadToS3,

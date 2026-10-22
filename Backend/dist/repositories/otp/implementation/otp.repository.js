@@ -11,6 +11,7 @@ import { injectable } from "inversify";
 import { Types } from "mongoose";
 import otpModel from "../../../models/otp.model.js";
 import { BaseRepository } from "../../base/base.repository.js";
+import { OTP_EXPIRY_MS } from "../../../constants/otp.constant.js";
 let OtpRepository = class OtpRepository extends BaseRepository {
     constructor() {
         super(otpModel);
@@ -19,8 +20,9 @@ let OtpRepository = class OtpRepository extends BaseRepository {
         return await this.create(data);
     }
     async findActiveOtp(userId, purpose) {
+        const validAfter = new Date(Date.now() - OTP_EXPIRY_MS);
         return await otpModel
-            .findOne({ userId, purpose, isUsed: false })
+            .findOne({ userId, purpose, isUsed: false, createdAt: { $gt: validAfter } })
             .sort({ createdAt: -1 })
             .lean();
     }

@@ -107,7 +107,9 @@ const UserSchema = new Schema<IUserDocument>(
       ref: 'User',
       default: null,
     },
+    
   },
+  
   { timestamps: true}
 )
 

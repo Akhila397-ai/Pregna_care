@@ -9,6 +9,7 @@ import {
   SetOnboardingRequest,
 } from '@/features/auth/types/auth.types';
 
+
 interface AuthState {
   user: UserAuthResponse | null;
   token: string | null;
@@ -32,6 +33,42 @@ const initialState: AuthState = {
   otpPurpose: null,
   initialized: false,
 };
+type UnknownRecord = Record<string, unknown>;
+
+const isRecord = (value:unknown): value is UnknownRecord => {
+  return typeof value === 'object' && value !== null;
+}
+
+const getAuthErrorMessage = (
+  error: unknown,
+  fallback: string
+): string => {
+  if(!isRecord(error)){
+    return fallback
+  }
+
+  const response = isRecord(error.response)
+  ?error.response
+  : undefined
+
+  const responseData  = 
+  response && isRecord(response.data)
+  ? response.data
+  : undefined
+
+  const candidates = [
+    error.userFriendlyMessage,
+    responseData?.message,
+    responseData?.error
+  ];
+
+  return(
+    candidates.find(
+      (value): value is string => 
+        typeof value === 'string' && value.trim().length > 0
+    ) ?? fallback
+  )
+}
 
 // ── Thunks ────────────────────────────────────
 
@@ -41,12 +78,12 @@ export const registerThunk = createAsyncThunk(
     try {
       const res = await authApi.register(data);
       return { ...res, email: data.email };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error?.userFriendlyMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        'Registration failed. Please check your details.'
+        getAuthErrorMessage(
+          error,
+          'Registration failed. Please check your details.'
+        )
       );
     }
   }
@@ -57,12 +94,12 @@ export const verifyOTPThunk = createAsyncThunk(
   async (data: VerifyOTPRequest, { rejectWithValue }) => {
     try {
       return await authApi.verifyOTP(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error?.userFriendlyMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        'Verification failed. Please check the code.'
+       getAuthErrorMessage(
+        error,
+       'Verification failed. Please check the code.'
+       )
       );
     }
   }
@@ -73,12 +110,12 @@ export const loginThunk = createAsyncThunk(
   async (data: LoginRequest, { rejectWithValue }) => {
     try {
       return await authApi.login(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error?.userFriendlyMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
-        'Email or password is incorrect.'
+       getAuthErrorMessage(
+        error,
+         'Email or password is incorrect.'
+       )
       );
     }
   }
@@ -90,12 +127,12 @@ export const forgotPasswordThunk = createAsyncThunk(
     try {
       const res = await authApi.forgotPassword(data);
       return { ...res, email: data.email };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error?.userFriendlyMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
+        getAuthErrorMessage(
+          error,
         'Failed to send reset code. Please try again.'
+        )
       );
     }
   }
@@ -112,12 +149,12 @@ export const resetPasswordThunk = createAsyncThunk(
   ) => {
     try {
       return await authApi.resetPassword(data.newPassword, data.resetToken);
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error?.userFriendlyMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
+       getAuthErrorMessage(
+        error,
         'Password reset failed. Please try again.'
+       )
       );
     }
   }
@@ -128,12 +165,12 @@ export const resendOTPThunk = createAsyncThunk(
   async (data: { email: string; purpose: string }, { rejectWithValue }) => {
     try {
       return await authApi.resendOTP(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error?.userFriendlyMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
+       getAuthErrorMessage(
+        error,
         'Failed to resend verification code.'
+       )
       );
     }
   }
@@ -142,12 +179,12 @@ export const resendOTPThunk = createAsyncThunk(
 export const refreshTokenThunk = createAsyncThunk('auth/refreshToken', async (_, { rejectWithValue }) => {
   try {
     return await authApi.refreshToken();
-  } catch (error: any) {
+  } catch (error: unknown) {
     return rejectWithValue(
-      error?.userFriendlyMessage ||
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
+      getAuthErrorMessage(
+        error,
       'Session expired. Please log in again.'
+      )
     );
   }
 });
@@ -158,12 +195,12 @@ export const setOnboardingThunk = createAsyncThunk(
     try {
       await authApi.setOnboarding(data);
       return data.onboardingType;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return rejectWithValue(
-        error?.userFriendlyMessage ||
-        error?.response?.data?.message ||
-        error?.response?.data?.error ||
+       getAuthErrorMessage(
+        error,
         'Failed to update onboarding journey.'
+       )
       );
     }
   }
@@ -173,12 +210,12 @@ export const getMeThunk = createAsyncThunk('auth/getMe', async (_, { rejectWithV
   try {
     const result = await authApi.getMe();
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     return rejectWithValue(
-      error?.userFriendlyMessage ||
-      error?.response?.data?.message ||
-      error?.response?.data?.error ||
+     getAuthErrorMessage(
+      error,
       'Session expired.'
+     )
     );
   }
 });

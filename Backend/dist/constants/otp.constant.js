@@ -1,0 +1,3 @@
+export const OTP_EXPIRY_SECONDS = 300;
+export const OTP_EXPIRY_MS = OTP_EXPIRY_SECONDS * 1000;
+//# sourceMappingURL=otp.constant.js.map

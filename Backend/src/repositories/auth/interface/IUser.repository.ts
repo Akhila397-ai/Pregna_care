@@ -1,5 +1,5 @@
 import { IBaseRepository } from "../../base/IBase.repository.js";
-import { EmergencyContactRelationship, IEmergencyContact, onboardingType, userData } from "../../../types/user.js";
+import { EmergencyContactRelationship, onboardingType, userData } from "../../../types/user.js";
 import { Types } from "mongoose";
 
 export interface IUserRepository extends IBaseRepository<userData> {

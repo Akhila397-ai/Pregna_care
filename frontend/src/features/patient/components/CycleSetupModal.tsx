@@ -3,6 +3,12 @@ import { authApi } from '@/features/auth/api/auth.api';
 import { CycleDetailsResponse } from '@/features/auth/types/auth.types';
 import { validateCycleInfo, hasErrors } from '../utils/validation';
 
+const isRecord = (
+  value: unknown
+): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null
+}
+
 interface CycleSetupModalProps {
   isOpen: boolean;
   initialDate?: string;
@@ -55,11 +61,23 @@ export const CycleSetupModal: React.FC<CycleSetupModalProps> = ({
       });
       onSuccess(response);
       onClose();
-    } catch (err: any) {
-      const errorMessage =
-        err?.userFriendlyMessage ||
-        err?.response?.data?.message ||
-        'Failed to save cycle information. Please try again.';
+    } catch (err: unknown) {
+      
+        const error = isRecord(err) ? err : {};
+        const response = isRecord(error.response) ? error.response : {};
+        const responseData = isRecord(response.data) ? response.data : {};
+
+        const friendlyMessage = error.userFriendlyMessage;
+        const apiMessage = responseData.message;
+
+        const errorMessage = 
+        (typeof friendlyMessage === 'string' && friendlyMessage.trim()
+      ? friendlyMessage
+       : undefined) ??
+       (typeof apiMessage === 'string' && apiMessage.trim()
+      ? apiMessage
+      : undefined) ??
+     'Failed to save cycle information. Please try again.';
       setError(errorMessage);
     } finally {
       setLoading(false);

@@ -13,6 +13,26 @@ import {
 import { doctorApi } from '@/features/doctor/api/doctor.api';
 import { VerifiedDoctor } from '@/features/doctor/types/doctor.types';
 
+
+const isRecord = (
+  value: unknown
+): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null;
+};
+
+const isEmergencyContactErrors = (
+  value: unknown
+): value is EmergencyContactErrors => {
+  if (!isRecord(value)) return false;
+
+  return (
+    (value.name === undefined || typeof value.name === 'string') &&
+    (value.phoneNumber === undefined ||
+      typeof value.phoneNumber === 'string') &&
+    (value.relationship === undefined ||
+      typeof value.relationship === 'string')
+  );
+};
 interface SOSModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -57,11 +77,11 @@ export const SOSModal: React.FC<SOSModalProps> = ({ isOpen, onClose }) => {
       if (docRes.status === 'fulfilled' && docRes.value?.data?.primaryDoctor) {
         setPrimaryDoctor(docRes.value.data.primaryDoctor);
       }
-    } catch (err: unknown) {
-      console.error('Failed to load emergency contacts:', err);
-    } finally {
-      setLoading(false);
-    }
+   }  catch(err: unknown){
+    console.error('Failed to load emergency contacts',err)
+   } finally {
+    setLoading(false)
+   }
   }, [isOpen]);
 
   useEffect(() => {
@@ -129,18 +149,33 @@ export const SOSModal: React.FC<SOSModalProps> = ({ isOpen, onClose }) => {
       setEditingContactId(null);
       setName('');
       setPhoneNumber('');
-    } catch (err: any) {
-      const msg =
-        err?.userFriendlyMessage ||
-        err?.response?.data?.message ||
-        'Failed to save emergency contact.';
-      setError(msg);
-      if (err?.fieldErrors) {
-        setFieldErrors(err.fieldErrors);
-      }
-    } finally {
-      setSaving(false);
-    }
+} catch (err: unknown) {
+  const error = isRecord(err) ? err : {};
+  const response = isRecord(error.response) ? error.response : {};
+  const responseData = isRecord(response.data)
+    ? response.data
+    : {};
+
+  const friendlyMessage = error.userFriendlyMessage;
+  const apiMessage = responseData.message;
+
+  const msg =
+    (typeof friendlyMessage === 'string' && friendlyMessage.trim()
+      ? friendlyMessage
+      : undefined) ??
+    (typeof apiMessage === 'string' && apiMessage.trim()
+      ? apiMessage
+      : undefined) ??
+    'Failed to save emergency contact.';
+
+  setError(msg);
+
+  if (isEmergencyContactErrors(error.fieldErrors)) {
+    setFieldErrors(error.fieldErrors);
+  }
+} finally {
+  setSaving(false);
+}
   };
 
   const handleDeleteContact = async (contactId: string) => {

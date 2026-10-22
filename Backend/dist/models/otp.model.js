@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { OTP_EXPIRY_SECONDS } from "../constants/otp.constant.js";
 const OTPSchema = new Schema({
     userId: {
         type: String,
@@ -24,7 +25,8 @@ const OTPSchema = new Schema({
     },
     createdAt: {
         type: Date,
-        default: Date.now, expires: 300
+        default: Date.now,
+        expires: OTP_EXPIRY_SECONDS,
     }
 });
 OTPSchema.index({ userId: 1, purpose: 1, isUsed: 1 });

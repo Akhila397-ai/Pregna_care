@@ -15,7 +15,7 @@ const DoctorRejectedPage = () => {
       return;
     }
     fetchStatus();
-  }, []);
+  }, [fetchStatus, navigate, user?.role]);
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center font-sans px-6 transition-colors duration-200 relative">
@@ -90,4 +90,4 @@ const DoctorRejectedPage = () => {
   );
 };
 
-export default DoctorRejectedPage;
+export default DoctorRejectedPage;

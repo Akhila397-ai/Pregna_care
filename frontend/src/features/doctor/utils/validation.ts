@@ -92,7 +92,7 @@ export const doctorStep3Schema = z.object({
 
 export const validateDoctorStep = (
   step: number,
-  data: Record<string, any>
+  data: unknown
 ): Record<string, string> => {
   let result;
   if (step === 1) {

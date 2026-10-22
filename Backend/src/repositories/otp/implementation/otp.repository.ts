@@ -4,6 +4,7 @@ import { IOtpRepository } from "../interface/IOtp.repository.js";
 import { otpData, OTPPurpose } from "../../../types/otp.js";
 import otpModel from "../../../models/otp.model.js";
 import { BaseRepository } from "../../base/base.repository.js";
+import { OTP_EXPIRY_MS } from "../../../constants/otp.constant.js";
 
 @injectable()
 export class OtpRepository extends BaseRepository<otpData> implements IOtpRepository {
@@ -16,8 +17,9 @@ export class OtpRepository extends BaseRepository<otpData> implements IOtpReposi
   }
 
   async findActiveOtp(userId: string, purpose: OTPPurpose): Promise<(otpData & { _id: Types.ObjectId }) | null> {
+    const validAfter = new Date(Date.now() - OTP_EXPIRY_MS)
     return await otpModel
-      .findOne({ userId, purpose, isUsed: false })
+      .findOne({ userId, purpose, isUsed: false, createdAt: { $gt: validAfter} })
       .sort({ createdAt: -1 })
       .lean();
   }

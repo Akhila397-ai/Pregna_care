@@ -52,7 +52,7 @@ const DoctorVerificationPage = () => {
 
   useEffect(() => {
     getDoctors(page, limit);
-  }, [page]);
+  }, [getDoctors,page]);
 
   const filtered = doctors.filter((d) => {
     const matchSearch =
