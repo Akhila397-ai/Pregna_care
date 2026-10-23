@@ -5,6 +5,8 @@ import { EmergencyContactRelationship, onboardingType, userData } from "../../..
 import userModel from "../../../models/User.model.js";
 import { BaseRepository } from "../../base/base.repository.js";
 
+
+
 @injectable()
 export class UserRepository extends BaseRepository<userData> implements IUserRepository {
   constructor() {
@@ -30,6 +32,46 @@ export class UserRepository extends BaseRepository<userData> implements IUserRep
     await this.model.findByIdAndUpdate(objectId, { $set: { role } });
   }
 
+  async setRefreshTokenHash(id: string, tokenHash: string): Promise<boolean> {
+      const objectId = Types.ObjectId.isValid(id)
+      ? new Types.ObjectId(id)
+      : id;
+      const result = await this.model.updateOne(
+        {_id: objectId},
+        {$set: { refreshTokenHash: tokenHash}}
+      );
+      return result.matchedCount > 0
+  }
+
+  async rotateRefreshTokenHash(id: string, currentHash: string, nextHash: string): Promise<boolean> {
+      const objectId = Types.ObjectId.isValid(id)
+      ? new Types.ObjectId(id)
+      : id;
+
+      const result = await this.model.updateOne(
+        {_id: objectId, refreshTokenHash: currentHash},
+        {$set: {refreshTokenHash: nextHash}}
+      )
+      return result.modifiedCount > 0
+  }
+  async revokeRefreshTokenHash(tokenHash: string): Promise<boolean> {
+      const result = await this.model.updateOne(
+        {refreshTokenHash: tokenHash},
+        {$unset: {refreshTokenHash: ""}}
+      )
+      return result.modifiedCount > 0
+  }
+ async getRefreshToken(id: string): Promise<string | null> {
+      const objectId = Types.ObjectId.isValid(id)
+      ? new Types.ObjectId(id)
+      : id;
+
+      const user = await this.model
+      .findById(objectId)
+      .select('+refreshTokenHash')
+      .lean()
+      return user?.refreshTokenHash ?? null;
+  }
   async setOnboarding(id: string, onboardingType: onboardingType): Promise<void> {
     const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
     await this.model.findByIdAndUpdate(objectId, {

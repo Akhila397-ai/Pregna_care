@@ -39,5 +39,7 @@ export interface userData {
     periodLength?: number;
     emergencyContacts?: IEmergencyContact[];
     primaryDoctorId?: any;
+    refreshToken?: string;
+    refreshTokenHash?: string;
 
 }

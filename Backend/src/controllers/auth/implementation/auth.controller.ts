@@ -6,9 +6,9 @@ import type { IAUthService } from "../../../services/auth/interface/IAuth.servic
 import { IAuthController } from "../interface/IAuth.controller.js";
 import { HttpStatus } from "../../../constants/status.constant.js";
 import { HttpResponse } from "../../../constants/messages.constant.js";
-import { REFRESH_COOKIE_OPTIONS } from "../../../constants/cookie.constant.js";
 import { logger } from "../../../shared/logger/logger.js";
-import { AppError } from "../../../shared/errors/AppError.js";
+import { AppError, UnauthorizedError } from "../../../shared/errors/AppError.js";
+import { CLEAR_COOKIE_OPTIONS,REFRESH_COOKIE_OPTIONS } from "../../../constants/cookie.constant.js";
 
 @injectable()
 export class AuthController implements IAuthController {
@@ -61,6 +61,13 @@ export class AuthController implements IAuthController {
     try {
       const { email, otp, purpose } = req.body;
       const result = await this.authService.verifyOtp(email, otp, purpose);
+      if("refreshToken" in result && result.refreshToken){
+        const { refreshToken, ...safeResult} = result;
+
+        res.cookie('refreshToken',refreshToken,REFRESH_COOKIE_OPTIONS);
+        res.status(HttpStatus.OK).json(safeResult)
+        return
+      }
       res.status(HttpStatus.OK).json(result);
     } catch (error: unknown) {
       logger.error("AuthController.verifyOtp error:", error);
@@ -133,12 +140,19 @@ export class AuthController implements IAuthController {
 
   refreshToken = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userId = req.user!.userId;
-      const result = await this.authService.refreshToken(userId);
+      const refreshToken = req.cookies?.refreshToken;
 
-      if (result.refreshToken) {
-        res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
+      if(typeof refreshToken !== "string" || !refreshToken){
+        throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
       }
+
+      const result = await this.authService.refreshToken(refreshToken);
+
+      if(!result.refreshToken) {
+        throw new UnauthorizedError(HttpResponse.UNAUTHORIZED)
+      }
+
+      res.cookie('refreshToken', result.refreshToken, REFRESH_COOKIE_OPTIONS)
 
       res.status(HttpStatus.OK).json({
         user: result.user,
@@ -288,4 +302,20 @@ export class AuthController implements IAuthController {
       this.handleError(error, req, res, "Failed to remove emergency contact.");
     }
   };
+  logout = async (req: Request, res: Response): Promise<void> => {
+      try {
+        const refreshToken = req.cookies?.refreshToken;
+
+        const result = await this.authService.logout(
+          typeof refreshToken === 'string' ? refreshToken : undefined
+        );
+
+        res.clearCookie('refreshToken', CLEAR_COOKIE_OPTIONS);
+        res.status(HttpStatus.OK).json(result)
+      } catch (error: unknown) {
+        res.clearCookie('refreshToken',CLEAR_COOKIE_OPTIONS);
+        logger.error('AuthController.logout error:',error);
+        this.handleError(error,req,res,"Logout Failed.Please try again")
+      }
+  }
 }

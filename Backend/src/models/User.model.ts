@@ -27,6 +27,10 @@ const UserSchema = new Schema<IUserDocument>(
       type: String,
       required: true
     },
+    refreshTokenHash: {
+  type: String,
+  select: false,
+},
      role:       {
       type:    String,
       enum:    ['user', 'admin', 'doctor'],
@@ -106,6 +110,10 @@ const UserSchema = new Schema<IUserDocument>(
       type: Schema.Types.ObjectId,
       ref: 'User',
       default: null,
+    },
+    refreshToken : {
+      type: String,
+      select: false
     },
     
   },

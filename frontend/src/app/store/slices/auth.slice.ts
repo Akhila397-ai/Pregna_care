@@ -10,6 +10,8 @@ import {
 } from '@/features/auth/types/auth.types';
 
 
+
+
 interface AuthState {
   user: UserAuthResponse | null;
   token: string | null;
@@ -271,6 +273,7 @@ const authSlice = createSlice({
         if (state.otpPurpose === 'signup') {
           state.user = action.payload.user;
           state.token = action.payload.token;
+          sessionStorage.setItem('accessToken',action.payload.token);
           state.pendingEmail = null;
           state.otpPurpose = null;
         }
@@ -360,11 +363,16 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.initialized = true;
         sessionStorage.setItem('accessToken', action.payload.token);
       })
       .addCase(refreshTokenThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        state.user = null;
+        state.token = null;
+        state.initialized = true;
+        sessionStorage.removeItem('accessToken');
       });
 
     // ── Set Onboarding ────────────────────────
@@ -397,7 +405,6 @@ const authSlice = createSlice({
       })
       .addCase(getMeThunk.rejected, (state) => {
         state.loading = false;
-        state.initialized = true;
         state.user = null;
         state.token = null;
         sessionStorage.removeItem('accessToken');

@@ -9,7 +9,7 @@ import { IAUthService } from "../interface/IAuth.service.js";
 import { toUserAuthDTO } from "../../../mapper/user.mapper.js";
 import { hashPassword, comparePassword } from "../../../utils/hashPassword.js";
 import { generateOTP } from "../../../utils/generateOtp.js";
-import { generateAccessToken, generateRefreshToken, generateResetToken } from "../../../utils/jwt.js";
+import { generateAccessToken, generateRefreshToken, generateResetToken, verifyRefreshToken } from "../../../utils/jwt.js";
 import { HttpResponse } from "../../../constants/messages.constant.js";
 import { OTPPurpose } from "../../../types/otp.js";
 import { OTP_EXPIRY_MS } from "../../../constants/otp.constant.js";
@@ -38,6 +38,8 @@ import {
 import { ROLE_PORTAL_NAMES, UserRole } from "../../../types/roles.js";
 import { EmergencyContactRelationship, onboardingType } from "../../../types/user.js";
 import { toEmergencyContactDTO } from "../../../mapper/user.mapper.js";
+import { hashRefreshToken } from "../../../utils/hashRefreshToken.js";
+
 
 
 @injectable()
@@ -77,11 +79,25 @@ export class AuthService implements IAUthService {
 
     if (purpose === "signup") {
       await this.userRepository.markVerified(user._id.toString());
-      const accessToken = generateAccessToken(user._id.toString(), user.role);
+
+      const userId = user._id.toString();
+      const accessToken = generateAccessToken(userId, user.role);
+      const refreshToken = generateRefreshToken(userId)
+
+      const stored = await this.userRepository.setRefreshTokenHash(
+        userId,
+        hashRefreshToken(refreshToken)
+      );
+
+      if(!stored) {
+        throw new NotFoundError(HttpResponse.USER_NOT_FOUND)
+      }
       return {
         user: toUserAuthDTO(user),
         token: accessToken,
-      };
+        refreshToken,
+
+      }
     }
 
     if (purpose === "forgot_password") {
@@ -154,6 +170,14 @@ export class AuthService implements IAUthService {
     const accessToken = generateAccessToken(user._id.toString(), user.role);
     const refreshToken = generateRefreshToken(user._id.toString());
 
+    const stored = await this.userRepository.setRefreshTokenHash(
+      user._id.toString(),
+      hashRefreshToken(refreshToken)
+    )
+
+     if(!stored){
+      throw new NotFoundError(HttpResponse.USER_NOT_FOUND)
+     }
     return {
       user: toUserAuthDTO(user),
       token: accessToken,
@@ -212,15 +236,53 @@ export class AuthService implements IAUthService {
     };
   }
 
-  async refreshToken(userId: string): Promise<AuthResponseDTO> {
-    const user = await this.userRepository.findById(userId);
-    if (!user) throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
-    if (user.isBlocked) throw new ForbiddenError(HttpResponse.USER_BLOCKED);
-    if (user.isDeleted) throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+  async refreshToken(refreshTokenValue: string): Promise<AuthResponseDTO> {
+   let decoded: { userId: string};
 
-    const accessToken = generateAccessToken(user._id.toString(), user.role);
-    const refreshToken = generateRefreshToken(user._id.toString());
-    return { user: toUserAuthDTO(user), token: accessToken, refreshToken };
+   try {
+    decoded = verifyRefreshToken(refreshTokenValue);
+   } catch {
+    throw new UnauthorizedError(HttpResponse.UNAUTHORIZED)
+   }
+
+   const userId = decoded.userId;
+   const user = await this.userRepository.findById(userId);
+
+   if(!user || user.isDeleted || !user.isVerified) {
+    throw new UnauthorizedError(HttpResponse.UNAUTHORIZED)
+   }
+
+   if(user.isBlocked){
+    throw new ForbiddenError(HttpResponse.USER_BLOCKED)
+   }
+
+   const currentHash = hashRefreshToken(refreshTokenValue);
+   const storedHash = await this.userRepository.getRefreshToken(userId);
+
+   if(!storedHash || storedHash !== currentHash){
+    throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
+   }
+
+   const nextRefreshToken = generateRefreshToken(userId);
+   const nextHash = hashRefreshToken(nextRefreshToken)
+
+   const rotated = await this.userRepository.rotateRefreshTokenHash(
+    userId,
+    currentHash,
+    nextHash
+   )
+
+   if(!rotated){
+    throw new UnauthorizedError(HttpResponse.UNAUTHORIZED)
+   }
+
+   const accessToken = generateAccessToken(userId, user.role)
+
+   return {
+    user: toUserAuthDTO(user),
+    token: accessToken,
+    refreshToken: nextRefreshToken
+   }
   }
 
   async setOnboarding(userId: string, onboardingType: onboardingType): Promise<MessageResponseDTO> {
@@ -518,6 +580,15 @@ export class AuthService implements IAUthService {
       fertileStartDate,
       fertileEndDate,
     };
+  }
+
+  async logout(refreshTokenValue?: string): Promise<MessageResponseDTO> {
+      if(refreshTokenValue) {
+        const tokenHash = hashRefreshToken(refreshTokenValue)
+        await this.userRepository.revokeRefreshTokenHash(tokenHash)
+      }
+
+      return { message: "Logged out successfully"}
   }
 
   private async _sendOTP(userId: string, email: string, purpose: OTPPurpose): Promise<void> {

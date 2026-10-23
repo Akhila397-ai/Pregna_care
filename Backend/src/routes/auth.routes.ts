@@ -37,7 +37,7 @@ router.route(ROUTES.AUTH.LOGIN).post(validateBody(loginSchema), authController.l
 router.route(ROUTES.AUTH.FORGOT_PASSWORD).post(validateBody(forgotPasswordSchema), authController.forgotPassword);
 router.route(ROUTES.AUTH.RESET_PASSWORD).post(verifyResetJWT, validateBody(resetPasswordSchema), authController.resetPassword);
 router.route(ROUTES.AUTH.RESEND_OTP).post(validateBody(resendOtpSchema), authController.resendOtp);
-router.route(ROUTES.AUTH.REFRESH_TOKEN).post(authenticate, authController.refreshToken);
+router.route(ROUTES.AUTH.REFRESH_TOKEN).post(authController.refreshToken)
 router.route(ROUTES.AUTH.SET_ONBOARDING).post(authenticate, validateBody(onboardingSchema), authController.setOnboarding);
 router.route(ROUTES.AUTH.ME).get(authenticate, authController.getMe);
 router.route(ROUTES.AUTH.PREGNANCY_LMP).post(authenticate, validateBody(pregnancyLmpSchema), authController.setPregnancyLMP);
@@ -50,6 +50,7 @@ router.route(ROUTES.AUTH.EMERGENCY_CONTACTS)
 router.route(ROUTES.AUTH.EMERGENCY_CONTACT_DETAIL)
   .put(authenticate, validateParams(emergencyContactParamSchema), validateBody(emergencyContactSchema), authController.updateEmergencyContact)
   .delete(authenticate, validateParams(emergencyContactParamSchema), authController.deleteEmergencyContact);
+  router.route(ROUTES.AUTH.LOGOUT).post(authController.logout);
 
 // ── Primary Doctor (Patient Side) ───────────
 router.route(ROUTES.AUTH.PRIMARY_DOCTOR).get(authenticate, doctorController.getPatientPrimaryDoctor);

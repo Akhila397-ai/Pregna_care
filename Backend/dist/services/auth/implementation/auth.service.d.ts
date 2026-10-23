@@ -20,7 +20,7 @@ export declare class AuthService implements IAUthService {
     forgotPassword(email: string): Promise<OTPResponseDTO>;
     resetPassword(userId: string, newPassword: string): Promise<MessageResponseDTO>;
     resendOtp(email: string, purpose: string): Promise<OTPResponseDTO>;
-    refreshToken(userId: string): Promise<AuthResponseDTO>;
+    refreshToken(refreshTokenValue: string): Promise<AuthResponseDTO>;
     setOnboarding(userId: string, onboardingType: onboardingType): Promise<MessageResponseDTO>;
     getMe(userId: string): Promise<UserAuthDTO>;
     private _parseDateOnly;
@@ -34,6 +34,7 @@ export declare class AuthService implements IAUthService {
     deleteEmergencyContact(userId: string, contactId: string): Promise<EmergencyContactDTO[]>;
     private _calculatePregnancyDetails;
     private _calculateCycleDetails;
+    logout(refreshTokenValue?: string): Promise<MessageResponseDTO>;
     private _sendOTP;
     private _verifyOtp;
 }

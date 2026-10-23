@@ -23,5 +23,6 @@ export declare class AuthController implements IAuthController {
     addEmergencyContact: (req: Request, res: Response) => Promise<void>;
     updateEmergencyContact: (req: Request, res: Response) => Promise<void>;
     deleteEmergencyContact: (req: Request, res: Response) => Promise<void>;
+    logout: (req: Request, res: Response) => Promise<void>;
 }
 //# sourceMappingURL=auth.controller.d.ts.map

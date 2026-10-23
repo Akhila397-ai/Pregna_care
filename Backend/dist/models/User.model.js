@@ -101,6 +101,10 @@ const UserSchema = new Schema({
         ref: 'User',
         default: null,
     },
+    refreshToken: {
+        type: String,
+        select: false
+    },
 }, { timestamps: true });
 export default mongoose.models.User || mongoose.model('User', UserSchema);
 //# sourceMappingURL=User.model.js.map

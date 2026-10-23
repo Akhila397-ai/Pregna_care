@@ -9,7 +9,7 @@ export interface IAUthService {
     forgotPassword(email: string): Promise<OTPResponseDTO>;
     resetPassword(email: string, newPassword: string): Promise<MessageResponseDTO>;
     resendOtp(email: string, purpose: string): Promise<OTPResponseDTO>;
-    refreshToken(userId: string): Promise<AuthResponseDTO>;
+    refreshToken(refreshToken: string): Promise<AuthResponseDTO>;
     setOnboarding(userId: string, onboardingType: onboardingType): Promise<MessageResponseDTO>;
     getMe(userId: string): Promise<UserAuthDTO>;
     setPregnancyLMP(userId: string, lmpDate: string): Promise<PregnancyDetailsDTO>;
@@ -20,4 +20,5 @@ export interface IAUthService {
     addEmergencyContact(userId: string, data: AddEmergencyContactDTO): Promise<EmergencyContactDTO[]>;
     updateEmergencyContact(userId: string, contactId: string, data: UpdateEmergencyContactDTO): Promise<EmergencyContactDTO[]>;
     deleteEmergencyContact(userId: string, contactId: string): Promise<EmergencyContactDTO[]>;
+    logout(refreshToken?: string) : Promise<MessageResponseDTO>;
 }

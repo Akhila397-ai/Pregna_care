@@ -15,9 +15,9 @@ import { injectable, inject } from "inversify";
 import { TYPES } from "../../../container/types.js";
 import { HttpStatus } from "../../../constants/status.constant.js";
 import { HttpResponse } from "../../../constants/messages.constant.js";
-import { REFRESH_COOKIE_OPTIONS } from "../../../constants/cookie.constant.js";
 import { logger } from "../../../shared/logger/logger.js";
-import { AppError } from "../../../shared/errors/AppError.js";
+import { AppError, UnauthorizedError } from "../../../shared/errors/AppError.js";
+import { CLEAR_COOKIE_OPTIONS, REFRESH_COOKIE_OPTIONS } from "../../../constants/cookie.constant.js";
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -67,6 +67,12 @@ let AuthController = class AuthController {
         try {
             const { email, otp, purpose } = req.body;
             const result = await this.authService.verifyOtp(email, otp, purpose);
+            if ("refreshToken" in result && result.refreshToken) {
+                const { refreshToken, ...safeResult } = result;
+                res.cookie('refreshToken', refreshToken, REFRESH_COOKIE_OPTIONS);
+                res.status(HttpStatus.OK).json(safeResult);
+                return;
+            }
             res.status(HttpStatus.OK).json(result);
         }
         catch (error) {
@@ -136,11 +142,15 @@ let AuthController = class AuthController {
     };
     refreshToken = async (req, res) => {
         try {
-            const userId = req.user.userId;
-            const result = await this.authService.refreshToken(userId);
-            if (result.refreshToken) {
-                res.cookie("refreshToken", result.refreshToken, REFRESH_COOKIE_OPTIONS);
+            const refreshToken = req.cookies?.refreshToken;
+            if (typeof refreshToken !== "string" || !refreshToken) {
+                throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
             }
+            const result = await this.authService.refreshToken(refreshToken);
+            if (!result.refreshToken) {
+                throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
+            }
+            res.cookie('refreshToken', result.refreshToken, REFRESH_COOKIE_OPTIONS);
             res.status(HttpStatus.OK).json({
                 user: result.user,
                 token: result.token,
@@ -283,6 +293,19 @@ let AuthController = class AuthController {
         catch (error) {
             logger.error("AuthController.deleteEmergencyContact error:", error);
             this.handleError(error, req, res, "Failed to remove emergency contact.");
+        }
+    };
+    logout = async (req, res) => {
+        try {
+            const refreshToken = req.cookies?.refreshToken;
+            const result = await this.authService.logout(typeof refreshToken === 'string' ? refreshToken : undefined);
+            res.clearCookie('refreshToken', CLEAR_COOKIE_OPTIONS);
+            res.status(HttpStatus.OK).json(result);
+        }
+        catch (error) {
+            res.clearCookie('refreshToken', CLEAR_COOKIE_OPTIONS);
+            logger.error('AuthController.logout error:', error);
+            this.handleError(error, req, res, "Logout Failed.Please try again");
         }
     };
 };

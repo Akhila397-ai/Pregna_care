@@ -18,4 +18,5 @@ export interface IAuthController {
     addEmergencyContact(req: Request, res: Response): Promise<void>;
     updateEmergencyContact(req: Request, res: Response): Promise<void>;
     deleteEmergencyContact(req: Request, res: Response): Promise<void>;
+    logout(req: Request, res: Response): Promise<void>;
 }

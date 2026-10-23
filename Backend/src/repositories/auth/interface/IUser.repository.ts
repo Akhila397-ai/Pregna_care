@@ -23,4 +23,20 @@ export interface IUserRepository extends IBaseRepository<userData> {
     userId: string,
     contactId: string
   ): Promise<(userData & { _id: Types.ObjectId }) | null>;
+  setRefreshTokenHash(
+    id: string,
+    tokenHash: string
+  ): Promise<boolean>
+  rotateRefreshTokenHash(
+    id: string,
+    currentHash: string,
+    nextHash: string
+  ): Promise<boolean>
+
+  revokeRefreshTokenHash(
+    tokenHash: string
+  ): Promise<boolean>;
+  getRefreshToken(
+    id: string
+  ): Promise<string | null>
 }

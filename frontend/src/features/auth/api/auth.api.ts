@@ -19,6 +19,7 @@ import {
   EmergencyContactsResponse,
 } from '../types/auth.types';
 
+
 export const authApi = {
   register: async (data: RegisterRequest): Promise<OTPResponse> => {
     const res = await axiosInstance.post('/auth/register', data);
@@ -61,6 +62,10 @@ export const authApi = {
   refreshToken: async (): Promise<AuthResponse> => {
     const res = await axiosInstance.post('/auth/refresh-token');
     return res.data;
+  },
+  logout: async (): Promise<MessageResponse> => {
+    const res = await axiosInstance.post('/auth/logout');
+    return res.data
   },
 
   setOnboarding: async (data: SetOnboardingRequest): Promise<MessageResponse> => {

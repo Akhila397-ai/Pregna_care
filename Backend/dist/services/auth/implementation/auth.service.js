@@ -16,12 +16,13 @@ import { TYPES } from "../../../container/types.js";
 import { toUserAuthDTO } from "../../../mapper/user.mapper.js";
 import { hashPassword, comparePassword } from "../../../utils/hashPassword.js";
 import { generateOTP } from "../../../utils/generateOtp.js";
-import { generateAccessToken, generateRefreshToken, generateResetToken } from "../../../utils/jwt.js";
+import { generateAccessToken, generateRefreshToken, generateResetToken, verifyRefreshToken } from "../../../utils/jwt.js";
 import { HttpResponse } from "../../../constants/messages.constant.js";
 import { OTP_EXPIRY_MS } from "../../../constants/otp.constant.js";
 import { ConflictError, UnauthorizedError, ForbiddenError, NotFoundError, ValidationError, } from "../../../shared/errors/AppError.js";
 import { ROLE_PORTAL_NAMES } from "../../../types/roles.js";
 import { toEmergencyContactDTO } from "../../../mapper/user.mapper.js";
+import { hashRefreshToken } from "../../../utils/hashRefreshToken.js";
 let AuthService = class AuthService {
     userRepository;
     otpRepository;
@@ -56,10 +57,17 @@ let AuthService = class AuthService {
         await this._verifyOtp(user._id.toString(), purpose, otp);
         if (purpose === "signup") {
             await this.userRepository.markVerified(user._id.toString());
-            const accessToken = generateAccessToken(user._id.toString(), user.role);
+            const userId = user._id.toString();
+            const accessToken = generateAccessToken(userId, user.role);
+            const refreshToken = generateRefreshToken(userId);
+            const stored = await this.userRepository.setRefreshTokenHash(userId, hashRefreshToken(refreshToken));
+            if (!stored) {
+                throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+            }
             return {
                 user: toUserAuthDTO(user),
                 token: accessToken,
+                refreshToken,
             };
         }
         if (purpose === "forgot_password") {
@@ -127,6 +135,10 @@ let AuthService = class AuthService {
         }
         const accessToken = generateAccessToken(user._id.toString(), user.role);
         const refreshToken = generateRefreshToken(user._id.toString());
+        const stored = await this.userRepository.setRefreshTokenHash(user._id.toString(), hashRefreshToken(refreshToken));
+        if (!stored) {
+            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
+        }
         return {
             user: toUserAuthDTO(user),
             token: accessToken,
@@ -175,17 +187,39 @@ let AuthService = class AuthService {
             expiresIn: 300,
         };
     }
-    async refreshToken(userId) {
+    async refreshToken(refreshTokenValue) {
+        let decoded;
+        try {
+            decoded = verifyRefreshToken(refreshTokenValue);
+        }
+        catch {
+            throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
+        }
+        const userId = decoded.userId;
         const user = await this.userRepository.findById(userId);
-        if (!user)
-            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
-        if (user.isBlocked)
+        if (!user || user.isDeleted || !user.isVerified) {
+            throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
+        }
+        if (user.isBlocked) {
             throw new ForbiddenError(HttpResponse.USER_BLOCKED);
-        if (user.isDeleted)
-            throw new NotFoundError(HttpResponse.USER_NOT_FOUND);
-        const accessToken = generateAccessToken(user._id.toString(), user.role);
-        const refreshToken = generateRefreshToken(user._id.toString());
-        return { user: toUserAuthDTO(user), token: accessToken, refreshToken };
+        }
+        const currentHash = hashRefreshToken(refreshTokenValue);
+        const storedHash = await this.userRepository.getRefreshToken(userId);
+        if (!storedHash || storedHash !== currentHash) {
+            throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
+        }
+        const nextRefreshToken = generateRefreshToken(userId);
+        const nextHash = hashRefreshToken(nextRefreshToken);
+        const rotated = await this.userRepository.rotateRefreshTokenHash(userId, currentHash, nextHash);
+        if (!rotated) {
+            throw new UnauthorizedError(HttpResponse.UNAUTHORIZED);
+        }
+        const accessToken = generateAccessToken(userId, user.role);
+        return {
+            user: toUserAuthDTO(user),
+            token: accessToken,
+            refreshToken: nextRefreshToken
+        };
     }
     async setOnboarding(userId, onboardingType) {
         const user = await this.userRepository.findById(userId);
@@ -447,6 +481,13 @@ let AuthService = class AuthService {
             fertileStartDate,
             fertileEndDate,
         };
+    }
+    async logout(refreshTokenValue) {
+        if (refreshTokenValue) {
+            const tokenHash = hashRefreshToken(refreshTokenValue);
+            await this.userRepository.revokeRefreshTokenHash(tokenHash);
+        }
+        return { message: "Logged out successfully" };
     }
     async _sendOTP(userId, email, purpose) {
         await this.otpRepository.invalidateAllOTPs(userId, purpose);

@@ -20,6 +20,7 @@ export declare const ROUTES: {
         readonly REQUEST_PRIMARY_DOCTOR: "/primary-doctor/request";
         readonly CANCEL_PRIMARY_DOCTOR_REQUEST: "/primary-doctor/cancel";
         readonly REMOVE_PRIMARY_DOCTOR: "/primary-doctor/remove";
+        readonly LOGOUT: "/logout";
     };
     readonly ADMIN: {
         readonly BASE: "/api/admin";

@@ -16,6 +16,7 @@ import { OnboardingType, UserRole } from '../types/auth.types';
 import axiosInstance from '@/shared/api/axiosInstance';
 import { clearAdminData } from '@/app/store/slices/admin.slice';
 import { clearDoctorState } from '@/features/doctor/store/doctor.slice';
+import { authApi } from '../api/auth.api';
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -158,11 +159,20 @@ export const useAuth = () => {
   };
 
   // ── Logout ────────────────────────────────────
-  const logoutUser = () => {
-    dispatch(logout());
-    dispatch(clearAdminData());
-    dispatch(clearDoctorState());
-    navigate('/login');
+  const logoutUser = async () => {
+    try {
+      await authApi.logout();
+    } catch (error: unknown) {
+      console.error(
+        'Backend logout request failed; clearing local session',
+        error
+      );
+    } finally {
+      dispatch(logout());
+      dispatch(clearAdminData())
+      dispatch(clearDoctorState());
+      navigate('/login',{replace: true})
+    }
   };
 
   return {

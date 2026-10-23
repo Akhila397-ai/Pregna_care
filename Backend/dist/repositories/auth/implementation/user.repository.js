@@ -30,6 +30,34 @@ let UserRepository = class UserRepository extends BaseRepository {
         const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
         await this.model.findByIdAndUpdate(objectId, { $set: { role } });
     }
+    async setRefreshTokenHash(id, tokenHash) {
+        const objectId = Types.ObjectId.isValid(id)
+            ? new Types.ObjectId(id)
+            : id;
+        const result = await this.model.updateOne({ _id: objectId }, { $set: { refreshTokenHash: tokenHash } });
+        return result.matchedCount > 0;
+    }
+    async rotateRefreshTokenHash(id, currentHash, nextHash) {
+        const objectId = Types.ObjectId.isValid(id)
+            ? new Types.ObjectId(id)
+            : id;
+        const result = await this.model.updateOne({ _id: objectId, refreshTokenHash: currentHash }, { $set: { refreshTokenHash: nextHash } });
+        return result.modifiedCount > 0;
+    }
+    async revokeRefreshTokenHash(tokenHash) {
+        const result = await this.model.updateOne({ refreshTokenHash: tokenHash }, { $unset: { refreshTokenHash: "" } });
+        return result.modifiedCount > 0;
+    }
+    async getRefreshToken(id) {
+        const objectId = Types.ObjectId.isValid(id)
+            ? new Types.ObjectId(id)
+            : id;
+        const user = await this.model
+            .findById(objectId)
+            .select('+refreshTokenHash')
+            .lean();
+        return user?.refreshTokenHash ?? null;
+    }
     async setOnboarding(id, onboardingType) {
         const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
         await this.model.findByIdAndUpdate(objectId, {

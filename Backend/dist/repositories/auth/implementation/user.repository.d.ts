@@ -10,6 +10,10 @@ export declare class UserRepository extends BaseRepository<userData> implements 
     updatePassword(id: string, hash: string): Promise<void>;
     markVerified(id: string): Promise<void>;
     updateRole(id: string, role: string): Promise<void>;
+    setRefreshTokenHash(id: string, tokenHash: string): Promise<boolean>;
+    rotateRefreshTokenHash(id: string, currentHash: string, nextHash: string): Promise<boolean>;
+    revokeRefreshTokenHash(tokenHash: string): Promise<boolean>;
+    getRefreshToken(id: string): Promise<string | null>;
     setOnboarding(id: string, onboardingType: onboardingType): Promise<void>;
     setPregnancyLMP(id: string, lmpDate: Date): Promise<void>;
     setCycleInfo(id: string, periodStartDate: Date, cycleLength?: number, periodLength?: number): Promise<void>;

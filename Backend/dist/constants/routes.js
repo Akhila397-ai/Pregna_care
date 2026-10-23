@@ -20,6 +20,7 @@ export const ROUTES = {
         REQUEST_PRIMARY_DOCTOR: '/primary-doctor/request',
         CANCEL_PRIMARY_DOCTOR_REQUEST: '/primary-doctor/cancel',
         REMOVE_PRIMARY_DOCTOR: '/primary-doctor/remove',
+        LOGOUT: "/logout",
     },
     ADMIN: {
         BASE: '/api/admin',

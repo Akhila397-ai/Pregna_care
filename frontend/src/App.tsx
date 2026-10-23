@@ -2,24 +2,51 @@ import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from '@/app/routes/AppRoutes';
 import { useEffect, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/store/hooks';
-import { getMeThunk, setInitialized } from '@/app/store/slices/auth.slice';
+import { clearError, getMeThunk, refreshTokenThunk,logout } from './app/store/slices/auth.slice';
+import { clearAdminData } from './app/store/slices/admin.slice';
+import { clearDoctorState } from './features/doctor/store/doctor.slice';
 
 const App = () => {
   const dispatch = useAppDispatch();
-  const { token, initialized } = useAppSelector((state) => state.auth);
+  const { initialized } = useAppSelector((state) => state.auth);
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
+   if(hasFetched.current) return
+   hasFetched.current = true;
 
-    const storedToken = sessionStorage.getItem('accessToken');
-    if (storedToken) {
-      dispatch(getMeThunk());
-    } else {
-      dispatch(setInitialized());
+   const initializeAuth = async () => {
+    const storedToken = sessionStorage.getItem('accessToken')
+
+    if(storedToken){
+      const result = await dispatch(getMeThunk())
+
+      if(getMeThunk.fulfilled.match(result)){
+        return
+      }
     }
-  }, [dispatch, token]);
+    const refreshResult = await dispatch(refreshTokenThunk())
+
+    if(refreshTokenThunk.rejected.match(refreshResult)){
+      dispatch(clearError())
+    }
+   };
+
+   void initializeAuth();
+  }, [dispatch]);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      dispatch(logout());
+      dispatch(clearAdminData())
+      dispatch(clearDoctorState())
+    }
+    window.addEventListener('auth:session-expired',handleSessionExpired)
+
+    return () => {
+      window.removeEventListener('auth:session-expired', handleSessionExpired)
+    }
+  },[dispatch])
 
   if (!initialized) {
     return (
