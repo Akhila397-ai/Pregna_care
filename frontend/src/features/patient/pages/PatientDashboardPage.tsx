@@ -438,6 +438,40 @@ const PatientDashboardPage: React.FC = () => {
                   </div>
                 </div>
               </div>
+                            {/* Healthcare Professional Application CTA */}
+              <div className="mt-6 rounded-3xl border border-emerald-200 dark:border-emerald-900/60 bg-gradient-to-r from-emerald-50 via-white to-teal-50 dark:from-emerald-950/40 dark:via-[var(--bg-card)] dark:to-teal-950/30 p-6 sm:p-8 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/70 flex items-center justify-center text-2xl shrink-0">
+                      🩺
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-2">
+                        For Healthcare Professionals
+                      </p>
+
+                      <h3 className="text-lg sm:text-xl font-black text-[var(--text-primary)] mb-2">
+                        Are you a healthcare professional?
+                      </h3>
+
+                      <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-xl">
+                        Join PregnaCare as a doctor and help women receive
+                        trusted maternity and reproductive healthcare.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/doctor/apply')}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-sm transition-colors cursor-pointer shrink-0"
+                  >
+                    Apply as a Doctor
+                    <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -572,6 +606,7 @@ const PatientDashboardPage: React.FC = () => {
           © {new Date().getFullYear()} PregnaCare Health • Simple maternal and family care.
         </footer>
       </div>
+
     </div>
   );
 };

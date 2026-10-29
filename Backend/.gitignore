@@ -1,2 +1,4 @@
 Backend/.env
 .env
+# Local uploads may contain private medical documents
+/uploads/

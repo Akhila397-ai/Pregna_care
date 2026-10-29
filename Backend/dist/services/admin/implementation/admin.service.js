@@ -53,9 +53,21 @@ let AdminService = class AdminService {
     // Doctor Management
     async getAllDoctors(page, limit) {
         const { doctors, total } = await this.adminRepository.findAllDoctors(page, limit);
+        const mappedDoctors = await Promise.all(doctors.map(async (doctor) => {
+            const mappedDoctor = toDoctorsMappedData(doctor);
+            const profileImageKey = doctor.application.profileImage;
+            if (!profileImageKey) {
+                return mappedDoctor;
+            }
+            const profileImageUrl = await getPresignedUrl(profileImageKey, 600);
+            return {
+                ...mappedDoctor,
+                profileImage: profileImageUrl,
+            };
+        }));
         const totalPages = Math.ceil(total / limit);
         return {
-            doctors: doctors.map(toDoctorsMappedData),
+            doctors: mappedDoctors,
             totalDoctors: total,
             totalPages,
             doctorPages: totalPages,

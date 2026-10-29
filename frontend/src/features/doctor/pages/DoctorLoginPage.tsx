@@ -213,11 +213,11 @@ const DoctorLoginPage = () => {
           <p className="text-center text-sm text-[var(--text-secondary)]">
             Not a doctor yet?{' '}
             <Link
-              to="/apply-as-doctor"
-              className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
-            >
-              Apply here
-            </Link>
+            to="/register"
+            className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
+          >
+            Create an account to apply
+          </Link>
           </p>
 
           <p className="text-center text-sm text-[var(--text-secondary)]">

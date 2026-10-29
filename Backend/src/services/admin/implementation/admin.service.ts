@@ -49,17 +49,43 @@ export class AdminService implements IAdminService {
   }
 
   // Doctor Management
-  async getAllDoctors(page: number, limit: number): Promise<GetMappedDoctorsResponse> {
-    const { doctors, total } = await this.adminRepository.findAllDoctors(page, limit);
-    const totalPages = Math.ceil(total / limit);
-    return {
-      doctors: doctors.map(toDoctorsMappedData),
-      totalDoctors: total,
-      totalPages,
-      doctorPages: totalPages,
-    };
-  }
+ async getAllDoctors(
+  page: number,
+  limit: number
+): Promise<GetMappedDoctorsResponse> {
+  const { doctors, total } =
+    await this.adminRepository.findAllDoctors(page, limit);
 
+  const mappedDoctors = await Promise.all(
+    doctors.map(async (doctor) => {
+      const mappedDoctor = toDoctorsMappedData(doctor);
+      const profileImageKey = doctor.application.profileImage;
+
+      if (!profileImageKey) {
+        return mappedDoctor;
+      }
+
+      const profileImageUrl = await getPresignedUrl(
+        profileImageKey,
+        600
+      );
+
+      return {
+        ...mappedDoctor,
+        profileImage: profileImageUrl,
+      };
+    })
+  );
+
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    doctors: mappedDoctors,
+    totalDoctors: total,
+    totalPages,
+    doctorPages: totalPages,
+  };
+}
   async verifyDoctor(
     doctorId: string,
     adminId: string,

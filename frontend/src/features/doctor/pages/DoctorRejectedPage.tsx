@@ -70,7 +70,7 @@ const DoctorRejectedPage = () => {
 
         <div className="space-y-3">
           <Link
-            to="/apply-as-doctor"
+            to="/doctor/apply"
             className="block w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700
               text-white font-bold text-sm shadow-lg shadow-emerald-500/20 transition"
           >

@@ -19,18 +19,16 @@ export const getDoctorDocumentParamSchema = z.object({
     .string()
     .min(1, 'Doctor ID is required.')
     .regex(/^[0-9a-fA-F]{24}$/, 'Invalid doctor ID format.'),
-  documentType: z.enum(
-    [
-      'medicalDegree',
-      'medicalRegistration',
-      'governmentId',
-      'clinicEstablishment',
-      'profileImage',
-    ],
-    {
-      message: 'Invalid document type requested.',
-    }
-  ),
+documentType: z.enum(
+  [
+    'degreeCertificate',
+    'registrationCertificate',
+    'governmentId',
+  ],
+  {
+    message: 'Invalid document type requested.',
+  }
+),
 });
 
 export const paginationQuerySchema = z.object({

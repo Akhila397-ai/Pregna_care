@@ -30,5 +30,6 @@ export interface userData {
     emergencyContacts?: IEmergencyContact[];
     primaryDoctorId?: any;
     refreshToken?: string;
+    refreshTokenHash?: string;
 }
 //# sourceMappingURL=user.d.ts.map

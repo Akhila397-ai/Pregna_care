@@ -21,9 +21,10 @@ export class DoctorRepository extends BaseRepository<doctorApplicationData> impl
     const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
     const application = (await doctorApplicationModel
       .findOne({
-        $or: [{ userId: userObjectId }, { _id: userObjectId }],
-        isDeleted: false,
+       userId: userObjectId,
+       isDeleted: false,
       })
+      .sort({ createdAt: -1})
       .lean()) as DoctorApplicationDocument | null;
 
     if (!application) return null;

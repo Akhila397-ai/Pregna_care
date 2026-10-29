@@ -90,7 +90,7 @@ export const useAuth = () => {
 
       // Regular user navigation (no unwanted doctor status calls)
       if (!isOnboarded) {
-        navigate('/onboarding', { replace: true });
+        navigate('/dashboard', { replace: true });
       } else if (onboardingType === 'pregnant') {
         navigate('/dashboard/pregnancy', { replace: true });
       } else if (onboardingType === 'trying') {

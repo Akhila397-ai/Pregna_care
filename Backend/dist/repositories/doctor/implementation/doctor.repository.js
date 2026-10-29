@@ -24,9 +24,10 @@ let DoctorRepository = class DoctorRepository extends BaseRepository {
         const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
         const application = (await doctorApplicationModel
             .findOne({
-            $or: [{ userId: userObjectId }, { _id: userObjectId }],
+            userId: userObjectId,
             isDeleted: false,
         })
+            .sort({ createdAt: -1 })
             .lean());
         if (!application)
             return null;

@@ -53,7 +53,7 @@ export const validateParams = (schema) => {
 export const validateQuery = (schema) => {
     return async (req, res, next) => {
         try {
-            req.query = (await schema.parseAsync(req.query));
+            await schema.parseAsync(req.query);
             next();
         }
         catch (error) {

@@ -17,11 +17,9 @@ export const getDoctorDocumentParamSchema = z.object({
         .min(1, 'Doctor ID is required.')
         .regex(/^[0-9a-fA-F]{24}$/, 'Invalid doctor ID format.'),
     documentType: z.enum([
-        'medicalDegree',
-        'medicalRegistration',
+        'degreeCertificate',
+        'registrationCertificate',
         'governmentId',
-        'clinicEstablishment',
-        'profileImage',
     ], {
         message: 'Invalid document type requested.',
     }),

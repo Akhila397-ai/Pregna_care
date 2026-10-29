@@ -8,11 +8,9 @@ export declare const doctorIdParamSchema: z.ZodObject<{
 export declare const getDoctorDocumentParamSchema: z.ZodObject<{
     doctorId: z.ZodString;
     documentType: z.ZodEnum<{
-        profileImage: "profileImage";
+        degreeCertificate: "degreeCertificate";
+        registrationCertificate: "registrationCertificate";
         governmentId: "governmentId";
-        medicalDegree: "medicalDegree";
-        medicalRegistration: "medicalRegistration";
-        clinicEstablishment: "clinicEstablishment";
     }>;
 }, z.core.$strip>;
 export declare const paginationQuerySchema: z.ZodObject<{
